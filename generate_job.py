@@ -44,10 +44,10 @@ slurm = '''#!/bin/sh
 #SBATCH --mem {1}G # memory pool for all cores
 #SBATCH -t {2} # time (DD-HH:MM)
 #SBATCH -o {3}.%N.%j.log
-#SBATCH -e {4}.%N.%j.log
+#SBATCH -e {3}.%N.%j.log
 #SBATCH --mail-type=FAIL
 #SBATCH --account=rrg-tetreaum
-#SBATCH --mail-user={5}
+#SBATCH --mail-user={4}
 #
 ### Load environnment
 #
@@ -56,13 +56,14 @@ source /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/bin/
 #
 ### Variables
 #
-config='{6}'
+sample='{3}'
+config='{5}'
 #
 ### Launch script
 #
-python /lustre03/project/6019267/shared/tools/PIPELINES/shortReads/pipeline_short_v202402.py --config ${config}
+python /lustre03/project/6019267/shared/tools/PIPELINES/shortReads/pipeline_short_v202402.py --sample ${sample} --config ${config}
 #
-'''.format(cores, memory, time, sample_name, sample_name, email, path_config)
+'''.format(cores, memory, time, sample_name, email, path_config)
 
 print(slurm)
 print(slurm,  file=open(work_dir+"/"+sample_name+".slurm", 'w'))
