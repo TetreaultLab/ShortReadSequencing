@@ -16,6 +16,7 @@ args = parser.parse_args()
 
 work_dir = os.getcwd()
 print(work_dir)
+
 # Project NAME
 project_name = args.project
 
@@ -99,10 +100,6 @@ general = '''# TOML config file for {}
 # Sorting and indexing
 [samtools]
 
-# Marking duplicates
-[picard]
-    scoring = "SUM_OF_BASE_QUALITIES" # The scoring strategy for choosing the non-duplicate among candidates
-    pixel   = 100                     # The maximum offset between two duplicate clusters in order to consider them optical duplicates
 '''.format(project_name, project_name)
 
 toml_config = general + "\n" + t + "\n" + a + "\n" + p + "\n" + q
