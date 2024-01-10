@@ -28,15 +28,14 @@ def main():
 
     # Start of pipeline
     start_str = "### {}-seq pipeline starting for {} at {} ###".format(
-        toml_config["general"]["sequencing"],
-        sample,
-        start.strftime("%d/%m/%Y %H:%M:%S"),
+        toml_config["general"]["sequencing"], sample, start
     )
     print("#" * len(start_str) + "\n" + start_str + "\n" + "#" * len(start_str))
 
     # Get tools and versions
     dict_keys = toml_config.keys()
 
+    function_queue = []
     # Quality control
     vqc = subprocess.check_output(
         ["cat ../version_fastqc_N.txt"], text=True, shell=True
@@ -49,6 +48,7 @@ def main():
             ["cat ../version_bbduk_N.txt"], text=True, shell=True
         ).strip()
         print(f"Trimming: BBDuk (v{vt})")
+        function_queue.append(bbduk)
     else:
         print("Trimming: none")
 
@@ -90,6 +90,12 @@ def main():
     ).strip()
     print(f"Sorting/Indexing: Samtools (v{vsi})")
 
+    # Calling initial quality control
+    fastqc()
+
+    # Calling each steps
+    for func in function_queue:
+        func(toml_config)
     # Steps
     # 01. Quality control
     # 02. Trimming
@@ -124,12 +130,22 @@ def get_time():
     return now
 
 
+def title(message):
+    print(f"\n>>> Running {message} [{get_time()}]\n")
+
+
 def get_file_names():
     print()
 
 
-def bbduk():
-    print("Run bduk")
+def fastqc():
+    title("FastQC")
+
+
+def bbduk(toml_config):
+    title("BBDuk")
+    print(toml_config["bbduk"])
+    # subprocess.call(["bbduk.sh", "--version"], text=True)
 
 
 if __name__ == "__main__":
