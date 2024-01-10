@@ -37,15 +37,13 @@ def main():
 
     function_queue = []
     # Quality control
-    vqc = subprocess.check_output(
-        ["cat ../version_fastqc_N.txt"], text=True, shell=True
-    ).strip()
+    vqc = subprocess.check_output(["cat", "../version_fastqc_N.txt"], text=True).strip()
     print(f"Quality control: FastQC ({vqc})")
 
     # Trimming
     if "bbduk" in dict_keys:
         vt = subprocess.check_output(
-            ["cat ../version_bbduk_N.txt"], text=True, shell=True
+            ["cat", "../version_bbduk_N.txt"], text=True
         ).strip()
         print(f"Trimming: BBDuk (v{vt})")
         function_queue.append(bbduk)
@@ -54,11 +52,13 @@ def main():
 
     # Alignment
     if "star" in dict_keys:
-        va = subprocess.check_output(["STAR --version"], text=True, shell=True).strip()
+        va = subprocess.check_output(
+            ["cat", "../version_star_N.txt"], text=True
+        ).strip()
         print(f"Alignment: STAR (v{va})")
     elif "bwa" in dict_keys:
         va = subprocess.check_output(
-            ["bwa-mem2 version"], text=True, shell=True
+            ["cat", "../version_bwa-mem2_N.txt"], text=True
         ).strip()
         print(f"Alignment: BWA-MEM2 (v{va})")
     else:
@@ -66,29 +66,35 @@ def main():
 
     # Pseudoalignment
     if "salmon" in dict_keys:
-        vp = (
-            subprocess.check_output(["salmon --version"], text=True, shell=True)
-            .strip()
-            .split(" ")[1]
-        )
+        vp = subprocess.check_output(
+            ["cat", "../version_salmon_N.txt"], text=True
+        ).strip()
         print(f"Pseudoalignment: Salmon (v{vp})")
     else:
         print("Pseudoalignment: none")
 
+    # Sorting and indexing
+    vsi = subprocess.check_output(
+        ["cat", "../version_samtools_N.txt"], text=True
+    ).strip()
+    print(f"Sorting/Indexing: Samtools (v{vsi})")
+
+    # MarkDuplicates
+    vgatk = subprocess.check_output(["cat", "../version_gatk_N.txt"], text=True).strip()
+
+    vpic = subprocess.check_output(
+        ["cat", "../version_picard_N.txt"], text=True
+    ).strip()
+    print(f"MarkDuplicates: GATK ({vgatk}) & Picard (v{vpic})")
+
     # Quantification
     if "featurecounts" in dict_keys:
         vq = subprocess.check_output(
-            ["cat ../version_featurecounts_N.txt"], text=True, shell=True
+            ["cat", "../version_featurecounts_N.txt"], text=True
         ).strip()
         print(f"Quantification: featureCounts ({vq})")
     else:
         print("Quantification: none")
-
-    # Sorting and indexing
-    vsi = subprocess.check_output(
-        ["samtools version | head -n 1 | awk '{print $2}'"], text=True, shell=True
-    ).strip()
-    print(f"Sorting/Indexing: Samtools (v{vsi})")
 
     # Calling initial quality control
     fastqc()
@@ -144,8 +150,8 @@ def fastqc():
 
 def bbduk(toml_config):
     title("BBDuk")
-    print(toml_config["bbduk"])
-    # subprocess.call(["bbduk.sh", "--version"], text=True)
+    # print(toml_config["bbduk"])
+    # subprocess.call(["bbduk.sh", "--version"])
 
 
 if __name__ == "__main__":
