@@ -29,7 +29,18 @@ def main():
     dict_keys = toml_config.keys()
     print(dict_keys)
 
-    print()
+    # Steps
+    # 01. Quality control
+    # 02. Trimming
+    # 03. Quality control
+    # 04. Alignment
+    # 05. Quality control
+    # 06. Pseudoalignment
+    # 07. Quality control
+    # 08. Sorting/indexing
+    # 09. If PE: markduplicates
+    # 10. Quantification 
+
 
     # reads = toml_config['general']['reads']
     # fastq = toml_config['general']['fastq']
