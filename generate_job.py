@@ -54,7 +54,7 @@ slurm = """#!/bin/sh
 #
 ### Load environnment
 #
-module load python/3.10.2 StdEnv/2020 fastqc/0.11.9 bbmap/38.86 star/2.7.9a bwa-mem2/2.2.1 gcc/9.3.0 openmpi/4.0.3 salmon/1.4.0 samtools/1.17
+module load python/3.10.2 StdEnv/2020 fastqc/0.11.9 bbmap/38.86 star/2.7.9a bwa-mem2/2.2.1 gcc/9.3.0 openmpi/4.0.3 salmon/1.4.0 subread/2.0.3 samtools/1.17
 source /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/bin/activate
 #
 ### Variables
