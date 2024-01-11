@@ -41,34 +41,47 @@ f.close()
 
 path_config = work_dir + "/" + toml_file
 
+# slurm = """#!/bin/sh
+# #SBATCH -N 1 #Number of nodes
+# #SBATCH -n {0} # number of cores
+# #SBATCH --mem {1}G # memory pool for all cores
+# #SBATCH -t {2} # time (DD-HH:MM)
+# #SBATCH -o {3}.%N.%j.log
+# #SBATCH -e {4}.%N.%j.log
+# #SBATCH --mail-type=FAIL
+# #SBATCH --account=rrg-tetreaum
+# #SBATCH --mail-user={5}
+# #
+# ### Load environnment
+# #
+# module load python/3.10.2 StdEnv/2020 fastqc/0.11.9 bbmap/38.86 star/2.7.9a bwa-mem2/2.2.1 gcc/9.3.0 openmpi/4.0.3 salmon/1.4.0 subread/2.0.3 samtools/1.17
+# source /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/bin/activate
+# #
+# ### Variables
+# #
+# sample='{6}'
+# config='{7}'
+# #
+# ### Launch script
+# #
+# python /lustre03/project/6019267/shared/tools/PIPELINES/shortReads/pipeline_short_v202402.py --sample ${sample} --config ${config}
+# #
+# """.format(  # noqa: F524
+#     cores, memory, time, sample_name, sample_name, email, sample_name, path_config
+# )
+
 slurm = """#!/bin/sh
-#SBATCH -N 1 #Number of nodes
-#SBATCH -n {0} # number of cores
-#SBATCH --mem {1}G # memory pool for all cores
-#SBATCH -t {2} # time (DD-HH:MM)
-#SBATCH -o {3}.%N.%j.log
-#SBATCH -e {4}.%N.%j.log
-#SBATCH --mail-type=FAIL
-#SBATCH --account=rrg-tetreaum
-#SBATCH --mail-user={5}
 #
 ### Load environnment
 #
 module load python/3.10.2 StdEnv/2020 fastqc/0.11.9 bbmap/38.86 star/2.7.9a bwa-mem2/2.2.1 gcc/9.3.0 openmpi/4.0.3 salmon/1.4.0 subread/2.0.3 samtools/1.17
 source /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/bin/activate
 #
-### Variables
-#
-sample='{6}'
-config='{7}'
-#
 ### Launch script
 #
-python /lustre03/project/6019267/shared/tools/PIPELINES/shortReads/pipeline_short_v202402.py --sample ${sample} --config ${config}
+python /lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/pipeline_short_v202402.py --sample {0} --config {1}
 #
-""".format(  # noqa: F524
-    cores, memory, time, sample_name, sample_name, email, sample_name, path_config
-)
+""".format(sample_name, path_config)  # noqa: F524
 
 print(slurm)
 print(slurm, file=open(work_dir + "/" + sample_name + ".slurm", "w"))

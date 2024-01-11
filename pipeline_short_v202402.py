@@ -32,6 +32,13 @@ def main():
     )
     print("=" * len(start_str) + "\n" + start_str + "\n" + "=" * len(start_str))
 
+    # Creating output and tmp directories for sample
+    output = toml_config["general"]["output"] + "/" + sample
+    tmp = toml_config["general"]["temporary"] + "/" + sample
+    subprocess.run(["mkdir", "-p", output])
+    subprocess.run(["mkdir", "-p", tmp])
+    print(f"\n>>> Output saved to '{output}'\n")
+
     # Get tools and versions
     dict_keys = toml_config.keys()
 
@@ -137,21 +144,100 @@ def get_time():
 
 
 def title(message):
-    print(f"\n>>> Running {message} [{get_time()}]\n")
-
-
-def get_file_names():
-    print()
+    print(f"\n>>> Running {message} [{get_time()}]")
 
 
 def fastqc(sample, toml_config):
     title("FastQC")
+    output = toml_config["general"]["output"] + "/" + sample + "/FastQC"
+    subprocess.run(["mkdir", "-p", output])
+    temporary = toml_config["general"]["temporary"] + "/" + sample
+    subprocess.run(["mkdir", "-p", temporary])
+
+    if toml_config["general"]["reads"] == "PE":
+        R1 = toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz"
+        R2 = toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz"
+
+        command = [
+            "fastqc",
+            "-o",
+            output,
+            "--noextract",
+            "--threads",
+            "6",
+            "--dir",
+            temporary,
+            "--kmers",
+            str(toml_config["fastqc"]["kmers"]),
+            R1,
+            R2,
+        ]
+
+    else:
+        R = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
+
+        command = [
+            "fastqc",
+            "-o",
+            output,
+            "--noextract",
+            "--threads",
+            "6",
+            "--dir",
+            temporary,
+            "--kmers",
+            str(toml_config["fastqc"]["kmers"]),
+            R,
+        ]
+    command_str = " ".join(command)
+    print(f">>> {command_str}\n")
+    subprocess.run(command)
 
 
 def bbduk(sample, toml_config):
     title("BBDuk")
-    # print(toml_config["bbduk"])
-    # subprocess.call(["bbduk.sh", "--version"])
+    output = toml_config["general"]["output"] + "/" + sample + "/BBDuk"
+    subprocess.run(["mkdir", "-p", output])
+
+    if toml_config["general"]["reads"] == "PE":
+        I1 = toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz"
+        I2 = toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz"
+        O1 = output + "/" + sample + "_trimmed_R1.fastq.gz"
+        O2 = output + "/" + sample + "_trimmed_R2.fastq.gz"
+        command = [
+            "bbduk.sh",
+            "in1=" + I1,
+            "in=" + I2,
+            "out=" + O1,
+            "out2=" + O2,
+            "stats=" + output + "/contaminants_stats.txt",
+            "threads=" + toml_config["general"]["threads"],
+            "ordered=" + toml_config["bbduk"]["ordered"],
+            "qtrim=" + toml_config["bbduk"]["qtrim"],
+            "trimq=" + toml_config["bbduk"]["trimq"],
+            "minlen=" + toml_config["bbduk"]["minlen"],
+            "mlf=" + toml_config["bbduk"]["mlf"],
+            "minavgquality=" + toml_config["bbduk"]["minavgquality"],
+        ]
+    else:
+        I = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
+        O = output + "/" + sample + "_trimmed.fastq.gz"
+        command = [
+            "bbduk.sh",
+            "in=" + I,
+            "out=" + O,
+            "stats=" + output + "/contaminants_stats.txt",
+            "threads=" + toml_config["general"]["threads"],
+            "ordered=" + toml_config["bbduk"]["ordered"],
+            "qtrim=" + toml_config["bbduk"]["qtrim"],
+            "trimq=" + toml_config["bbduk"]["trimq"],
+            "minlen=" + toml_config["bbduk"]["minlen"],
+            "mlf=" + toml_config["bbduk"]["mlf"],
+            "minavgquality=" + toml_config["bbduk"]["minavgquality"],
+        ]
+    command_str = " ".join(command)
+    print(f">>> {command_str}\n")
+    subprocess.run(command)
 
 
 def star(sample, toml_config):

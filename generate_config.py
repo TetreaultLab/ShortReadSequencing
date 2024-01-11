@@ -47,11 +47,13 @@ if args.trimming == "none":
 elif args.trimming == "bbduk":
     t = """# Trimming
 [bbduk]
-    qtrim  = "r"    # trim the right side only
-    trimq  = 10 # quality-trim to Q10 using the Phred algorithm
-    minlen = 35 # removes reads shorter than minlen
-    mlf    = 50 # discard reads under mlf% of their original length after trimming
-
+    ordered = "f"   # Set to true to output reads in same order as input.
+    kmers = 27  # Kmer length used for finding contaminants.  Contaminants shorter than k will not be found.  k must be at least 1.
+    qtrim = "r"    # Trim read ends to remove bases with quality below trimq. Performed AFTER looking for kmers.  Values: rl (trim both ends), f (neither end), r (right end only), l (left end only), w (sliding window).
+    trimq = 6 # Regions with average quality BELOW this will be trimmed, if qtrim is set to something other than f.
+    minlength = 10 # Reads shorter than this after trimming will be discarded.  Pairs will be discarded if both are shorter.
+    mlf = 0 # (minlengthfraction) Reads shorter than this fraction of original length after trimming will be discarded.
+    minavgquality = 0   # (maq) Reads with average quality (after trimming) below this will be discarded.
 """
 
 else:
@@ -126,8 +128,17 @@ general = """# TOML config file for {}
     memory     = 32 # Total memory needed.
     email      = "" # You e-mail adress to receive notification
 
+# Quality control
+[fastqc]
+    kmers = 7   # Specifies the length of Kmer to look for in the Kmer content module. Specified Kmer length must be between 2 and 10.
+
+[multiqc]
+
 # Sorting and indexing
 [samtools]
+
+# MarkDuplicates
+[markduplicates]
 
 """.format(project_name, project_name)
 
