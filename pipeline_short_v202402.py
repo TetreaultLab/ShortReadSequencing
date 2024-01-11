@@ -2,6 +2,7 @@ import argparse
 import toml
 from datetime import datetime
 import subprocess
+import sys
 
 
 def main():
@@ -30,7 +31,10 @@ def main():
     start_str = ">>> {}-seq pipeline starting for {} at {}.".format(
         toml_config["general"]["sequencing"], sample, start
     )
-    print("=" * len(start_str) + "\n" + start_str + "\n" + "=" * len(start_str))
+    print(
+        "=" * len(start_str) + "\n" + start_str + "\n" + "=" * len(start_str),
+        file=sys.stdout,
+    )
 
     # Creating output and tmp directories for sample
     output = toml_config["general"]["output"] + "/" + sample
@@ -121,14 +125,6 @@ def main():
     # Calling each steps
     for func in function_queue:
         func(sample, toml_config)
-    # reads = toml_config['general']['reads']
-    # fastq = toml_config['general']['fastq']
-
-    # if reads == "PE":
-    #     R1 = fastq + "/" + "" + sample + "_R1.fastq.gz"
-    #     R2 = fastq + "/" + "" + sample + "_R2.fastq.gz"
-    # elif reads == "SE":
-    #     R = fastq + "/" + "" + sample + ".fastq.gz"
 
     end = get_time()
     total_time = end - start
@@ -193,8 +189,8 @@ def fastqc(sample, toml_config):
     subprocess.run(["mkdir", "-p", temporary])
 
     if toml_config["general"]["reads"] == "PE":
-        R1 = toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz"
-        R2 = toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz"
+        Read1 = toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz"
+        Read2 = toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz"
 
         command = [
             "fastqc",
@@ -207,12 +203,12 @@ def fastqc(sample, toml_config):
             temporary,
             "--kmers",
             str(toml_config["fastqc"]["kmers"]),
-            R1,
-            R2,
+            Read1,
+            Read2,
         ]
 
     else:
-        R = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
+        Read = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
 
         command = [
             "fastqc",
@@ -225,7 +221,7 @@ def fastqc(sample, toml_config):
             temporary,
             "--kmers",
             str(toml_config["fastqc"]["kmers"]),
-            R,
+            Read,
         ]
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
@@ -238,16 +234,16 @@ def bbduk(sample, toml_config):
     subprocess.run(["mkdir", "-p", output])
 
     if toml_config["general"]["reads"] == "PE":
-        I1 = toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz"
-        I2 = toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz"
-        O1 = output + "/" + sample + "_trimmed_R1.fastq.gz"
-        O2 = output + "/" + sample + "_trimmed_R2.fastq.gz"
+        I1duk = toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz"
+        I2duk = toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz"
+        O1duk = output + "/" + sample + "_trimmed_R1.fastq.gz"
+        O2duk = output + "/" + sample + "_trimmed_R2.fastq.gz"
         command = [
             "bbduk.sh",
-            "in=" + I1,
-            "in2=" + I2,
-            "out=" + O1,
-            "out2=" + O2,
+            "in=" + I1duk,
+            "in2=" + I2duk,
+            "out=" + O1duk,
+            "out2=" + O2duk,
             "stats=" + output + "/contaminants_stats.txt",
             "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
@@ -259,12 +255,12 @@ def bbduk(sample, toml_config):
             "minavgquality=" + str(toml_config["bbduk"]["minavgquality"]),
         ]
     else:
-        I = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
-        O = output + "/" + sample + "_trimmed.fastq.gz"
+        Iduk = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
+        Oduk = output + "/" + sample + "_trimmed.fastq.gz"
         command = [
             "bbduk.sh",
-            "in=" + I,
-            "out=" + O,
+            "in=" + Iduk,
+            "out=" + Oduk,
             "stats=" + output + "/contaminants_stats.txt",
             "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
@@ -287,10 +283,9 @@ def star(sample, toml_config):
     temporary = toml_config["general"]["temporary"] + "/" + sample + "/star_tmp"
     subprocess.run(["rm", "-r", temporary])
     ref = get_reference(toml_config["general"]["reference"], "star")["index"]
-    print(ref)
 
     if "bbduk" in toml_config.keys():
-        I1 = (
+        I1star = (
             toml_config["general"]["output"]
             + "/"
             + sample
@@ -298,7 +293,7 @@ def star(sample, toml_config):
             + sample
             + "_trimmed_R1.fastq.gz"
         )
-        I2 = (
+        I2star = (
             toml_config["general"]["output"]
             + "/"
             + sample
@@ -306,7 +301,7 @@ def star(sample, toml_config):
             + sample
             + "_trimmed_R2.fastq.gz"
         )
-        I = (
+        Istar = (
             toml_config["general"]["output"]
             + "/"
             + sample
@@ -314,13 +309,13 @@ def star(sample, toml_config):
             + sample
             + "_trimmed.fastq.gz"
         )
-        O = output + "/" + sample + "_trimmed"
+        Ostar = output + "/" + sample + "_trimmed"
 
     else:
-        I1 = toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz"
-        I2 = toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz"
-        I = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
-        O = output + "/" + sample
+        I1star = toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz"
+        I2star = toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz"
+        Istar = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
+        Ostar = output + "/" + sample
 
     if toml_config["general"]["reads"] == "PE":
         command = [
@@ -332,12 +327,12 @@ def star(sample, toml_config):
             "--genomeDir",
             ref,
             "--outFileNamePrefix",
-            O,
+            Ostar,
             "--outTmpDir",
             temporary,
             "--readFilesIn",
-            I1,
-            I2,
+            I1star,
+            I2star,
             "--outSAMtype",
             toml_config["star"]["outSAMtype1"],
             toml_config["star"]["outSAMtype2"],
@@ -360,11 +355,11 @@ def star(sample, toml_config):
             "--genomeDir",
             ref,
             "--outFileNamePrefix",
-            O,
+            Ostar,
             "--outTmpDir",
             temporary,
             "--readFilesIn",
-            I,
+            Istar,
             "--outSAMtype",
             toml_config["star"]["outSAMtype1"],
             toml_config["star"]["outSAMtype2"],
