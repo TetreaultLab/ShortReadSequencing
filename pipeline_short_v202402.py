@@ -47,7 +47,7 @@ def main():
     # Quality control
     vqc = subprocess.check_output(["cat", "../version_fastqc_N.txt"], text=True).strip()
     print(f"\t>>> Quality control: FastQC ({vqc})")
-    function_queue.append(fastqc)
+    # function_queue.append(fastqc)
 
     # Trimming
     if "bbduk" in dict_keys:
@@ -206,34 +206,36 @@ def bbduk(sample, toml_config):
         O2 = output + "/" + sample + "_trimmed_R2.fastq.gz"
         command = [
             "bbduk.sh",
-            "in1=" + I1,
-            "in=" + I2,
+            "in=" + I1,
+            "in2=" + I2,
             "out=" + O1,
             "out2=" + O2,
             "stats=" + output + "/contaminants_stats.txt",
-            "threads=" + toml_config["general"]["threads"],
+            "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
+            "k=" + str(toml_config["bbduk"]["kmers"]),
             "qtrim=" + toml_config["bbduk"]["qtrim"],
-            "trimq=" + toml_config["bbduk"]["trimq"],
-            "minlen=" + toml_config["bbduk"]["minlen"],
-            "mlf=" + toml_config["bbduk"]["mlf"],
-            "minavgquality=" + toml_config["bbduk"]["minavgquality"],
+            "trimq=" + str(toml_config["bbduk"]["trimq"]),
+            "minlength=" + str(toml_config["bbduk"]["minlength"]),
+            "mlf=" + str(toml_config["bbduk"]["mlf"]),
+            "minavgquality=" + str(toml_config["bbduk"]["minavgquality"]),
         ]
     else:
-        I = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
-        O = output + "/" + sample + "_trimmed.fastq.gz"
+        seI = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
+        seO = output + "/" + sample + "_trimmed.fastq.gz"
         command = [
             "bbduk.sh",
-            "in=" + I,
-            "out=" + O,
+            "in=" + seI,
+            "out=" + seO,
             "stats=" + output + "/contaminants_stats.txt",
-            "threads=" + toml_config["general"]["threads"],
+            "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
+            "k=" + str(toml_config["bbduk"]["kmers"]),
             "qtrim=" + toml_config["bbduk"]["qtrim"],
-            "trimq=" + toml_config["bbduk"]["trimq"],
-            "minlen=" + toml_config["bbduk"]["minlen"],
-            "mlf=" + toml_config["bbduk"]["mlf"],
-            "minavgquality=" + toml_config["bbduk"]["minavgquality"],
+            "trimq=" + str(toml_config["bbduk"]["trimq"]),
+            "minlength=" + str(toml_config["bbduk"]["minlength"]),
+            "mlf=" + str(toml_config["bbduk"]["mlf"]),
+            "minavgquality=" + str(toml_config["bbduk"]["minavgquality"]),
         ]
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
