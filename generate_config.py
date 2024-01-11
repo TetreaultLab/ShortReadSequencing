@@ -68,9 +68,12 @@ if args.alignment == "none":
 elif args.alignment == "star":
     a = """# Alignment
 [star]
-    outSAMtype = "BAM SortedByCoordinate"   # output file type
-    quantMode  = "GeneCounts"   # how it counts Gene vs Transcript
-
+    outSAMtype1 = "BAM"   # type of SAM/BAM output
+    outSAMtype2 = "SortedByCoordinate"
+    twopassMode = "None"    # 2-pass mapping mode. None or Basic
+    outWigType = "bedGraph" # type of signal output
+    outSJtype = "Standard"  # type of splice junction output
+    quantMode  = "GeneCounts"   # types of quantification requested. -, TranscriptomeSAM and/or GeneCounts
 """
 elif args.alignment == "bwa":
     a = """# Alignment

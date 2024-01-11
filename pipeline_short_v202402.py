@@ -47,7 +47,7 @@ def main():
     # Quality control
     vqc = subprocess.check_output(["cat", "../version_fastqc_N.txt"], text=True).strip()
     print(f"\t>>> Quality control: FastQC ({vqc})")
-    # function_queue.append(fastqc)
+    function_queue.append(fastqc)
 
     # Trimming
     if "bbduk" in dict_keys:
@@ -147,6 +147,44 @@ def title(message):
     print(f"\n>>> Running {message} [{get_time()}]")
 
 
+def get_reference(ref, tool):
+    index_path = "/lustre03/project/6019267/shared/tools/REFERENCE_GENOMES/"
+    gtf_path = "/lustre03/project/6019267/shared/tools/ANNOTATED_GTF/"
+    reference: {}
+    match ref:
+        case "hg19":
+            reference = {
+                "index": index_path + "human/hg19_GRCh37/index_" + tool,
+                "gtf": gtf_path + "human/hg19_GRCh37/Homo_sapiens.GRCh37.87.gtf.gz",
+            }
+        case "hg38":
+            reference = {
+                "index": index_path + "human/hg38_GRCh38/index_" + tool,
+                "gtf": gtf_path + "human/hg38_GRCh38/Homo_sapiens.GRCh38.110.gtf.gz",
+            }
+
+        case "mm39":
+            reference = {
+                "index": index_path + "mouse/mm39_GRCm39/index_" + tool,
+                "gtf": gtf_path + "mouse/mm39_GRCm39/Mus_musculus.GRCm39.110.gtf.gz",
+            }
+
+        case "ce11":
+            reference = {
+                "index": index_path + "worm/ce11_WBcel235/index_" + tool,
+                "gtf": gtf_path
+                + "worm/ce11_WBcel235/Caenorhabditis_elegans.WBcel235.110.gtf.gz",
+            }
+
+        case "danRer11":
+            reference = {
+                "index": index_path + "zebrafish/danRer11_GRCz11/index_" + tool,
+                "gtf": gtf_path
+                + "zebrafish/danRer11_GRCz11/Danio_rerio.GRCz11.110.gtf.gz",
+            }
+    return reference
+
+
 def fastqc(sample, toml_config):
     title("FastQC")
     output = toml_config["general"]["output"] + "/" + sample + "/FastQC"
@@ -221,12 +259,12 @@ def bbduk(sample, toml_config):
             "minavgquality=" + str(toml_config["bbduk"]["minavgquality"]),
         ]
     else:
-        seI = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
-        seO = output + "/" + sample + "_trimmed.fastq.gz"
+        I = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
+        O = output + "/" + sample + "_trimmed.fastq.gz"
         command = [
             "bbduk.sh",
-            "in=" + seI,
-            "out=" + seO,
+            "in=" + I,
+            "out=" + O,
             "stats=" + output + "/contaminants_stats.txt",
             "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
@@ -244,6 +282,104 @@ def bbduk(sample, toml_config):
 
 def star(sample, toml_config):
     title("STAR")
+    output = toml_config["general"]["output"] + "/" + sample + "/STAR"
+    subprocess.run(["mkdir", "-p", output])
+    temporary = toml_config["general"]["temporary"] + "/" + sample + "/star_tmp"
+    subprocess.run(["rm", "-r", temporary])
+    ref = get_reference(toml_config["general"]["reference"], "star")["index"]
+    print(ref)
+
+    if "bbduk" in toml_config.keys():
+        I1 = (
+            toml_config["general"]["output"]
+            + "/"
+            + sample
+            + "/BBDuk/"
+            + sample
+            + "_trimmed_R1.fastq.gz"
+        )
+        I2 = (
+            toml_config["general"]["output"]
+            + "/"
+            + sample
+            + "/BBDuk/"
+            + sample
+            + "_trimmed_R2.fastq.gz"
+        )
+        I = (
+            toml_config["general"]["output"]
+            + "/"
+            + sample
+            + "/BBDuk/"
+            + sample
+            + "_trimmed.fastq.gz"
+        )
+        O = output + "/" + sample + "_trimmed"
+
+    else:
+        I1 = toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz"
+        I2 = toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz"
+        I = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
+        O = output + "/" + sample
+
+    if toml_config["general"]["reads"] == "PE":
+        command = [
+            "STAR",
+            "--runMode",
+            "alignReads",
+            "--runThreadN",
+            str(toml_config["general"]["threads"]),
+            "--genomeDir",
+            ref,
+            "--outFileNamePrefix",
+            O,
+            "--outTmpDir",
+            temporary,
+            "--readFilesIn",
+            I1,
+            I2,
+            "--outSAMtype",
+            toml_config["star"]["outSAMtype1"],
+            toml_config["star"]["outSAMtype2"],
+            "--twopassMode",
+            toml_config["star"]["twopassMode"],
+            "--outWigType",
+            toml_config["star"]["outWigType"],
+            "--outSJtype",
+            toml_config["star"]["outSJtype"],
+            "--quantMode",
+            toml_config["star"]["quantMode"],
+        ]
+    else:
+        command = [
+            "STAR",
+            "--runMode",
+            "alignReads",
+            "--runThreadN",
+            str(toml_config["general"]["threads"]),
+            "--genomeDir",
+            ref,
+            "--outFileNamePrefix",
+            O,
+            "--outTmpDir",
+            temporary,
+            "--readFilesIn",
+            I,
+            "--outSAMtype",
+            toml_config["star"]["outSAMtype1"],
+            toml_config["star"]["outSAMtype2"],
+            "--twopassMode",
+            toml_config["star"]["twopassMode"],
+            "--outWigType",
+            toml_config["star"]["outWigType"],
+            "--outSJtype",
+            toml_config["star"]["outSJtype"],
+            "--quantMode",
+            toml_config["star"]["quantMode"],
+        ]
+    command_str = " ".join(command)
+    print(f">>> {command_str}\n")
+    subprocess.run(command)
 
 
 def bwa(sample, toml_config):
