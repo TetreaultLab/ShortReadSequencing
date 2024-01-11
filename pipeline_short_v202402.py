@@ -143,6 +143,42 @@ def title(message):
     print(f"\n>>> Running {message} [{get_time()}]")
 
 
+def get_file_align(toml_config, output, sample):
+    files = {}
+    if "bbduk" in toml_config.keys():
+        files = {
+            "I1align": toml_config["general"]["output"]
+            + "/"
+            + sample
+            + "/BBDuk/"
+            + sample
+            + "_trimmed_R1.fastq.gz",
+            "I2align": toml_config["general"]["output"]
+            + "/"
+            + sample
+            + "/BBDuk/"
+            + sample
+            + "_trimmed_R2.fastq.gz",
+            "Ialign": toml_config["general"]["output"]
+            + "/"
+            + sample
+            + "/BBDuk/"
+            + sample
+            + "_trimmed.fastq.gz",
+            "Oalign": output + "/" + sample + "_trimmed",
+        }
+
+    else:
+        files = {
+            "I1align": toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz",
+            "I2align": toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz",
+            "Ialign": toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz",
+            "Oalign": output + "/" + sample,
+        }
+
+    return files
+
+
 def get_reference(ref, tool):
     index_path = "/lustre03/project/6019267/shared/tools/REFERENCE_GENOMES/"
     gtf_path = "/lustre03/project/6019267/shared/tools/ANNOTATED_GTF/"
@@ -183,8 +219,10 @@ def get_reference(ref, tool):
 
 def fastqc(sample, toml_config):
     title("FastQC")
+
     output = toml_config["general"]["output"] + "/" + sample + "/FastQC"
     subprocess.run(["mkdir", "-p", output])
+
     temporary = toml_config["general"]["temporary"] + "/" + sample
     subprocess.run(["mkdir", "-p", temporary])
 
@@ -230,6 +268,7 @@ def fastqc(sample, toml_config):
 
 def bbduk(sample, toml_config):
     title("BBDuk")
+
     output = toml_config["general"]["output"] + "/" + sample + "/BBDuk"
     subprocess.run(["mkdir", "-p", output])
 
@@ -280,42 +319,17 @@ def star(sample, toml_config):
     title("STAR")
     output = toml_config["general"]["output"] + "/" + sample + "/STAR"
     subprocess.run(["mkdir", "-p", output])
+
     temporary = toml_config["general"]["temporary"] + "/" + sample + "/star_tmp"
     subprocess.run(["rm", "-r", temporary])
+
     ref = get_reference(toml_config["general"]["reference"], "star")["index"]
 
-    if "bbduk" in toml_config.keys():
-        I1star = (
-            toml_config["general"]["output"]
-            + "/"
-            + sample
-            + "/BBDuk/"
-            + sample
-            + "_trimmed_R1.fastq.gz"
-        )
-        I2star = (
-            toml_config["general"]["output"]
-            + "/"
-            + sample
-            + "/BBDuk/"
-            + sample
-            + "_trimmed_R2.fastq.gz"
-        )
-        Istar = (
-            toml_config["general"]["output"]
-            + "/"
-            + sample
-            + "/BBDuk/"
-            + sample
-            + "_trimmed.fastq.gz"
-        )
-        Ostar = output + "/" + sample + "_trimmed"
-
-    else:
-        I1star = toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz"
-        I2star = toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz"
-        Istar = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
-        Ostar = output + "/" + sample
+    files = get_file_align(toml_config, output, sample)
+    I1align = files["I1align"]
+    I2align = files["I2align"]
+    Ialign = files["Ialign"]
+    Oalign = files["Oalign"]
 
     if toml_config["general"]["reads"] == "PE":
         command = [
@@ -327,12 +341,14 @@ def star(sample, toml_config):
             "--genomeDir",
             ref,
             "--outFileNamePrefix",
-            Ostar,
+            Oalign,
             "--outTmpDir",
             temporary,
+            "--readFilesCommand",
+            "zcat",
             "--readFilesIn",
-            I1star,
-            I2star,
+            I1align,
+            I2align,
             "--outSAMtype",
             toml_config["star"]["outSAMtype1"],
             toml_config["star"]["outSAMtype2"],
@@ -355,11 +371,13 @@ def star(sample, toml_config):
             "--genomeDir",
             ref,
             "--outFileNamePrefix",
-            Ostar,
+            Oalign,
             "--outTmpDir",
             temporary,
+            "--readFilesCommand",
+            "zcat",
             "--readFilesIn",
-            Istar,
+            Ialign,
             "--outSAMtype",
             toml_config["star"]["outSAMtype1"],
             toml_config["star"]["outSAMtype2"],
@@ -379,6 +397,25 @@ def star(sample, toml_config):
 
 def bwa(sample, toml_config):
     title("BWA-MEM2")
+
+    output = toml_config["general"]["output"] + "/" + sample + "/BWA-MEM2"
+    subprocess.run(["mkdir", "-p", output])
+
+    ref = get_reference(toml_config["general"]["reference"], "star")["index"]
+
+    files = get_file_align(toml_config, output, sample)
+    I1align = files["I1align"]
+    I2align = files["I2align"]
+    Ialign = files["Ialign"]
+    Oalign = files["Oalign"]
+
+    if toml_config["general"]["reads"] == "PE":
+        command = []
+    else:
+        command = []
+    command_str = " ".join(command)
+    print(f">>> {command_str}\n")
+    subprocess.run(command)
 
 
 def salmon(sample, toml_config):
