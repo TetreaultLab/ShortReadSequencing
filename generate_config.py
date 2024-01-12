@@ -143,8 +143,10 @@ general = """# TOML config file for {}
 
 # MarkDuplicates
 [markduplicates]
+    index = "true"    # Whether to create an index when writing VCF or coordinate sorted BAM output.
+    strategy = "SUM_OF_BASE_QUALITIES"   # The scoring strategy for choosing the non-duplicate among candidates.  Default value: SUM_OF_BASE_QUALITIES. Possible values: {SUM_OF_BASE_QUALITIES, TOTAL_MAPPED_REFERENCE_LENGTH, RANDOM}
 
-""".format(project_name, project_name)
+""".format(project_name, project_name)  # noqa: F524
 
 toml_config = general + "\n" + t + "\n" + a + "\n" + p + "\n" + q
 print(toml_config)
