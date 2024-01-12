@@ -51,7 +51,7 @@ def main():
     # Quality control
     vqc = subprocess.check_output(["cat", "../version_fastqc_N.txt"], text=True).strip()
     print(f"\t>>> Quality control: FastQC ({vqc})")
-    function_queue.append(fastqc)
+    # function_queue.append(fastqc)
 
     # Trimming
     if "bbduk" in dict_keys:
@@ -59,7 +59,7 @@ def main():
             ["cat", "../version_bbduk_N.txt"], text=True
         ).strip()
         print(f"\t>>> Trimming: BBDuk (v{vt})")
-        function_queue.append(bbduk)
+        # function_queue.append(bbduk)
     else:
         print("\t>>> Trimming: none")
 
@@ -69,7 +69,7 @@ def main():
             ["cat", "../version_star_N.txt"], text=True
         ).strip()
         print(f"\t>>> Alignment: STAR (v{va})")
-        function_queue.append(star)
+        # function_queue.append(star)
     elif "bwa" in dict_keys:
         va = subprocess.check_output(
             ["cat", "../version_bwa-mem2_N.txt"], text=True
@@ -79,15 +79,15 @@ def main():
     else:
         print("\t>>> Alignment: none")
 
-    # Pseudoalignment
+    # PseudO_alignedment
     if "salmon" in dict_keys:
         vp = subprocess.check_output(
             ["cat", "../version_salmon_N.txt"], text=True
         ).strip()
-        print(f"\t>>> Pseudoalignment: Salmon (v{vp})")
+        print(f"\t>>> PseudO_alignedment: Salmon (v{vp})")
         function_queue.append(salmon)
     else:
-        print("\t>>> Pseudoalignment: none")
+        print("\t>>> PseudO_alignedment: none")
 
     # Sorting and indexing
     vsi = subprocess.check_output(
@@ -143,37 +143,43 @@ def title(message):
     print(f"\n>>> Running {message} [{get_time()}]")
 
 
-def get_file_align(toml_config, output, sample):
+def get_file_trimmed(toml_config, output, sample):
     files = {}
     if "bbduk" in toml_config.keys():
         files = {
-            "I1align": toml_config["general"]["output"]
+            "I1_toAlign": toml_config["general"]["output"]
             + "/"
             + sample
             + "/BBDuk/"
             + sample
             + "_trimmed_R1.fastq.gz",
-            "I2align": toml_config["general"]["output"]
+            "I2_toAlign": toml_config["general"]["output"]
             + "/"
             + sample
             + "/BBDuk/"
             + sample
             + "_trimmed_R2.fastq.gz",
-            "Ialign": toml_config["general"]["output"]
+            "I_toAlign": toml_config["general"]["output"]
             + "/"
             + sample
             + "/BBDuk/"
             + sample
             + "_trimmed.fastq.gz",
-            "Oalign": output + "/" + sample + "_trimmed",
+            "O_aligned": output + "/" + sample + "_trimmed_",
         }
 
     else:
         files = {
-            "I1align": toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz",
-            "I2align": toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz",
-            "Ialign": toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz",
-            "Oalign": output + "/" + sample,
+            "I1_toAlign": toml_config["general"]["fastq"]
+            + "/"
+            + sample
+            + "_R1.fastq.gz",
+            "I2_toAlign": toml_config["general"]["fastq"]
+            + "/"
+            + sample
+            + "_R2.fastq.gz",
+            "I_toAlign": toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz",
+            "O_aligned": output + "/" + sample + "_",
         }
 
     return files
@@ -325,11 +331,11 @@ def star(sample, toml_config):
 
     ref = get_reference(toml_config["general"]["reference"], "star")["index"]
 
-    files = get_file_align(toml_config, output, sample)
-    I1align = files["I1align"]
-    I2align = files["I2align"]
-    Ialign = files["Ialign"]
-    Oalign = files["Oalign"]
+    files = get_file_trimmed(toml_config, output, sample)
+    I1_toAlign = files["I1_toAlign"]
+    I2_toAlign = files["I2_toAlign"]
+    I_toAlign = files["I_toAlign"]
+    O_aligned = files["O_aligned"]
 
     if toml_config["general"]["reads"] == "PE":
         command = [
@@ -341,14 +347,14 @@ def star(sample, toml_config):
             "--genomeDir",
             ref,
             "--outFileNamePrefix",
-            Oalign,
+            O_aligned,
             "--outTmpDir",
             temporary,
             "--readFilesCommand",
             "zcat",
             "--readFilesIn",
-            I1align,
-            I2align,
+            I1_toAlign,
+            I2_toAlign,
             "--outSAMtype",
             toml_config["star"]["outSAMtype1"],
             toml_config["star"]["outSAMtype2"],
@@ -371,13 +377,13 @@ def star(sample, toml_config):
             "--genomeDir",
             ref,
             "--outFileNamePrefix",
-            Oalign,
+            O_aligned,
             "--outTmpDir",
             temporary,
             "--readFilesCommand",
             "zcat",
             "--readFilesIn",
-            Ialign,
+            I_toAlign,
             "--outSAMtype",
             toml_config["star"]["outSAMtype1"],
             toml_config["star"]["outSAMtype2"],
@@ -385,6 +391,8 @@ def star(sample, toml_config):
             toml_config["star"]["twopassMode"],
             "--outWigType",
             toml_config["star"]["outWigType"],
+            "--outWigStrand",
+            toml_config["star"]["outWigStrand"],
             "--outSJtype",
             toml_config["star"]["outSJtype"],
             "--quantMode",
@@ -393,6 +401,9 @@ def star(sample, toml_config):
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
     subprocess.run(command)
+
+    # rename BAM file
+    subprocess.run(["mv", sample + "*.bam", sample + ".bam"])
 
 
 def bwa(sample, toml_config):
@@ -403,11 +414,11 @@ def bwa(sample, toml_config):
 
     ref = get_reference(toml_config["general"]["reference"], "star")["index"]
 
-    files = get_file_align(toml_config, output, sample)
-    I1align = files["I1align"]
-    I2align = files["I2align"]
-    Ialign = files["Ialign"]
-    Oalign = files["Oalign"]
+    files = get_file_trimmed(toml_config, output, sample)
+    I1_toAlign = files["I1_toAlign"]
+    I2_toAlign = files["I2_toAlign"]
+    I_toAlign = files["I_toAlign"]
+    O_aligned = files["O_aligned"]
 
     if toml_config["general"]["reads"] == "PE":
         command = []
@@ -420,6 +431,65 @@ def bwa(sample, toml_config):
 
 def salmon(sample, toml_config):
     title("Salmon")
+
+    output = toml_config["general"]["output"] + "/" + sample + "/Salmon"
+    subprocess.run(["mkdir", "-p", output])
+
+    temporary = toml_config["general"]["temporary"] + "/" + sample + "/salmon_tmp"
+    subprocess.run(["mkdir", "-p", temporary])
+
+    ref = get_reference(toml_config["general"]["reference"], "salmon")["index"]
+    gtf = get_reference(toml_config["general"]["reference"], "salmon")["gtf"]
+
+    files = get_file_trimmed(toml_config, output, sample)
+    I1_toAlign = files["I1_toAlign"]
+    I2_toAlign = files["I2_toAlign"]
+    I_toAlign = files["I_toAlign"]
+
+    if toml_config["general"]["reads"] == "PE":
+        command = [
+            "salmon",
+            "quant",
+            "--threads",
+            str(toml_config["general"]["threads"]),
+            "--auxDir",
+            temporary,
+            "--index",
+            ref,
+            "--geneMap",
+            gtf,
+            "--minScoreFraction",
+            str(toml_config["salmon"]["minScoreFraction"]),
+            "--mates1",
+            I1_toAlign,
+            "--mates2",
+            I2_toAlign,
+            "--output",
+            output,
+        ]
+    else:
+        command = [
+            "salmon",
+            "quant",
+            "--threads",
+            str(toml_config["general"]["threads"]),
+            "--auxDir",
+            temporary,
+            "--index",
+            ref,
+            "--geneMap",
+            gtf,
+            "--minScoreFraction",
+            str(toml_config["salmon"]["minScoreFraction"]),
+            "--unmatedReads",
+            I_toAlign,
+            "--output",
+            output,
+        ]
+
+    command_str = " ".join(command)
+    print(f">>> {command_str}\n")
+    subprocess.run(command)
 
 
 def samtools(sample, toml_config):

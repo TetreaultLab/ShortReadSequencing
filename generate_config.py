@@ -72,6 +72,7 @@ elif args.alignment == "star":
     outSAMtype2 = "SortedByCoordinate"
     twopassMode = "None"    # 2-pass mapping mode. None or Basic
     outWigType = "bedGraph" # type of signal output
+    outWigStrand = "Unstranded"  # strandedness of wiggle/bedGraph output
     outSJtype = "Standard"  # type of splice junction output
     quantMode  = "GeneCounts"   # types of quantification requested. -, TranscriptomeSAM and/or GeneCounts
 """
@@ -92,7 +93,7 @@ if args.pseudo == "none":
 elif args.pseudo == "salmon":
     p = """# Pseudoalignment
 [salmon]
-
+    minScoreFraction = 0.65	# The fraction of the optimal possible alignment score that a mapping must achieve in order to be considered "valid" --- should be in (0,1]. Salmon Default 0.65 and Alevin Default  0.87
 """
 else:
     print(
