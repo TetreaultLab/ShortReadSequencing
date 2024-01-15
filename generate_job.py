@@ -11,6 +11,9 @@ parser.add_argument("--sample", type=str, required=True, help="Sample name.")
 parser.add_argument(
     "--config", type=str, required=True, help="Project config file, including path."
 )
+parser.add_argument(
+    "--launch", type=bool, required=True, help="Decide if it launches the job for sample or not. True will automatically launch the slurm file. False will only create the file"
+)
 
 args = parser.parse_args()
 
@@ -64,19 +67,6 @@ python -u /lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/pipeline_short
 """.format(
     cores, memory, time, sample_name, sample_name, email, sample_name, path_config
 )
-
-# slurm = """#!/bin/sh
-# #
-# ### Load environnment
-# #
-# module load python/3.10.2 StdEnv/2020 fastqc/0.11.9 bbmap/38.86 star/2.7.9a bwa-mem2/2.2.1 gcc/9.3.0 openmpi/4.0.3 salmon/1.4.0 subread/2.0.3 samtools/1.17
-# source /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/bin/activate
-# #
-# ### Launch script
-# #
-# python /lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/pipeline_short_v202402.py --sample {0} --config {1}
-# #
-# """.format(sample_name, path_config)  # noqa: F524
 
 print(slurm)
 print(slurm, file=open(work_dir + "/" + sample_name + ".slurm", "w"))

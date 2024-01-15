@@ -121,16 +121,21 @@ general = """# TOML config file for {}
 
 # Required information
 [general]
-    project     = "{}"   # Choose a project name. Should not start with a number.
-    fastq      = "/path/to/raw/data"   # Path to raw fastq.gz files. Ex: /lustre03/project/6019267/shared/data/<project>.
-    output     = "/path/to/output" # Preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/output/.
-    temporary  = "/path/to/output/tmp" # Preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/tmp/. 
+    project = "{}"   # Choose a project name. Should not start with a number.
+    fastq = "/path/to/raw/data"   # Path to raw fastq.gz files. Ex: /lustre03/project/6019267/shared/data/<project>.
+    output = "/path/to/output" # Preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/output/.
+    temporary = "/path/to/output/tmp" # Preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/tmp/. 
     sequencing = "" # Type of sequencing. Short read RNA or DNA. Possible values: ["RNA", "Exome", "Genome"].
-    reads      = "" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].
-    reference  = "" # Possible values: Human: ["hg19", "hg38"]. Mouse: ["mm39"]. Worm: ["ce11"]. Zebrafish: ["danRer11"].
-    threads    = 8  # Number of threads.
-    memory     = 32 # Total memory needed.
-    email      = "" # You e-mail adress to receive notification
+    reads = "" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].
+    reference = "" # Possible values: Human: ["hg19", "hg38"]. Mouse: ["mm39"]. Worm: ["ce11"]. Zebrafish: ["danRer11"].
+    trimming = "{}"
+    alignment = "{}"
+    pseudo = "{}"
+    quantification = "{}"
+    threads = 8  # Number of threads.
+    memory = 32 # Total memory needed.
+    email = "" # You e-mail adress to receive notification
+    
 
 # Quality control
 [fastqc]
@@ -146,7 +151,7 @@ general = """# TOML config file for {}
     index = "true"    # Whether to create an index when writing VCF or coordinate sorted BAM output.
     strategy = "SUM_OF_BASE_QUALITIES"   # The scoring strategy for choosing the non-duplicate among candidates.  Default value: SUM_OF_BASE_QUALITIES. Possible values: {SUM_OF_BASE_QUALITIES, TOTAL_MAPPED_REFERENCE_LENGTH, RANDOM}
 
-""".format(project_name, project_name)  # noqa: F524
+""".format(project_name, project_name, args.trimming, args.alignment, args.pseudo, args.quantification)  # noqa: F524
 
 toml_config = general + "\n" + t + "\n" + a + "\n" + p + "\n" + q
 print(toml_config)

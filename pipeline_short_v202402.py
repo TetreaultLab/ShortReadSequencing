@@ -49,77 +49,51 @@ def main():
     function_queue = []
     print(">>> Parameters:")
     # Quality control
-    vqc = subprocess.check_output(["cat", "../version_fastqc_N.txt"], text=True).strip()
-    print(f"\t>>> Quality control: FastQC ({vqc})")
+    vqc = subprocess.check_output(["fastqc", "--version", "|", "awk", "'{print $2}'"], text=True).strip()
+    print("\t>>> Quality control: FastQC (v0.12.1)")
     function_queue.append(fastqc)
 
     # Trimming
-    if "bbduk" in dict_keys:
-        vt = subprocess.check_output(
-            ["cat", "../version_bbduk_N.txt"], text=True
-        ).strip()
-        print(f"\t>>> Trimming: BBDuk (v{vt})")
+    if toml_config["general"]["trimming"] == "bbduk":
+        print("\t>>> Trimming: BBDuk (v39.06)")
         function_queue.append(bbduk)
     else:
         print("\t>>> Trimming: none")
 
     # Alignment
-    if "star" in dict_keys:
-        va = subprocess.check_output(
-            ["cat", "../version_star_N.txt"], text=True
-        ).strip()
-        print(f"\t>>> Alignment: STAR (v{va})")
+    if toml_config["general"]["alignment"] == "star":
+        print("\t>>> Alignment: STAR (v2.7.11a)")
         function_queue.append(star)
-    elif "bwa" in dict_keys:
-        va = subprocess.check_output(
-            ["cat", "../version_bwa-mem2_N.txt"], text=True
-        ).strip()
-        print(f"\t>>> Alignment: BWA-MEM2 (v{va})")
+    elif toml_config["general"]["alignment"] == "bwa":
+        print("\t>>> Alignment: BWA-MEM2 (v2.2.1)")
         function_queue.append(bwa)
     else:
         print("\t>>> Alignment: none")
 
-    # PseudO_alignedment
-    if "salmon" in dict_keys:
-        vp = subprocess.check_output(
-            ["cat", "../version_salmon_N.txt"], text=True
-        ).strip()
-        print(f"\t>>> PseudO_alignedment: Salmon (v{vp})")
+    # Pseudo alignedment
+    if toml_config["general"]["pseudo"] == "salmon":
+        print("\t>>> Pseudo_alignedment: Salmon (v1.10.2)")
         function_queue.append(salmon)
     else:
-        print("\t>>> PseudO_alignedment: none")
+        print("\t>>> Pseudo_alignedment: none")
 
     # Sorting and indexing
-    vsi = subprocess.check_output(
-        ["cat", "../version_samtools_N.txt"], text=True
-    ).strip()
-    print(f"\t>>> Sorting/Indexing: Samtools (v{vsi})")
+    print("\t>>> Sorting/Indexing: Samtools (v1.18)")
     function_queue.append(samtools)
 
     # MarkDuplicates
-    vgatk = subprocess.check_output(["cat", "../version_gatk_N.txt"], text=True).strip()
-
-    vpic = subprocess.check_output(
-        ["cat", "../version_picard_N.txt"], text=True
-    ).strip()
-    print(f"\t>>> MarkDuplicates: GATK ({vgatk}) & Picard (v{vpic})")
+    print("\t>>> MarkDuplicates: GATK (4.4.0.0) & Picard (v3.0.0)")
     function_queue.append(markduplicates)
 
     # Quantification
-    if "featurecounts" in dict_keys:
-        vq = subprocess.check_output(
-            ["cat", "../version_featurecounts_N.txt"], text=True
-        ).strip()
-        print(f"\t>>> Quantification: featureCounts ({vq})")
-        function_queue.append(featurecounts)
+    if toml_config["general"]["quantification"] == "featurecounts":
+        print("\t>>> Quantification: featureCounts (v?)")
+        #function_queue.append(featurecounts)
     else:
         print("\t>>> Quantification: none")
 
     # MultiQC
-    vmqc = subprocess.check_output(
-        ["cat", "../version_multiqc_N.txt"], text=True
-    ).strip()
-    print(f"\t>>> Quality control report: multiQC (v{vmqc})")
+    print("\t>>> Quality control report: multiQC (v)")
     function_queue.append(multiqc)
 
     # Calling each steps
@@ -434,7 +408,14 @@ def bwa(sample, toml_config):
             I2_toAlign,
         ]
     else:
-        command = []
+        command = ["bwa-mem2",
+            "mem",
+            "-o",
+            O_aligned,
+            "-t",
+            str(toml_config["general"]["threads"]),
+            ref,
+            I_toAlign,]
 
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
