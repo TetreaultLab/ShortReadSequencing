@@ -44,12 +44,12 @@ def main():
     print(f"\n>>> Output saved to '{output}'\n")
 
     # Get tools and versions
-    dict_keys = toml_config.keys()
-
     function_queue = []
     print(">>> Parameters:")
     # Quality control
-    vqc = subprocess.check_output(["fastqc", "--version", "|", "awk", "'{print $2}'"], text=True).strip()
+    vqc = subprocess.check_output(
+        ["fastqc", "--version", "|", "awk", "'{print $2}'"], text=True
+    ).strip()
     print("\t>>> Quality control: FastQC (v0.12.1)")
     function_queue.append(fastqc)
 
@@ -88,7 +88,7 @@ def main():
     # Quantification
     if toml_config["general"]["quantification"] == "featurecounts":
         print("\t>>> Quantification: featureCounts (v?)")
-        #function_queue.append(featurecounts)
+        # function_queue.append(featurecounts)
     else:
         print("\t>>> Quantification: none")
 
@@ -119,7 +119,7 @@ def title(message):
 
 def get_file_trimmed(toml_config, output, sample):
     files = {}
-    if "bbduk" in toml_config.keys():
+    if toml_config["general"]["trimming"] == "bbduk":
         files = {
             "I1_toAlign": toml_config["general"]["output"]
             + "/"
@@ -378,7 +378,12 @@ def star(sample, toml_config):
     subprocess.run(command)
 
     # rename BAM file
-    subprocess.run(["mv", sample + "*.bam", sample + ".bam"])
+    subprocess.run(["mv", sample + "_Aligned.sortedByCoord.out.bam", sample + ".bam"])
+    subprocess.run(
+        ["mv", sample + "_Log.final.out", sample + "_summary_mapping_stats.out"]
+    )
+    subprocess.run(["mv", sample + "_Log.out", sample + "_run_information.out"])
+    subprocess.run(["rm", sample + "_Log.progress.out"])
 
 
 def bwa(sample, toml_config):
@@ -408,14 +413,16 @@ def bwa(sample, toml_config):
             I2_toAlign,
         ]
     else:
-        command = ["bwa-mem2",
+        command = [
+            "bwa-mem2",
             "mem",
             "-o",
             O_aligned,
             "-t",
             str(toml_config["general"]["threads"]),
             ref,
-            I_toAlign,]
+            I_toAlign,
+        ]
 
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
@@ -555,12 +562,43 @@ def markduplicates(sample, toml_config):
 def featurecounts(sample, toml_config):
     title("FeatureCounts")
 
+    output = toml_config["general"]["output"] + "/" + sample + "/FeatureCounts"
+    subprocess.run(["mkdir", "-p", output])
+
 
 def multiqc(sample, toml_config):
     title("MutliQC")
-
-    output = toml_config["general"]["output"] + "/" + sample + "/QC/MultiQC"
+    input = toml_config["general"]["output"] + "/" + sample + "/"
+    output = toml_config["general"]["output"] + "/" + sample + "/QC/multiQC"
     subprocess.run(["mkdir", "-p", output])
+
+    paths = []
+    paths.append(input + "QC/fastQC/")
+    if toml_config["general"]["trimming"] != "none":
+        paths.append(input + "Trimmed/")
+    if toml_config["general"]["alignment"] != "none":
+        paths.append(input + "Aligned/")
+    if toml_config["general"]["pseudo"] != "none":
+        paths.append(input + "Salmon/")
+    if toml_config["general"]["quantification"] != "none":
+        paths.append(input + "FeatureCounts/")
+    paths.append(input + "Samtools/")
+    paths.append(input + "MarkDuplicates/")
+
+    print(paths)
+    print(paths.join(" "))
+
+    subprocess.run(
+        [
+            "multiqc",
+            paths.join(" "),
+            "--force",
+            "--filename",
+            sample + "_multiqc_report",
+            "--outdir",
+            output,
+        ]
+    )
 
 
 if __name__ == "__main__":

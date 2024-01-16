@@ -71,8 +71,6 @@ elif args.alignment == "star":
     outSAMtype1 = "BAM"   # type of SAM/BAM output
     outSAMtype2 = "SortedByCoordinate"
     twopassMode = "None"    # 2-pass mapping mode. None or Basic
-    outWigType = "bedGraph" # type of signal output
-    outWigStrand = "Unstranded"  # strandedness of wiggle/bedGraph output
     outSJtype = "Standard"  # type of splice junction output
     quantMode  = "GeneCounts"   # types of quantification requested. -, TranscriptomeSAM and/or GeneCounts
 """
@@ -83,7 +81,7 @@ elif args.alignment == "bwa":
 """
 else:
     print(
-        f"'{args.alignment}' is not a valid alignment option. Check generate_config .py --help for options."
+        f"'{args.alignment}' is not a valid alignment option. Check generate_config.py --help for options."
     )
     exit()
 
@@ -93,7 +91,7 @@ if args.pseudo == "none":
 elif args.pseudo == "salmon":
     p = """# Pseudoalignment
 [salmon]
-    minScoreFraction = 0.65	# The fraction of the optimal possible alignment score that a mapping must achieve in order to be considered "valid" --- should be in (0,1]. Salmon Default 0.65 and Alevin Default  0.87
+    minScoreFraction = 0.65	# The fraction of the optimal possible alignment score that a mapping must achieve in order to be considered "valid" --- should be in [0,1]. Salmon Default 0.65 and Alevin Default 0.87.
 """
 else:
     print(
@@ -117,21 +115,21 @@ else:
 
 
 # Create config file
-general = """# TOML config file for {}
+general = """# TOML config file for {0}
 
 # Required information
 [general]
-    project = "{}"   # Choose a project name. Should not start with a number.
+    project = "{1}"   # Choose a project name. Should not start with a number.
     fastq = "/path/to/raw/data"   # Path to raw fastq.gz files. Ex: /lustre03/project/6019267/shared/data/<project>.
     output = "/path/to/output" # Preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/output/.
     temporary = "/path/to/output/tmp" # Preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/tmp/. 
     sequencing = "" # Type of sequencing. Short read RNA or DNA. Possible values: ["RNA", "Exome", "Genome"].
     reads = "" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].
     reference = "" # Possible values: Human: ["hg19", "hg38"]. Mouse: ["mm39"]. Worm: ["ce11"]. Zebrafish: ["danRer11"].
-    trimming = "{}"
-    alignment = "{}"
-    pseudo = "{}"
-    quantification = "{}"
+    trimming = "{2}"
+    alignment = "{3}"
+    pseudo = "{4}"
+    quantification = "{5}"
     threads = 8  # Number of threads.
     memory = 32 # Total memory needed.
     email = "" # You e-mail adress to receive notification
@@ -149,11 +147,17 @@ general = """# TOML config file for {}
 # MarkDuplicates
 [markduplicates]
     index = "true"    # Whether to create an index when writing VCF or coordinate sorted BAM output.
-    strategy = "SUM_OF_BASE_QUALITIES"   # The scoring strategy for choosing the non-duplicate among candidates.  Default value: SUM_OF_BASE_QUALITIES. Possible values: {SUM_OF_BASE_QUALITIES, TOTAL_MAPPED_REFERENCE_LENGTH, RANDOM}
+    strategy = "SUM_OF_BASE_QUALITIES"   # The scoring strategy for choosing the non-duplicate among candidates.  Default value: SUM_OF_BASE_QUALITIES. Possible values: [SUM_OF_BASE_QUALITIES, TOTAL_MAPPED_REFERENCE_LENGTH, RANDOM].
 
-""".format(project_name, project_name, args.trimming, args.alignment, args.pseudo, args.quantification)  # noqa: F524
+""".format(
+    project_name,
+    project_name,
+    args.trimming,
+    args.alignment,
+    args.pseudo,
+    args.quantification,
+)  # noqa: F524
 
 toml_config = general + "\n" + t + "\n" + a + "\n" + p + "\n" + q
-print(toml_config)
 
 print(toml_config, file=open(work_dir + "/" + project_name + ".config.toml", "w"))

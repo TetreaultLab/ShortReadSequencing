@@ -1,6 +1,7 @@
 import argparse
 import toml
 import os
+import subprocess
 
 parser = argparse.ArgumentParser(
     prog="GenerateJob",
@@ -12,7 +13,10 @@ parser.add_argument(
     "--config", type=str, required=True, help="Project config file, including path."
 )
 parser.add_argument(
-    "--launch", type=bool, required=True, help="Decide if it launches the job for sample or not. True will automatically launch the slurm file. False will only create the file"
+    "--launch",
+    action="store_true",
+    required=False,
+    help="Decide if it launches the job for sample or not. True will automatically launch the slurm file. False will only create the file",
 )
 
 args = parser.parse_args()
@@ -70,3 +74,6 @@ python -u /lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/pipeline_short
 
 print(slurm)
 print(slurm, file=open(work_dir + "/" + sample_name + ".slurm", "w"))
+
+if args.launch is True:
+    subprocess.run(["sbatch", work_dir + "/" + sample_name + ".slurm"])
