@@ -216,7 +216,7 @@ def fastqc(sample, toml_config):
             output,
             "--noextract",
             "--threads",
-            "6",
+            "2",
             "--dir",
             temporary,
             "--kmers",
@@ -335,8 +335,6 @@ def star(sample, toml_config):
             toml_config["star"]["outSAMtype2"],
             "--twopassMode",
             toml_config["star"]["twopassMode"],
-            "--outWigType",
-            toml_config["star"]["outWigType"],
             "--outSJtype",
             toml_config["star"]["outSJtype"],
             "--quantMode",
@@ -586,12 +584,11 @@ def multiqc(sample, toml_config):
     paths.append(input + "MarkDuplicates/")
 
     print(paths)
-    print(paths.join(" "))
 
     subprocess.run(
         [
             "multiqc",
-            paths.join(" "),
+            paths,
             "--force",
             "--filename",
             sample + "_multiqc_report",

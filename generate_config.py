@@ -130,8 +130,8 @@ general = """# TOML config file for {0}
     alignment = "{3}"
     pseudo = "{4}"
     quantification = "{5}"
-    threads = 8  # Number of threads.
-    memory = 32 # Total memory needed.
+    threads = 4  # Number of threads.
+    memory = 64 # Total memory needed.
     email = "" # You e-mail adress to receive notification
     
 
