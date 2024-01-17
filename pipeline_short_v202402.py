@@ -594,7 +594,7 @@ def featurecounts(sample, toml_config):
         toml_config["general"]["output"]
         + "/"
         + sample
-        + "/Aligned/"
+        + "/Samtools/"
         + sample
         + "_sortedCoordinate.bam"
     )
@@ -602,15 +602,16 @@ def featurecounts(sample, toml_config):
     gtf = get_reference(toml_config["general"]["reference"], "")["gtf"]
     print(gtf)
 
-    subprocess.run(
-        [
+    if toml_config["general"]["reads"] == "PE":
+        command = [
             "featureCounts",
             "-t",
             toml_config["featurecounts"]["features"],
             "-g",
             toml_config["featurecounts"]["attribute"],
             "--minOverlap",
-            (toml_config["featurecounts"]["overlap"]),
+            str(toml_config["featurecounts"]["overlap"]),
+            "-p",
             "-T",
             str(toml_config["general"]["threads"]),
             "--tmpDir",
@@ -618,10 +619,32 @@ def featurecounts(sample, toml_config):
             "-a",
             gtf,
             "-o",
-            output,
+            output + "/" + sample,
             input,
         ]
-    )
+    else:
+        command = [
+            "featureCounts",
+            "-t",
+            toml_config["featurecounts"]["features"],
+            "-g",
+            toml_config["featurecounts"]["attribute"],
+            "--minOverlap",
+            str(toml_config["featurecounts"]["overlap"]),
+            "-T",
+            str(toml_config["general"]["threads"]),
+            "--tmpDir",
+            temporary,
+            "-a",
+            gtf,
+            "-o",
+            output + "/" + sample,
+            input,
+        ]
+
+    command_str = " ".join(command)
+    print(f">>> {command_str}\n")
+    subprocess.run(command)
 
 
 def multiqc(sample, toml_config):
