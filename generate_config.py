@@ -36,7 +36,6 @@ parser.add_argument(
 args = parser.parse_args()
 
 work_dir = os.getcwd()
-print(work_dir)
 
 # Project NAME
 project_name = args.project
@@ -105,7 +104,9 @@ if args.quantification == "none":
 elif args.quantification == "featurecounts":
     q = """# Quantification
 [featurecounts]
-
+    features = "exon"   # Specify feature type(s) in a GTF annotation. If multiple types are provided, they should be separated by ',' with no space in between. 'exon' by default. Rows in the annotation with a matched feature will be extracted and used for read mapping.
+    attribute = "gene_id"   # Specify attribute type in GTF annotation. 'gene_id' by  default. Meta-features used for read counting will be  extracted from annotation using the provided value.
+    overlap = 1 # Minimum number of overlapping bases in a read that is  required for read assignment. 1 by default. Number of overlapping bases is counted from both reads if paired end.
 """
 else:
     print(
@@ -119,20 +120,20 @@ general = """# TOML config file for {0}
 
 # Required information
 [general]
-    project = "{1}"   # Choose a project name. Should not start with a number.
-    fastq = "/path/to/raw/data"   # Path to raw fastq.gz files. Ex: /lustre03/project/6019267/shared/data/<project>.
-    output = "/path/to/output" # Preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/output/.
-    temporary = "/path/to/output/tmp" # Preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/tmp/. 
-    sequencing = "" # Type of sequencing. Short read RNA or DNA. Possible values: ["RNA", "Exome", "Genome"].
-    reads = "" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].
-    reference = "" # Possible values: Human: ["hg19", "hg38"]. Mouse: ["mm39"]. Worm: ["ce11"]. Zebrafish: ["danRer11"].
-    trimming = "{2}"
-    alignment = "{3}"
-    pseudo = "{4}"
-    quantification = "{5}"
+    project = "{0}"   # Choose a project name. Should not start with a number.
+    fastq = "/lustre03/project/6019267/shared/data/testShortReadSeq" # "/path/to/raw/data"   # Path to raw fastq.gz files. Ex: /lustre03/project/6019267/shared/data/<project>.
+    output = "/lustre04/scratch/mlab/pipeline2024/{0}/output" # "/path/to/output" # Preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/output/.
+    temporary = "/lustre04/scratch/mlab/pipeline2024/{0}/tmp" # Preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/tmp/. 
+    sequencing = "RNA" # Type of sequencing. Short read RNA or DNA. Possible values: ["RNA", "Exome", "Genome"].
+    reads = "PE" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].
+    reference = "hg38" # Possible values: Human: ["hg19", "hg38"]. Mouse: ["mm39"]. Worm: ["ce11"]. Zebrafish: ["danRer11"].
+    trimming = "{1}"
+    alignment = "{2}"
+    pseudo = "{3}"
+    quantification = "{4}"
     threads = 4  # Number of threads.
     memory = 64 # Total memory needed.
-    email = "" # You e-mail adress to receive notification
+    email = "marjorie.labrecque@umontreal.ca" # You e-mail adress to receive notification
     
 
 # Quality control
@@ -150,7 +151,6 @@ general = """# TOML config file for {0}
     strategy = "SUM_OF_BASE_QUALITIES"   # The scoring strategy for choosing the non-duplicate among candidates.  Default value: SUM_OF_BASE_QUALITIES. Possible values: [SUM_OF_BASE_QUALITIES, TOTAL_MAPPED_REFERENCE_LENGTH, RANDOM].
 
 """.format(
-    project_name,
     project_name,
     args.trimming,
     args.alignment,
