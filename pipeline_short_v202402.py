@@ -49,7 +49,7 @@ def main():
 
     # Quality control
     print("\t>>> Quality control: FastQC (v0.12.1)")
-    # function_queue.append(fastqc)
+    function_queue.append(fastqc)
 
     # # Trimming
     # if toml_config["general"]["trimming"] == "bbduk":
@@ -667,8 +667,6 @@ def multiqc(sample, toml_config):
         f.write(input + "Samtools/\n")
         f.write(input + "MarkDuplicates/\n")
     f.close()
-
-    subprocess.run(["cat", output + "/my_file_list.txt"])
 
     subprocess.run(
         [
