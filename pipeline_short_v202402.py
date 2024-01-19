@@ -46,52 +46,53 @@ def main():
     # Get tools and versions
     function_queue = []
     print(">>> Parameters:")
+
     # Quality control
     print("\t>>> Quality control: FastQC (v0.12.1)")
     # function_queue.append(fastqc)
 
-    # Trimming
-    if toml_config["general"]["trimming"] == "bbduk":
-        print("\t>>> Trimming: BBDuk (v39.06)")
-        function_queue.append(bbduk)
-    else:
-        print("\t>>> Trimming: none")
+    # # Trimming
+    # if toml_config["general"]["trimming"] == "bbduk":
+    #     print("\t>>> Trimming: BBDuk (v39.06)")
+    #     function_queue.append(bbduk)
+    # else:
+    #     print("\t>>> Trimming: none")
 
-    # Alignment
-    if toml_config["general"]["alignment"] == "star":
-        print("\t>>> Alignment: STAR (v2.7.11a)")
-        function_queue.append(star)
-    elif toml_config["general"]["alignment"] == "bwa":
-        print("\t>>> Alignment: BWA-MEM2 (v2.2.1)")
-        function_queue.append(bwa)
-    else:
-        print("\t>>> Alignment: none")
+    # # Alignment
+    # if toml_config["general"]["alignment"] == "star":
+    #     print("\t>>> Alignment: STAR (v2.7.11a)")
+    #     function_queue.append(star)
+    # elif toml_config["general"]["alignment"] == "bwa":
+    #     print("\t>>> Alignment: BWA-MEM2 (v2.2.1)")
+    #     function_queue.append(bwa)
+    # else:
+    #     print("\t>>> Alignment: none")
 
-    # Pseudo alignedment
-    if toml_config["general"]["pseudo"] == "salmon":
-        print("\t>>> Pseudo_alignedment: Salmon (v1.10.2)")
-        function_queue.append(salmon)
-    else:
-        print("\t>>> Pseudo_alignedment: none")
+    # # Pseudo alignedment
+    # if toml_config["general"]["pseudo"] == "salmon":
+    #     print("\t>>> Pseudo_alignedment: Salmon (v1.10.2)")
+    #     function_queue.append(salmon)
+    # else:
+    #     print("\t>>> Pseudo_alignedment: none")
 
     # Sorting and indexing
     print("\t>>> Sorting/Indexing: Samtools (v1.18)")
-    # function_queue.append(samtools)
+    function_queue.append(samtools)
 
     # MarkDuplicates
     print("\t>>> MarkDuplicates: GATK (4.4.0.0) & Picard (v3.0.0)")
-    # function_queue.append(markduplicates)
+    function_queue.append(markduplicates)
 
-    # Quantification
-    if toml_config["general"]["quantification"] == "featurecounts":
-        print("\t>>> Quantification: featureCounts (v2.0.6)")
-        function_queue.append(featurecounts)
-    else:
-        print("\t>>> Quantification: none")
+    # # Quantification
+    # if toml_config["general"]["quantification"] == "featurecounts":
+    #     print("\t>>> Quantification: featureCounts (v2.0.6)")
+    #     function_queue.append(featurecounts)
+    # else:
+    #     print("\t>>> Quantification: none")
 
     # MultiQC
-    print("\t>>> Quality control report: multiQC (v)")
-    # function_queue.append(multiqc)
+    print("\t>>> Quality control report: multiQC (v1.18)")
+    function_queue.append(multiqc)
 
     # Calling each steps
     for func in function_queue:
@@ -653,20 +654,21 @@ def multiqc(sample, toml_config):
     output = toml_config["general"]["output"] + "/" + sample + "/QC/multiQC"
     subprocess.run(["mkdir", "-p", output])
 
-    with open(output + "/my_file_list.txt", "a") as f:
-        f.write(input + "QC/fastQC/")
-    if toml_config["general"]["trimming"] != "none":
-        f.write(input + "Trimmed/")
-    if toml_config["general"]["alignment"] != "none":
-        f.write(input + "Aligned/")
-    if toml_config["general"]["pseudo"] != "none":
-        f.write(input + "Salmon/")
-    if toml_config["general"]["quantification"] != "none":
-        f.write(input + "FeatureCounts/")
-    f.write(input + "Samtools/")
-    f.write(input + "MarkDuplicates/")
+    with open(output + "/my_file_list.txt", "w") as f:
+        f.write(input + "QC/fastQC/\n")
+        if toml_config["general"]["trimming"] != "none":
+            f.write(input + "Trimmed/\n")
+        if toml_config["general"]["alignment"] != "none":
+            f.write(input + "Aligned/\n")
+        if toml_config["general"]["pseudo"] != "none":
+            f.write(input + "Salmon/\n")
+        if toml_config["general"]["quantification"] != "none":
+            f.write(input + "FeatureCounts/\n")
+        f.write(input + "Samtools/\n")
+        f.write(input + "MarkDuplicates/\n")
+    f.close()
 
-    subprocess.run("cat", output + "/my_file_list.txt")
+    subprocess.run(["cat", output + "/my_file_list.txt"])
 
     subprocess.run(
         [
