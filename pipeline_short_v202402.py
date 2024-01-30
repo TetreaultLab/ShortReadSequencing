@@ -47,9 +47,9 @@ def main():
     function_queue = []
     print(">>> Parameters:")
 
-    # Quality control
-    print("\t>>> Quality control: FastQC (v0.12.1)")
-    function_queue.append(fastqc)
+    # # Quality control
+    # print("\t>>> Quality control: FastQC (v0.12.1)")
+    # function_queue.append(fastqc)
 
     # # Trimming
     # if toml_config["general"]["trimming"] == "bbduk":
@@ -75,24 +75,27 @@ def main():
     # else:
     #     print("\t>>> Pseudo_alignedment: none")
 
-    # Sorting and indexing
-    print("\t>>> Sorting/Indexing: Samtools (v1.18)")
-    function_queue.append(samtools)
+    # # Sorting and indexing
+    # print("\t>>> Sorting/Indexing: Samtools (v1.18)")
+    # function_queue.append(samtools)
 
-    # MarkDuplicates
-    print("\t>>> MarkDuplicates: GATK (4.4.0.0) & Picard (v3.0.0)")
-    function_queue.append(markduplicates)
+    # # MarkDuplicates
+    # print("\t>>> MarkDuplicates: GATK (4.4.0.0) & Picard (v3.0.0)")
+    # function_queue.append(markduplicates)
 
-    # # Quantification
+    # # # Quantification
     # if toml_config["general"]["quantification"] == "featurecounts":
     #     print("\t>>> Quantification: featureCounts (v2.0.6)")
     #     function_queue.append(featurecounts)
     # else:
     #     print("\t>>> Quantification: none")
 
-    # MultiQC
-    print("\t>>> Quality control report: multiQC (v1.18)")
-    function_queue.append(multiqc)
+    # # MultiQC
+    # print("\t>>> Quality control report: MultiQC (v1.18)")
+    # function_queue.append(multiqc)
+
+    print("\t>>> Variant Calling: BCFtools (v1.18)")
+    function_queue.append(bcftools)
 
     # Calling each steps
     for func in function_queue:
@@ -164,33 +167,45 @@ def get_reference(ref, tool):
     match ref:
         case "hg19":
             reference = {
+                "fasta": index_path + "human/hg19_GRCh37/gentrome.fa",
                 "index": index_path + "human/hg19_GRCh37/index_" + tool,
                 "gtf": gtf_path + "human/hg19_GRCh37/Homo_sapiens.GRCh37.87.gtf.gz",
+                "gff3": gtf_path + "human/hg19_GRCh37/Homo_sapiens.GRCh37.87.gff3.gz",
             }
         case "hg38":
             reference = {
+                "fasta": index_path + "human/hg38_GRCh38/gentrome.fa",
                 "index": index_path + "human/hg38_GRCh38/index_" + tool,
                 "gtf": gtf_path + "human/hg38_GRCh38/Homo_sapiens.GRCh38.110.gtf.gz",
+                "gff3": gtf_path + "human/hg38_GRCh38/Homo_sapiens.GRCh38.110.gff3.gz",
             }
 
         case "mm39":
             reference = {
+                "fasta": index_path + "mouse/mm39_GRCm39/gentrome.fa",
                 "index": index_path + "mouse/mm39_GRCm39/index_" + tool,
                 "gtf": gtf_path + "mouse/mm39_GRCm39/Mus_musculus.GRCm39.110.gtf.gz",
+                "gff3": gtf_path + "mouse/mm39_GRCm39/Mus_musculus.GRCm39.110.gff3.gz",
             }
 
         case "ce11":
             reference = {
+                "fasta": index_path + "worm/ce11_WBcel235/gentrome.fa",
                 "index": index_path + "worm/ce11_WBcel235/index_" + tool,
                 "gtf": gtf_path
                 + "worm/ce11_WBcel235/Caenorhabditis_elegans.WBcel235.110.gtf.gz",
+                "gff3": gtf_path
+                + "worm/ce11_WBcel235/Caenorhabditis_elegans.WBcel235.110.gff3.gz",
             }
 
         case "danRer11":
             reference = {
+                "fasta": index_path + "zebrafish/danRer11_GRCz11/gentrome.fa",
                 "index": index_path + "zebrafish/danRer11_GRCz11/index_" + tool,
                 "gtf": gtf_path
                 + "zebrafish/danRer11_GRCz11/Danio_rerio.GRCz11.110.gtf.gz",
+                "gff3": gtf_path
+                + "zebrafish/danRer11_GRCz11/Danio_rerio.GRCz11.110.gff3.gz",
             }
     return reference
 
@@ -462,11 +477,7 @@ def salmon(sample, toml_config):
     output = toml_config["general"]["output"] + "/" + sample + "/Salmon"
     subprocess.run(["mkdir", "-p", output])
 
-    temporary = toml_config["general"]["temporary"] + "/" + sample + "/salmon_tmp"
-    subprocess.run(["mkdir", "-p", temporary])
-
     ref = get_reference(toml_config["general"]["reference"], "salmon")["index"]
-    print(ref)
     gtf = get_reference(toml_config["general"]["reference"], "salmon")["gtf"]
 
     files = get_file_trimmed(toml_config, output, sample)
@@ -485,7 +496,7 @@ def salmon(sample, toml_config):
             "--threads",
             str(toml_config["general"]["threads"]),
             "--auxDir",
-            temporary,
+            "salmon_tmp",
             "--geneMap",
             gtf,
             "--minScoreFraction",
@@ -508,7 +519,7 @@ def salmon(sample, toml_config):
             "--threads",
             str(toml_config["general"]["threads"]),
             "--auxDir",
-            temporary,
+            "salmon_tmp",
             "--geneMap",
             gtf,
             "--minScoreFraction",
@@ -560,7 +571,7 @@ def markduplicates(sample, toml_config):
     input = toml_config["general"]["output"] + "/" + sample + "/Samtools"
     bamCoord = input + "/" + sample + "_sortedCoordinate.bam"
     metrics = output + sample + "_duplicates_metrics.txt"
-    records = output + sample + "_duplicates.txt"
+    records = output + sample + "_duplicates.bam"
 
     command = [
         "gatk",
@@ -620,7 +631,7 @@ def featurecounts(sample, toml_config):
             "-a",
             gtf,
             "-o",
-            output + "/" + sample,
+            output + "/" + sample + "_counts.txt",
             input,
         ]
     else:
@@ -680,6 +691,72 @@ def multiqc(sample, toml_config):
             output,
         ]
     )
+
+
+def bcftools(sample, toml_config):
+    title("BCFtools")
+    input = (
+        toml_config["general"]["output"]
+        + "/"
+        + sample
+        + "/Samtools/"
+        + sample
+        + "_sortedCoordinate.bam"
+    )
+    output = toml_config["general"]["output"] + "/" + sample + "/BCFtools"
+    subprocess.run(["mkdir", "-p", output])
+
+    ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
+    gff3 = get_reference(toml_config["general"]["reference"], "")["gff3"]
+    mpileup = [
+        "bcftools",
+        "mpileup",
+        "--threads",
+        str(toml_config["general"]["threads"]),
+        "-d",
+        "10000",
+        "-Ob",
+        "-o",
+        output + sample + ".bcf",
+        "-f",
+        ref,
+        input,
+    ]
+
+    call = [
+        "bcftools",
+        "call",
+        "-m",
+        "-Ob",
+        "-o",
+        output + sample + "_calls.bcf",
+        output + sample + ".bcf.gz",
+    ]
+
+    consequence = [
+        "bcftools",
+        "csq",
+        "-f",
+        ref,
+        "-g",
+        gff3,
+        output + sample + "_calls.bcf.gz",
+        "-Oz",
+        "-o",
+        output + sample + "_var.vcf",
+    ]
+
+    command_1 = " ".join(mpileup)
+    print(f">>> {command_1}\n")
+    subprocess.run(mpileup)
+
+    command_2 = " ".join(call)
+    print(f">>> {command_2}\n")
+    subprocess.run(call)
+
+    command_3 = " ".join(consequence)
+    print(f">>> {command_3}\n")
+    subprocess.run(consequence)
 
 
 if __name__ == "__main__":
