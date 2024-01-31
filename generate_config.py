@@ -32,6 +32,13 @@ parser.add_argument(
     required=True,
     help='choose quantification tool. Options: "none", "featurecounts".',
 )
+parser.add_argument(
+    "--variant",
+    type=str,
+    required=True,
+    help='choose variant tool. Options: "none", "vep".',
+)
+
 
 args = parser.parse_args()
 
@@ -114,6 +121,15 @@ else:
     )
     exit()
 
+# VARIANT CALLING
+if args.variant == "none":
+    q = "# No variant calling\n"
+elif args.variant == "vep":
+    q = """# Quantification
+[vep]
+    species = "homo_sapiens"   # Species for your data. Possible values: ["homo_sapiens", "mus_musculus", "caenorhabditis_elegans", "danio_rerio"].
+"""
+
 
 # Create config file
 general = """# TOML config file for {0}
@@ -131,6 +147,7 @@ general = """# TOML config file for {0}
     alignment = "{2}"
     pseudo = "{3}"
     quantification = "{4}"
+    variant = "{5}"
     threads = 4  # Number of threads.
     memory = 64 # Total memory needed.
     email = "marjorie.labrecque@umontreal.ca" # You e-mail adress to receive notification
@@ -156,6 +173,7 @@ general = """# TOML config file for {0}
     args.alignment,
     args.pseudo,
     args.quantification,
+    args.variant,
 )  # noqa: F524
 
 toml_config = general + "\n" + t + "\n" + a + "\n" + p + "\n" + q

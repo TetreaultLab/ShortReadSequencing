@@ -83,7 +83,7 @@ def main():
     # print("\t>>> MarkDuplicates: GATK (4.4.0.0) & Picard (v3.0.0)")
     # function_queue.append(markduplicates)
 
-    # # # Quantification
+    # # Quantification
     # if toml_config["general"]["quantification"] == "featurecounts":
     #     print("\t>>> Quantification: featureCounts (v2.0.6)")
     #     function_queue.append(featurecounts)
@@ -94,8 +94,17 @@ def main():
     # print("\t>>> Quality control report: MultiQC (v1.18)")
     # function_queue.append(multiqc)
 
+    # # Variant Calling
+    # # BAM to VCF
     print("\t>>> Variant Calling: BCFtools (v1.18)")
     function_queue.append(bcftools)
+
+    # # Variant Effect Predictor
+    # if toml_config["general"]["variant"] == "vep":
+    #     print("\t>>> Variant Calling: Variant Effect Predictor (VEP) (v2.0.6)")
+    #     function_queue.append(vep)
+    # else:
+    #     print("\t>>> Variant Calling: none")
 
     # Calling each steps
     for func in function_queue:
@@ -167,14 +176,16 @@ def get_reference(ref, tool):
     match ref:
         case "hg19":
             reference = {
-                "fasta": index_path + "human/hg19_GRCh37/gentrome.fa",
+                "fasta": index_path
+                + "human/hg19_GRCh37/Homo_sapiens.GRCh37.dna.primary_assembly.fa",
                 "index": index_path + "human/hg19_GRCh37/index_" + tool,
                 "gtf": gtf_path + "human/hg19_GRCh37/Homo_sapiens.GRCh37.87.gtf.gz",
                 "gff3": gtf_path + "human/hg19_GRCh37/Homo_sapiens.GRCh37.87.gff3.gz",
             }
         case "hg38":
             reference = {
-                "fasta": index_path + "human/hg38_GRCh38/gentrome.fa",
+                "fasta": index_path
+                + "human/hg38_GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa",
                 "index": index_path + "human/hg38_GRCh38/index_" + tool,
                 "gtf": gtf_path + "human/hg38_GRCh38/Homo_sapiens.GRCh38.110.gtf.gz",
                 "gff3": gtf_path + "human/hg38_GRCh38/Homo_sapiens.GRCh38.110.gff3.gz",
@@ -182,7 +193,8 @@ def get_reference(ref, tool):
 
         case "mm39":
             reference = {
-                "fasta": index_path + "mouse/mm39_GRCm39/gentrome.fa",
+                "fasta": index_path
+                + "mouse/mm39_GRCm39/Mus_musculus.GRCm39.dna.primary_assembly.fa",
                 "index": index_path + "mouse/mm39_GRCm39/index_" + tool,
                 "gtf": gtf_path + "mouse/mm39_GRCm39/Mus_musculus.GRCm39.110.gtf.gz",
                 "gff3": gtf_path + "mouse/mm39_GRCm39/Mus_musculus.GRCm39.110.gff3.gz",
@@ -190,7 +202,8 @@ def get_reference(ref, tool):
 
         case "ce11":
             reference = {
-                "fasta": index_path + "worm/ce11_WBcel235/gentrome.fa",
+                "fasta": index_path
+                + "worm/ce11_WBcel235/Caenorhabditis_elegans.WBcel235.dna.toplevel.fa",
                 "index": index_path + "worm/ce11_WBcel235/index_" + tool,
                 "gtf": gtf_path
                 + "worm/ce11_WBcel235/Caenorhabditis_elegans.WBcel235.110.gtf.gz",
@@ -200,7 +213,8 @@ def get_reference(ref, tool):
 
         case "danRer11":
             reference = {
-                "fasta": index_path + "zebrafish/danRer11_GRCz11/gentrome.fa",
+                "fasta": index_path
+                + "zebrafish/danRer11_GRCz11/Danio_rerio.GRCz11.dna.primary_assembly.fa",
                 "index": index_path + "zebrafish/danRer11_GRCz11/index_" + tool,
                 "gtf": gtf_path
                 + "zebrafish/danRer11_GRCz11/Danio_rerio.GRCz11.110.gtf.gz",
@@ -662,7 +676,7 @@ def featurecounts(sample, toml_config):
 def multiqc(sample, toml_config):
     title("MutliQC")
     input = toml_config["general"]["output"] + "/" + sample + "/"
-    output = toml_config["general"]["output"] + "/" + sample + "/QC/multiQC"
+    output = toml_config["general"]["output"] + "/" + sample + "/QC/multiQC/"
     subprocess.run(["mkdir", "-p", output])
 
     with open(output + "/my_file_list.txt", "w") as f:
@@ -683,7 +697,7 @@ def multiqc(sample, toml_config):
         [
             "multiqc",
             "--file-list",
-            output + "/my_file_list.txt",
+            output + "my_file_list.txt",
             "--force",
             "--filename",
             sample + "_multiqc_report",
@@ -703,11 +717,12 @@ def bcftools(sample, toml_config):
         + sample
         + "_sortedCoordinate.bam"
     )
-    output = toml_config["general"]["output"] + "/" + sample + "/BCFtools"
+    output = toml_config["general"]["output"] + "/" + sample + "/BCFtools/"
     subprocess.run(["mkdir", "-p", output])
 
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
     gff3 = get_reference(toml_config["general"]["reference"], "")["gff3"]
+
     mpileup = [
         "bcftools",
         "mpileup",
@@ -717,7 +732,7 @@ def bcftools(sample, toml_config):
         "10000",
         "-Ob",
         "-o",
-        output + sample + ".bcf",
+        output + sample + ".bcf.gz",
         "-f",
         ref,
         input,
@@ -729,7 +744,7 @@ def bcftools(sample, toml_config):
         "-m",
         "-Ob",
         "-o",
-        output + sample + "_calls.bcf",
+        output + sample + "_calls.bcf.gz",
         output + sample + ".bcf.gz",
     ]
 
@@ -757,6 +772,56 @@ def bcftools(sample, toml_config):
     command_3 = " ".join(consequence)
     print(f">>> {command_3}\n")
     subprocess.run(consequence)
+
+
+def vep(sample, toml_config):
+    title("VEP")
+
+    vep_cache = "/lustre03/project/6019267/shared/tools/VARIATION_VEP"
+    ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
+    gff3 = get_reference(toml_config["general"]["reference"], "")["gff3"]
+
+    input = (
+        toml_config["general"]["output"]
+        + "/"
+        + sample
+        + "/BCFtools/"
+        + sample
+        + "_var.vcf"
+    )
+    output = (
+        toml_config["general"]["output"]
+        + "/"
+        + sample
+        + "/Variants/"
+        + sample
+        + "_all_variants.txt"
+    )
+
+    command = [
+        "vep",
+        "--cache",
+        "--dir_cache",
+        vep_cache,
+        "--species",
+        toml_config["vep"]["species"],
+        "--gff",
+        gff3,
+        "--fasta",
+        ref,
+        "--cache_version",
+        "110",
+        "--everything",
+        "--tab",
+        "-i",
+        input,
+        "-o",
+        output,
+    ]
+
+    command_str = " ".join(command)
+    print(f">>> {command_str}\n")
+    subprocess.run(command)
 
 
 if __name__ == "__main__":
