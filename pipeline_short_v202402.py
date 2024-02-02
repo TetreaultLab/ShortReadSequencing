@@ -730,9 +730,8 @@ def bcftools(sample, toml_config):
         str(toml_config["general"]["threads"]),
         "-d",
         "10000",
-        "-Ob",
         "-o",
-        output + sample + ".bcf.gz",
+        output + sample + ".bcf",
         "-f",
         ref,
         input,
@@ -741,25 +740,25 @@ def bcftools(sample, toml_config):
     call = [
         "bcftools",
         "call",
-        "-m",
-        "-Ob",
+        "--threads",
+        str(toml_config["general"]["threads"]),
+        "-mv",
         "-o",
-        output + sample + "_calls.bcf.gz",
-        output + sample + ".bcf.gz",
+        output + sample + "_vars.vcf",
+        output + sample + ".bcf",
     ]
 
-    consequence = [
-        "bcftools",
-        "csq",
-        "-f",
-        ref,
-        "-g",
-        gff3,
-        output + sample + "_calls.bcf.gz",
-        "-Oz",
-        "-o",
-        output + sample + "_var.vcf",
-    ]
+    # consequence = [
+    #     "bcftools",
+    #     "csq",
+    #     "-f",
+    #     ref,
+    #     "-g",
+    #     gff3,
+    #     output + sample + "_calls.bcf",
+    #     "-o",
+    #     output + sample + "_var.vcf",
+    # ]
 
     command_1 = " ".join(mpileup)
     print(f">>> {command_1}\n")
@@ -769,9 +768,9 @@ def bcftools(sample, toml_config):
     print(f">>> {command_2}\n")
     subprocess.run(call)
 
-    command_3 = " ".join(consequence)
-    print(f">>> {command_3}\n")
-    subprocess.run(consequence)
+    # command_3 = " ".join(consequence)
+    # print(f">>> {command_3}\n")
+    # subprocess.run(consequence)
 
 
 def vep(sample, toml_config):
@@ -800,6 +799,7 @@ def vep(sample, toml_config):
 
     command = [
         "vep",
+        "--offline",
         "--cache",
         "--dir_cache",
         vep_cache,

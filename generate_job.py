@@ -38,7 +38,7 @@ memory = toml_config["general"]["memory"]
 
 # time
 if toml_config["general"]["sequencing"] == "RNA":
-    time = "00-05:59"
+    time = "00-11:59"
 elif toml_config["general"]["sequencing"] == "Exome":
     time = "00-05:59"
 elif toml_config["general"]["sequencing"] == "Genome":
@@ -63,7 +63,7 @@ slurm = """#!/bin/sh
 #
 module load StdEnv/2023
 module load python/3.11.5
-module load fastqc/0.12.1 bbmap/39.06 star/2.7.11a bwa-mem2/2.2.1 gcc/12.3 openmpi/4.1.5 salmon/1.10.2 samtools/1.18 gatk/4.4.0.0 subread/2.0.6 bcftools/1.18
+module load fastqc/0.12.1 bbmap/39.06 star/2.7.11a bwa-mem2/2.2.1 gcc/12.3 openmpi/4.1.5 salmon/1.10.2 samtools/1.18 gatk/4.4.0.0 subread/2.0.6 bcftools/1.18 perl/5.36.1
 source /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/bin/activate
 #
 ### Launch script
