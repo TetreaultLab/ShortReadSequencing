@@ -100,9 +100,9 @@ def main():
     function_queue.append(bcftools)
 
     # # Variant Effect Predictor
-    # if toml_config["general"]["variant"] == "vep":
-    #     print("\t>>> Variant Calling: Variant Effect Predictor (VEP) (v2.0.6)")
-    #     function_queue.append(vep)
+    # if toml_config["general"]["variant"] == "snpeff":
+    #     print("\t>>> Variant Calling: SnpEff + SnpSift (v)")
+    #     function_queue.append(snpeff)
     # else:
     #     print("\t>>> Variant Calling: none")
 
@@ -773,12 +773,8 @@ def bcftools(sample, toml_config):
     # subprocess.run(consequence)
 
 
-def vep(sample, toml_config):
-    title("VEP")
-
-    vep_cache = "/lustre03/project/6019267/shared/tools/VARIATION_VEP"
-    ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
-    gff3 = get_reference(toml_config["general"]["reference"], "")["gff3"]
+def snpeff(sample, toml_config):
+    title("SnpEff")
 
     input = (
         toml_config["general"]["output"]
@@ -788,36 +784,9 @@ def vep(sample, toml_config):
         + sample
         + "_var.vcf"
     )
-    output = (
-        toml_config["general"]["output"]
-        + "/"
-        + sample
-        + "/Variants/"
-        + sample
-        + "_all_variants.txt"
-    )
+    output = toml_config["general"]["output"] + "/" + sample + "/Variants/" + sample
 
-    command = [
-        "vep",
-        "--offline",
-        "--cache",
-        "--dir_cache",
-        vep_cache,
-        "--species",
-        toml_config["vep"]["species"],
-        "--gff",
-        gff3,
-        "--fasta",
-        ref,
-        "--cache_version",
-        "110",
-        "--everything",
-        "--tab",
-        "-i",
-        input,
-        "-o",
-        output,
-    ]
+    command = []
 
     command_str = " ".join(command)
     print(f">>> {command_str}\n")

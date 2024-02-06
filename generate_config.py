@@ -36,7 +36,7 @@ parser.add_argument(
     "--variant",
     type=str,
     required=True,
-    help='choose variant tool. Options: "none", "vep".',
+    help='choose variant tool. Options: "none", "snpeff".',
 )
 
 
@@ -124,10 +124,10 @@ else:
 # VARIANT CALLING
 if args.variant == "none":
     q = "# No variant calling\n"
-elif args.variant == "vep":
-    q = """# Quantification
-[vep]
-    species = "homo_sapiens"   # Species for your data. Possible values: ["homo_sapiens", "mus_musculus", "caenorhabditis_elegans", "danio_rerio"].
+elif args.variant == "snpeff":
+    q = """# Variant calling
+[snpeff]
+    
 """
 
 
