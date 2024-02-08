@@ -130,7 +130,6 @@ elif args.variant == "snpeff":
     
 """
 
-
 # Create config file
 general = """# TOML config file for {0}
 

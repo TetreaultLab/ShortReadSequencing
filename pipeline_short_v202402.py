@@ -101,7 +101,7 @@ def main():
 
     # # Variant Effect Predictor
     # if toml_config["general"]["variant"] == "snpeff":
-    #     print("\t>>> Variant Calling: SnpEff + SnpSift (v)")
+    #     print("\t>>> Variant Calling: SnpEff + SnpSift (v5.2a)")
     #     function_queue.append(snpeff)
     # else:
     #     print("\t>>> Variant Calling: none")
