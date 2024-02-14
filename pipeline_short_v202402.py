@@ -170,56 +170,46 @@ def get_file_trimmed(toml_config, output, sample):
 
 
 def get_reference(ref, tool):
-    index_path = "/lustre03/project/6019267/shared/tools/REFERENCE_GENOMES/"
-    gtf_path = "/lustre03/project/6019267/shared/tools/ANNOTATED_GTF/"
+    path = "/lustre03/project/6019267/shared/tools/PIPELINES/References/"
     reference: {}
     match ref:
-        case "hg19":
+        case "grch37":
             reference = {
-                "fasta": index_path
-                + "human/hg19_GRCh37/Homo_sapiens.GRCh37.dna.primary_assembly.fa",
-                "index": index_path + "human/hg19_GRCh37/index_" + tool,
-                "gtf": gtf_path + "human/hg19_GRCh37/Homo_sapiens.GRCh37.87.gtf.gz",
-                "gff3": gtf_path + "human/hg19_GRCh37/Homo_sapiens.GRCh37.87.gff3.gz",
+                "fasta": path + "Homo_sapiens.GRCh37.87.dna.primary_assembly.fa",
+                "index": path + "index_" + tool + "/" + ref,
+                "gtf": path + "Homo_sapiens.GRCh37.87.gtf.gz",
+                "gff3": path + "Homo_sapiens.GRCh37.87.gff3.gz",
             }
-        case "hg38":
+        case "grch38":
             reference = {
-                "fasta": index_path
-                + "human/hg38_GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa",
-                "index": index_path + "human/hg38_GRCh38/index_" + tool,
-                "gtf": gtf_path + "human/hg38_GRCh38/Homo_sapiens.GRCh38.110.gtf.gz",
-                "gff3": gtf_path + "human/hg38_GRCh38/Homo_sapiens.GRCh38.110.gff3.gz",
+                "fasta": path + "Homo_sapiens.GRCh38.105.dna.primary_assembly.fa",
+                "index": path + "index_" + tool + "/" + ref,
+                "gtf": path + "Homo_sapiens.GRCh38.105.gtf.gz",
+                "gff3": path + "Homo_sapiens.GRCh38.105.gff3.gz",
             }
 
-        case "mm39":
+        case "grcm39":
             reference = {
-                "fasta": index_path
-                + "mouse/mm39_GRCm39/Mus_musculus.GRCm39.dna.primary_assembly.fa",
-                "index": index_path + "mouse/mm39_GRCm39/index_" + tool,
-                "gtf": gtf_path + "mouse/mm39_GRCm39/Mus_musculus.GRCm39.110.gtf.gz",
-                "gff3": gtf_path + "mouse/mm39_GRCm39/Mus_musculus.GRCm39.110.gff3.gz",
+                "fasta": path + "Mus_musculus.GRCm39.105.dna.primary_assembly.fa",
+                "index": path + "index_" + tool + "/" + ref,
+                "gtf": path + "Mus_musculus.GRCm39.105.gtf.gz",
+                "gff3": path + "Mus_musculus.GRCm39.105.gff3.gz",
             }
 
-        case "ce11":
+        case "wbcel235":
             reference = {
-                "fasta": index_path
-                + "worm/ce11_WBcel235/Caenorhabditis_elegans.WBcel235.dna.toplevel.fa",
-                "index": index_path + "worm/ce11_WBcel235/index_" + tool,
-                "gtf": gtf_path
-                + "worm/ce11_WBcel235/Caenorhabditis_elegans.WBcel235.110.gtf.gz",
-                "gff3": gtf_path
-                + "worm/ce11_WBcel235/Caenorhabditis_elegans.WBcel235.110.gff3.gz",
+                "fasta": path + "Caenorhabditis_elegans.WBcel235.105.dna.toplevel.fa",
+                "index": path + "index_" + tool + "/" + ref,
+                "gtf": path + "Caenorhabditis_elegans.WBcel235.105.gtf.gz",
+                "gff3": path + "Caenorhabditis_elegans.WBcel235.105.gff3.gz",
             }
 
-        case "danRer11":
+        case "grcz11":
             reference = {
-                "fasta": index_path
-                + "zebrafish/danRer11_GRCz11/Danio_rerio.GRCz11.dna.primary_assembly.fa",
-                "index": index_path + "zebrafish/danRer11_GRCz11/index_" + tool,
-                "gtf": gtf_path
-                + "zebrafish/danRer11_GRCz11/Danio_rerio.GRCz11.110.gtf.gz",
-                "gff3": gtf_path
-                + "zebrafish/danRer11_GRCz11/Danio_rerio.GRCz11.110.gff3.gz",
+                "fasta": path + "Danio_rerio.GRCz11.105.dna.primary_assembly.fa",
+                "index": path + "index_" + tool + "/" + ref,
+                "gtf": path + "Danio_rerio.GRCz11.105.gtf.gz",
+                "gff3": path + "Danio_rerio.GRCz11.105.gff3.gz",
             }
     return reference
 
@@ -721,7 +711,6 @@ def bcftools(sample, toml_config):
     subprocess.run(["mkdir", "-p", output])
 
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
-    gff3 = get_reference(toml_config["general"]["reference"], "")["gff3"]
 
     mpileup = [
         "bcftools",
@@ -731,46 +720,15 @@ def bcftools(sample, toml_config):
         "-d",
         "10000",
         "-o",
-        output + sample + ".bcf",
+        output + sample + "_all.vcf",
         "-f",
         ref,
         input,
     ]
 
-    call = [
-        "bcftools",
-        "call",
-        "--threads",
-        str(toml_config["general"]["threads"]),
-        "-mv",
-        "-o",
-        output + sample + "_vars.vcf",
-        output + sample + ".bcf",
-    ]
-
-    # consequence = [
-    #     "bcftools",
-    #     "csq",
-    #     "-f",
-    #     ref,
-    #     "-g",
-    #     gff3,
-    #     output + sample + "_calls.bcf",
-    #     "-o",
-    #     output + sample + "_var.vcf",
-    # ]
-
     command_1 = " ".join(mpileup)
     print(f">>> {command_1}\n")
     subprocess.run(mpileup)
-
-    command_2 = " ".join(call)
-    print(f">>> {command_2}\n")
-    subprocess.run(call)
-
-    # command_3 = " ".join(consequence)
-    # print(f">>> {command_3}\n")
-    # subprocess.run(consequence)
 
 
 def snpeff(sample, toml_config):
@@ -782,7 +740,7 @@ def snpeff(sample, toml_config):
         + sample
         + "/BCFtools/"
         + sample
-        + "_var.vcf"
+        + "_all.vcf"
     )
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/" + sample
 
