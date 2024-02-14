@@ -712,7 +712,7 @@ def bcftools(sample, toml_config):
         + sample
         + "_sortedCoordinate.bam"
     )
-    output = toml_config["general"]["output"] + "/" + sample + "/BCFtools/"
+    output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
 
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
@@ -739,15 +739,7 @@ def bcftools(sample, toml_config):
 def snpeff(sample, toml_config):
     title("SnpEff")
 
-    input = (
-        toml_config["general"]["output"]
-        + "/"
-        + sample
-        + "/BCFtools/"
-        + sample
-        + "_all.vcf"
-    )
-    output = toml_config["general"]["output"] + "/" + sample + "/Variants/" + sample
+    path = toml_config["general"]["output"] + "/" + sample + "/Variants/"
 
     command = []
 
