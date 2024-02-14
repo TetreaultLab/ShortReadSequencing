@@ -171,7 +171,7 @@ def get_file_trimmed(toml_config, output, sample):
 
 def get_reference(ref, tool):
     path = "/lustre03/project/6019267/shared/tools/PIPELINES/References/"
-    reference: {}
+    reference: {}  # type: ignore
     match ref:
         case "grch37":
             reference = {
@@ -342,6 +342,10 @@ def star(sample, toml_config):
             O_aligned,
             "--outTmpDir",
             temporary,
+            "--outReadsUnmapped",
+            "Fastx",
+            "--sjdbOverhang",
+            "99",
             "--readFilesCommand",
             "zcat",
             "--readFilesIn",
@@ -495,6 +499,7 @@ def salmon(sample, toml_config):
             "quant",
             "--libType",
             "A",
+            "--validateMappings",
             "--index",
             ref,
             "--threads",
