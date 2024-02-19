@@ -105,7 +105,7 @@ elif args.pseudo == "salmon":
 """
 else:
     print(
-        f"'{args.pseudo}' is not a valid pseudoalignment option. Check generate_config .py --help for options."
+        f"'{args.pseudo}' is not a valid pseudoalignment option. Check generate_config.py --help for options."
     )
     exit()
 
@@ -122,7 +122,7 @@ elif args.quantification == "featurecounts":
 """
 else:
     print(
-        f"'{args.quantification}' is not a valid quantification option. Check generate_config .py --help for options."
+        f"'{args.quantification}' is not a valid quantification option. Check generate_config.py --help for options."
     )
     exit()
 
@@ -141,8 +141,8 @@ general = """# TOML config file for {0}
 # Required information
 [general]
     project = "{0}"   # Choose a project name. Should not start with a number.
-    fastq = "/lustre03/project/6019267/shared/data/testShortReadSeq" # "/path/to/raw/data"   # Path to raw fastq.gz files. Ex: /lustre03/project/6019267/shared/data/<project>.
-    output = "/lustre04/scratch/mlab/pipeline2024/{0}/output" # "/path/to/output" # Preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/output/.
+    fastq = "/lustre03/project/6019267/shared/data/testShortReadSeq" # Path to raw fastq.gz files. Ex: /lustre03/project/6019267/shared/data/<project>.
+    output = "/lustre04/scratch/mlab/pipeline2024/{0}/output" # # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/output/.
     temporary = "/lustre04/scratch/mlab/pipeline2024/{0}/tmp" # Preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/tmp/. 
     sequencing = "RNA" # Type of sequencing. Short read RNA or DNA. Possible values: ["RNA", "Exome", "Genome"].
     reads = "PE" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].

@@ -739,7 +739,7 @@ def snpeff(sample, toml_config):
     title("SnpEff")
 
     path = toml_config["general"]["output"] + "/" + sample + "/Variants/"
-
+    print(path)
     command = []
 
     command_str = " ".join(command)
