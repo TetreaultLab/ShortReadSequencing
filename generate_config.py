@@ -47,11 +47,12 @@ work_dir = os.getcwd()
 # Project NAME
 project_name = args.project
 
+options = ""
 # TRIMMING
 if args.trimming == "none":
-    t = "# No trimming\n"
+    options += "# No trimming\n"
 elif args.trimming == "bbduk":
-    t = """# Trimming
+    options += """# Trimming
 [bbduk]
     ordered = "f"   # Set to true to output reads in same order as input.
     kmers = 27  # Kmer length used for finding contaminants.  Contaminants shorter than k will not be found.  k must be at least 1.
@@ -60,30 +61,32 @@ elif args.trimming == "bbduk":
     minlength = 10 # Reads shorter than this after trimming will be discarded.  Pairs will be discarded if both are shorter.
     mlf = 0 # (minlengthfraction) Reads shorter than this fraction of original length after trimming will be discarded.
     minavgquality = 0   # (maq) Reads with average quality (after trimming) below this will be discarded.
+    \n
 """
 
 else:
     print(
-        f"'{args.trimming}' is not a valid trimming option. Check generate_config .py --help for options."
+        f"'{args.trimming}' is not a valid trimming option. Check generate_config.py --help for options."
     )
     exit()
 
 # ALIGNMENT
 if args.alignment == "none":
-    a = "# No alignment\n"
+    options += "# No alignment\n"
 elif args.alignment == "star":
-    a = """# Alignment
+    options += """# Alignment
 [star]
     outSAMtype1 = "BAM"   # type of SAM/BAM output
     outSAMtype2 = "SortedByCoordinate"
     twopassMode = "Basic"    # 2-pass mapping mode. None or Basic
     outSJtype = "Standard"  # type of splice junction output
     quantMode  = "TranscriptomeSAM"   # types of quantification requested. -, TranscriptomeSAM and/or GeneCounts
+    \n
 """
 elif args.alignment == "bwa":
-    a = """# Alignment
+    options += """# Alignment
 [bwa-mem]
-
+\n
 """
 else:
     print(
@@ -93,11 +96,12 @@ else:
 
 # PSEUDOALIGNMENT
 if args.pseudo == "none":
-    p = "# No pseudoalignment\n"
+    options += "# No pseudoalignment\n"
 elif args.pseudo == "salmon":
-    p = """# Pseudoalignment
+    options += """# Pseudoalignment
 [salmon]
     minScoreFraction = 0.65	# The fraction of the optimal possible alignment score that a mapping must achieve in order to be considered "valid" --- should be in [0,1]. Salmon Default 0.65 and Alevin Default 0.87.
+    \n
 """
 else:
     print(
@@ -107,13 +111,14 @@ else:
 
 # QUANTIFICATION
 if args.quantification == "none":
-    q = "# No quantification\n"
+    options += "# No quantification\n"
 elif args.quantification == "featurecounts":
-    q = """# Quantification
+    options += """# Quantification
 [featurecounts]
     features = "gene"   # Specify feature type(s) in a GTF annotation. If multiple types are provided, they should be separated by ',' with no space in between. 'exon' by default. Rows in the annotation with a matched feature will be extracted and used for read mapping.
-    attribute = "gene_name"   # Specify attribute type in GTF annotation. 'gene_id' by  default. Meta-features used for read counting will be  extracted from annotation using the provided value.
-    overlap = 1 # Minimum number of overlapping bases in a read that is  required for read assignment. 1 by default. Number of overlapping bases is counted from both reads if paired end.
+    attribute = "gene_name"   # Specify attribute type in GTF annotation. 'gene_id' by default. Meta-features used for read counting will be extracted from annotation using the provided value.
+    overlap = 1 # Minimum number of overlapping bases in a read that is required for read assignment. 1 by default. Number of overlapping bases is counted from both reads if paired end.
+    \n
 """
 else:
     print(
@@ -123,11 +128,11 @@ else:
 
 # VARIANT CALLING
 if args.variant == "none":
-    q = "# No variant calling\n"
+    options += "# No variant calling\n"
 elif args.variant == "snpeff":
-    q = """# Variant calling
+    options += """# Variant calling
 [snpeff]
-    
+    \n
 """
 
 # Create config file
@@ -165,7 +170,7 @@ general = """# TOML config file for {0}
 [markduplicates]
     index = "true"    # Whether to create an index when writing VCF or coordinate sorted BAM output.
     strategy = "SUM_OF_BASE_QUALITIES"   # The scoring strategy for choosing the non-duplicate among candidates.  Default value: SUM_OF_BASE_QUALITIES. Possible values: [SUM_OF_BASE_QUALITIES, TOTAL_MAPPED_REFERENCE_LENGTH, RANDOM].
-
+\n
 """.format(
     project_name,
     args.trimming,
@@ -175,6 +180,6 @@ general = """# TOML config file for {0}
     args.variant,
 )  # noqa: F524
 
-toml_config = general + "\n" + t + "\n" + a + "\n" + p + "\n" + q
+toml_config = general + options
 
 print(toml_config, file=open(work_dir + "/" + project_name + ".config.toml", "w"))
