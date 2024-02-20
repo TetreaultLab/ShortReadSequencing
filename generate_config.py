@@ -115,7 +115,7 @@ if args.quantification == "none":
 elif args.quantification == "featurecounts":
     options += """# Quantification
 [featurecounts]
-    features = "gene"   # Specify feature type(s) in a GTF annotation. If multiple types are provided, they should be separated by ',' with no space in between. 'exon' by default. Rows in the annotation with a matched feature will be extracted and used for read mapping.
+    features = "exon"   # Specify feature type(s) in a GTF annotation. If multiple types are provided, they should be separated by ',' with no space in between. 'exon' by default. Rows in the annotation with a matched feature will be extracted and used for read mapping.
     attribute = "gene_name"   # Specify attribute type in GTF annotation. 'gene_id' by default. Meta-features used for read counting will be extracted from annotation using the provided value.
     overlap = 1 # Minimum number of overlapping bases in a read that is required for read assignment. 1 by default. Number of overlapping bases is counted from both reads if paired end.
     \n

@@ -79,6 +79,9 @@ def main():
     print("\t>>> Sorting/Indexing: Samtools (v1.18)")
     function_queue.append(samtools)
 
+    # Alignment QC
+    function_queue.append(bamqc)
+
     # MarkDuplicates
     print("\t>>> MarkDuplicates: GATK (4.4.0.0) & Picard (v3.0.0)")
     function_queue.append(markduplicates)
@@ -550,12 +553,10 @@ def samtools(sample, toml_config):
     subprocess.run(["mkdir", "-p", output])
 
     inBAM = input + "/" + sample + ".bam"
-    bamName = output + "/" + sample + "_sortedName.bam"
     bamCoord = output + "/" + sample + "_sortedCoordinate.bam"
-    idxstats = output + "/" + sample + "_sortedCoordinate_idxstats.txt"
-
-    # Sort by name
-    subprocess.run(["samtools", "sort", "-n", inBAM, "-o", bamName])
+    stats1 = output + "/" + sample + "_stats1.txt"
+    stats2 = output + "/" + sample + "_stats2.txt"
+    stats = output + "/" + sample + "_stats.txt"
 
     # Sort by coordinate
     subprocess.run(["samtools", "sort", inBAM, "-o", bamCoord])
@@ -563,8 +564,49 @@ def samtools(sample, toml_config):
     # Index bam sorted by coordinates
     subprocess.run(["samtools", "index", "-b", bamCoord, "-o", bamCoord + ".bai"])
 
-    # idxstats
-    subprocess.run(["samtools", "idxstats", bamCoord, ">", idxstats])
+    # alignment stats
+    subprocess.run(["samtools", "stats", bamCoord, ">", stats1])
+    subprocess.run(["grep", "^SN", stats1, ">", stats2])
+    subprocess.run(["cut", "-f", "2-", stats2, ">", stats])
+    subprocess.run(["rm", stats1])
+    subprocess.run(["rm", stats2])
+
+
+def bamqc(sample, toml_config):
+    title("FastQC")
+
+    output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
+    subprocess.run(["mkdir", "-p", output])
+
+    temporary = toml_config["general"]["temporary"] + "/" + sample
+    subprocess.run(["mkdir", "-p", temporary])
+
+    input = (
+        toml_config["general"]["output"]
+        + "/"
+        + sample
+        + "/Samtools/"
+        + sample
+        + "_sortedCoordinate.bam"
+    )
+
+    command = [
+        "fastqc",
+        "-o",
+        output,
+        "--noextract",
+        "--threads",
+        "2",
+        "--dir",
+        temporary,
+        "--kmers",
+        str(toml_config["fastqc"]["kmers"]),
+        input,
+    ]
+
+    command_str = " ".join(command)
+    print(f">>> {command_str}\n")
+    subprocess.run(command)
 
 
 def markduplicates(sample, toml_config):
