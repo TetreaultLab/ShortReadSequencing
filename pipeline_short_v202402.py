@@ -45,7 +45,7 @@ def main():
 
     # Open file for steps done
     steps = open(output + "/steps_done.txt", "a")
-    steps.write("Loading ENV\n")
+    steps.write("\nLoading ENV\n")
     steps.close()
 
     done = []
@@ -54,7 +54,6 @@ def main():
             done.append(line.strip())
 
     print(done)
-    steps = open(output + "/steps_done.txt", "a")
 
     # Get tools and versions
     function_queue = []
@@ -135,7 +134,7 @@ def main():
 
     # Calling each steps
     for func in function_queue:
-        func(sample, toml_config, steps)
+        func(sample, toml_config)
 
     steps.close()
 
@@ -245,7 +244,7 @@ def get_reference(ref, tool):
     return reference
 
 
-def fastqc(sample, toml_config, steps):
+def fastqc(sample, toml_config):
     title("FastQC")
 
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
@@ -293,10 +292,13 @@ def fastqc(sample, toml_config, steps):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
-    steps.write("FastQC\n")
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("FastQC\n")
 
 
-def bbduk(sample, toml_config, steps):
+def bbduk(sample, toml_config):
     title("BBDuk")
 
     output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
@@ -345,10 +347,13 @@ def bbduk(sample, toml_config, steps):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
-    steps.write("BBDuk\n")
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("BBDuk\n")
 
 
-def star(sample, toml_config, steps):
+def star(sample, toml_config):
     title("STAR")
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     subprocess.run(["mkdir", "-p", output])
@@ -455,10 +460,13 @@ def star(sample, toml_config, steps):
     )
     subprocess.run(["rm", output + "/" + sample + "_Log.progress.out"])
 
-    steps.write("STAR\n")
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("STAR\n")
 
 
-def bwa(sample, toml_config, steps):
+def bwa(sample, toml_config):
     title("BWA-MEM2")
 
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
@@ -515,10 +523,13 @@ def bwa(sample, toml_config, steps):
         ]
     )
 
-    steps.write("BWA-MEM2\n")
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("BWA-MEM2\n")
 
 
-def salmon(sample, toml_config, steps):
+def salmon(sample, toml_config):
     title("Salmon")
 
     output = toml_config["general"]["output"] + "/" + sample + "/Salmon"
@@ -577,10 +588,13 @@ def salmon(sample, toml_config, steps):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
-    steps.write("Salmon\n")
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("Salmon\n")
 
 
-def samtools(sample, toml_config, steps):
+def samtools(sample, toml_config):
     title("Samtools")
     input = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     output = toml_config["general"]["output"] + "/" + sample + "/Samtools"
@@ -617,10 +631,13 @@ def samtools(sample, toml_config, steps):
     subprocess.run(["rm", stats1])
     subprocess.run(["rm", stats2])
 
-    steps.write("Samtools\n")
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("Samtools\n")
 
 
-def bamqc(sample, toml_config, steps):
+def bamqc(sample, toml_config):
     title("FastQC for bam")
 
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
@@ -656,10 +673,13 @@ def bamqc(sample, toml_config, steps):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
-    steps.write("FastQC for bam\n")
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("FastQC for bam\n")
 
 
-def markduplicates(sample, toml_config, steps):
+def markduplicates(sample, toml_config):
     title("MarkDuplicates")
 
     output = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/"
@@ -694,10 +714,13 @@ def markduplicates(sample, toml_config, steps):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
-    steps.write("MarkDuplicates\n")
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("MarkDuplicates\n")
 
 
-def featurecounts(sample, toml_config, steps):
+def featurecounts(sample, toml_config):
     title("FeatureCounts")
 
     temporary = toml_config["general"]["temporary"] + "/" + sample
@@ -766,10 +789,13 @@ def featurecounts(sample, toml_config, steps):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
-    steps.write("FeatureCounts\n")
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("FeatureCounts\n")
 
 
-def multiqc(sample, toml_config, steps):
+def multiqc(sample, toml_config):
     title("MutliQC")
     input = toml_config["general"]["output"] + "/" + sample + "/"
     output = toml_config["general"]["output"] + "/" + sample + "/QC/multiQC/"
@@ -802,10 +828,13 @@ def multiqc(sample, toml_config, steps):
         ]
     )
 
-    steps.write("MutliQC\n")
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("MutliQC\n")
 
 
-def bcftools(sample, toml_config, steps):
+def bcftools(sample, toml_config):
     title("BCFtools")
     input = (
         toml_config["general"]["output"]
@@ -854,10 +883,13 @@ def bcftools(sample, toml_config, steps):
     print(f">>> {command_2}\n")
     subprocess.run(call)
 
-    steps.write("BCFtools\n")
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("BCFtools\n")
 
 
-def snpeff(sample, toml_config, steps):
+def snpeff(sample, toml_config):
     title("SnpEff")
 
     path = toml_config["general"]["output"] + "/" + sample + "/Variants/"
@@ -868,7 +900,10 @@ def snpeff(sample, toml_config, steps):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
-    steps.write("SnpEff\n")
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("SnpEff\n")
 
 
 if __name__ == "__main__":
