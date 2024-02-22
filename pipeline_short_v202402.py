@@ -43,74 +43,101 @@ def main():
     subprocess.run(["mkdir", "-p", tmp])
     print(f"\n>>> Output saved to '{output}'\n")
 
+    # Open file for steps done
+    steps = open(output + "/steps_done.txt", "a")
+    steps.write("Loading ENV\n")
+    steps.close()
+
+    done = []
+    with open(output + "/steps_done.txt", "r") as f:
+        for line in f:
+            done.append(line.strip())
+
+    print(done)
+    steps = open(output + "/steps_done.txt", "a")
+
     # Get tools and versions
     function_queue = []
     print(">>> Parameters:")
 
     # Quality control
     print("\t>>> Quality control: FastQC (v0.12.1)")
-    function_queue.append(fastqc)
+    if "FastQC" not in done:
+        function_queue.append(fastqc)
 
     # Trimming
     if toml_config["general"]["trimming"] == "bbduk":
         print("\t>>> Trimming: BBDuk (v39.06)")
-        function_queue.append(bbduk)
+        if "BBDuk" not in done:
+            function_queue.append(bbduk)
     else:
         print("\t>>> Trimming: none")
 
     # Alignment
     if toml_config["general"]["alignment"] == "star":
         print("\t>>> Alignment: STAR (v2.7.11a)")
-        function_queue.append(star)
+        if "STAR" not in done:
+            function_queue.append(star)
     elif toml_config["general"]["alignment"] == "bwa":
         print("\t>>> Alignment: BWA-MEM2 (v2.2.1)")
-        function_queue.append(bwa)
+        if "BWA-MEM2" not in done:
+            function_queue.append(bwa)
     else:
         print("\t>>> Alignment: none")
 
     # Pseudo alignedment
     if toml_config["general"]["pseudo"] == "salmon":
         print("\t>>> Pseudo_alignedment: Salmon (v1.10.2)")
-        function_queue.append(salmon)
+        if "Salmon" not in done:
+            function_queue.append(salmon)
     else:
         print("\t>>> Pseudo_alignedment: none")
 
     # Sorting and indexing
     print("\t>>> Sorting/Indexing: Samtools (v1.18)")
-    function_queue.append(samtools)
+    if "Samtools" not in done:
+        function_queue.append(samtools)
 
     # Alignment QC
-    function_queue.append(bamqc)
+    if "FastQC for bam" not in done:
+        function_queue.append(bamqc)
 
     # MarkDuplicates
     print("\t>>> MarkDuplicates: GATK (4.4.0.0) & Picard (v3.0.0)")
-    function_queue.append(markduplicates)
+    if "MarkDuplicates" not in done:
+        function_queue.append(markduplicates)
 
     # Quantification
     if toml_config["general"]["quantification"] == "featurecounts":
         print("\t>>> Quantification: featureCounts (v2.0.6)")
-        function_queue.append(featurecounts)
+        if "FeatureCounts" not in done:
+            function_queue.append(featurecounts)
     else:
         print("\t>>> Quantification: none")
 
     # MultiQC
     print("\t>>> Quality control report: MultiQC (v1.18)")
-    function_queue.append(multiqc)
+    if "MutliQC" not in done:
+        function_queue.append(multiqc)
 
     # Variant Calling : BAM to VCF
     print("\t>>> Variant Calling: BCFtools (v1.18)")
-    function_queue.append(bcftools)
+    if "BCFtools" not in done:
+        function_queue.append(bcftools)
 
     # Variant Calling : SnpEff (annotation)
     if toml_config["general"]["variant"] == "snpeff":
         print("\t>>> Variant Calling: SnpEff + SnpSift (v5.2a)")
-        function_queue.append(snpeff)
+        if "SnpEff" not in done:
+            function_queue.append(snpeff)
     else:
         print("\t>>> Variant Calling: none")
 
     # Calling each steps
     for func in function_queue:
-        func(sample, toml_config)
+        func(sample, toml_config, steps)
+
+    steps.close()
 
     end = get_time()
     total_time = end - start
@@ -118,6 +145,8 @@ def main():
         toml_config["general"]["sequencing"], sample, total_time
     )
     print("=" * len(end_str) + "\n" + end_str + "\n" + "=" * len(end_str))
+
+    steps.close
 
 
 def get_time():
@@ -179,14 +208,14 @@ def get_reference(ref, tool):
             reference = {
                 "fasta": path + "Homo_sapiens.GRCh37.87.dna.primary_assembly.fa",
                 "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "Homo_sapiens.GRCh37.87.gtf.gz",
+                "gtf": path + "Homo_sapiens.GRCh37.87.gtf",
                 "gff3": path + "Homo_sapiens.GRCh37.87.gff3.gz",
             }
         case "grch38":
             reference = {
                 "fasta": path + "Homo_sapiens.GRCh38.105.dna.primary_assembly.fa",
                 "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "Homo_sapiens.GRCh38.105.gtf.gz",
+                "gtf": path + "Homo_sapiens.GRCh38.105.gtf",
                 "gff3": path + "Homo_sapiens.GRCh38.105.gff3.gz",
             }
 
@@ -194,7 +223,7 @@ def get_reference(ref, tool):
             reference = {
                 "fasta": path + "Mus_musculus.GRCm39.105.dna.primary_assembly.fa",
                 "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "Mus_musculus.GRCm39.105.gtf.gz",
+                "gtf": path + "Mus_musculus.GRCm39.105.gtf",
                 "gff3": path + "Mus_musculus.GRCm39.105.gff3.gz",
             }
 
@@ -202,7 +231,7 @@ def get_reference(ref, tool):
             reference = {
                 "fasta": path + "Caenorhabditis_elegans.WBcel235.105.dna.toplevel.fa",
                 "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "Caenorhabditis_elegans.WBcel235.105.gtf.gz",
+                "gtf": path + "Caenorhabditis_elegans.WBcel235.105.gtf",
                 "gff3": path + "Caenorhabditis_elegans.WBcel235.105.gff3.gz",
             }
 
@@ -210,13 +239,13 @@ def get_reference(ref, tool):
             reference = {
                 "fasta": path + "Danio_rerio.GRCz11.105.dna.primary_assembly.fa",
                 "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "Danio_rerio.GRCz11.105.gtf.gz",
+                "gtf": path + "Danio_rerio.GRCz11.105.gtf",
                 "gff3": path + "Danio_rerio.GRCz11.105.gff3.gz",
             }
     return reference
 
 
-def fastqc(sample, toml_config):
+def fastqc(sample, toml_config, steps):
     title("FastQC")
 
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
@@ -264,8 +293,10 @@ def fastqc(sample, toml_config):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
+    steps.write("FastQC\n")
 
-def bbduk(sample, toml_config):
+
+def bbduk(sample, toml_config, steps):
     title("BBDuk")
 
     output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
@@ -314,8 +345,10 @@ def bbduk(sample, toml_config):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
+    steps.write("BBDuk\n")
 
-def star(sample, toml_config):
+
+def star(sample, toml_config, steps):
     title("STAR")
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     subprocess.run(["mkdir", "-p", output])
@@ -422,8 +455,10 @@ def star(sample, toml_config):
     )
     subprocess.run(["rm", output + "/" + sample + "_Log.progress.out"])
 
+    steps.write("STAR\n")
 
-def bwa(sample, toml_config):
+
+def bwa(sample, toml_config, steps):
     title("BWA-MEM2")
 
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
@@ -480,15 +515,16 @@ def bwa(sample, toml_config):
         ]
     )
 
+    steps.write("BWA-MEM2\n")
 
-def salmon(sample, toml_config):
+
+def salmon(sample, toml_config, steps):
     title("Salmon")
 
     output = toml_config["general"]["output"] + "/" + sample + "/Salmon"
     subprocess.run(["mkdir", "-p", output])
 
     ref = get_reference(toml_config["general"]["reference"], "salmon")["index"]
-    gtf = get_reference(toml_config["general"]["reference"], "salmon")["gtf"]
 
     files = get_file_trimmed(toml_config, output, sample)
     I1_toAlign = files["I1_toAlign"]
@@ -508,8 +544,6 @@ def salmon(sample, toml_config):
             str(toml_config["general"]["threads"]),
             "--auxDir",
             "salmon_tmp",
-            "--geneMap",
-            gtf,
             "--minScoreFraction",
             str(toml_config["salmon"]["minScoreFraction"]),
             "--mates1",
@@ -531,8 +565,6 @@ def salmon(sample, toml_config):
             str(toml_config["general"]["threads"]),
             "--auxDir",
             "salmon_tmp",
-            "--geneMap",
-            gtf,
             "--minScoreFraction",
             str(toml_config["salmon"]["minScoreFraction"]),
             "--unmatedReads",
@@ -545,8 +577,10 @@ def salmon(sample, toml_config):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
+    steps.write("Salmon\n")
 
-def samtools(sample, toml_config):
+
+def samtools(sample, toml_config, steps):
     title("Samtools")
     input = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     output = toml_config["general"]["output"] + "/" + sample + "/Samtools"
@@ -565,15 +599,29 @@ def samtools(sample, toml_config):
     subprocess.run(["samtools", "index", "-b", bamCoord, "-o", bamCoord + ".bai"])
 
     # alignment stats
-    subprocess.run(["samtools", "stats", bamCoord, ">", stats1])
-    subprocess.run(["grep", "^SN", stats1, ">", stats2])
-    subprocess.run(["cut", "-f", "2-", stats2, ">", stats])
+    with open(stats1, "w") as outfile1:
+        subprocess.run(["samtools", "stats", bamCoord], stdout=outfile1)
+
+    with open(stats2, "w") as outfile2:
+        subprocess.run(
+            [
+                "grep",
+                "^SN",
+                stats1,
+            ],
+            stdout=outfile2,
+        )
+    with open(stats, "w") as outfile:
+        subprocess.run(["cut", "-f", "2-", stats2], stdout=outfile)
+
     subprocess.run(["rm", stats1])
     subprocess.run(["rm", stats2])
 
+    steps.write("Samtools\n")
 
-def bamqc(sample, toml_config):
-    title("FastQC")
+
+def bamqc(sample, toml_config, steps):
+    title("FastQC for bam")
 
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
     subprocess.run(["mkdir", "-p", output])
@@ -608,8 +656,10 @@ def bamqc(sample, toml_config):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
+    steps.write("FastQC for bam\n")
 
-def markduplicates(sample, toml_config):
+
+def markduplicates(sample, toml_config, steps):
     title("MarkDuplicates")
 
     output = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/"
@@ -644,8 +694,10 @@ def markduplicates(sample, toml_config):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
+    steps.write("MarkDuplicates\n")
 
-def featurecounts(sample, toml_config):
+
+def featurecounts(sample, toml_config, steps):
     title("FeatureCounts")
 
     temporary = toml_config["general"]["temporary"] + "/" + sample
@@ -669,6 +721,9 @@ def featurecounts(sample, toml_config):
             "featureCounts",
             "-t",
             toml_config["featurecounts"]["features"],
+            "-O",
+            "-F",
+            "GTF",
             "-g",
             toml_config["featurecounts"]["attribute"],
             "--minOverlap",
@@ -689,6 +744,9 @@ def featurecounts(sample, toml_config):
             "featureCounts",
             "-t",
             toml_config["featurecounts"]["features"],
+            "-O",
+            "-F",
+            "GTF",
             "-g",
             toml_config["featurecounts"]["attribute"],
             "--minOverlap",
@@ -708,8 +766,10 @@ def featurecounts(sample, toml_config):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
+    steps.write("FeatureCounts\n")
 
-def multiqc(sample, toml_config):
+
+def multiqc(sample, toml_config, steps):
     title("MutliQC")
     input = toml_config["general"]["output"] + "/" + sample + "/"
     output = toml_config["general"]["output"] + "/" + sample + "/QC/multiQC/"
@@ -742,8 +802,10 @@ def multiqc(sample, toml_config):
         ]
     )
 
+    steps.write("MutliQC\n")
 
-def bcftools(sample, toml_config):
+
+def bcftools(sample, toml_config, steps):
     title("BCFtools")
     input = (
         toml_config["general"]["output"]
@@ -766,18 +828,36 @@ def bcftools(sample, toml_config):
         "-d",
         "10000",
         "-o",
-        output + sample + "_all.vcf",
+        output + sample + ".vcf",
         "-f",
         ref,
         input,
+    ]
+
+    call = [
+        "bcftools",
+        "call",
+        "--threads",
+        str(toml_config["general"]["threads"]),
+        "--multiallelic-caller",
+        "--variants-only",
+        "-o",
+        output + sample + "_all.vcf",
+        output + sample + ".vcf",
     ]
 
     command_1 = " ".join(mpileup)
     print(f">>> {command_1}\n")
     subprocess.run(mpileup)
 
+    command_2 = " ".join(call)
+    print(f">>> {command_2}\n")
+    subprocess.run(call)
 
-def snpeff(sample, toml_config):
+    steps.write("BCFtools\n")
+
+
+def snpeff(sample, toml_config, steps):
     title("SnpEff")
 
     path = toml_config["general"]["output"] + "/" + sample + "/Variants/"
@@ -787,6 +867,8 @@ def snpeff(sample, toml_config):
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
     subprocess.run(command)
+
+    steps.write("SnpEff\n")
 
 
 if __name__ == "__main__":
