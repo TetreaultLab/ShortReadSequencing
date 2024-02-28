@@ -38,7 +38,7 @@ memory = toml_config["general"]["memory"]
 
 # time
 if toml_config["general"]["sequencing"] == "RNA":
-    time = "00-11:59"
+    time = "00-18:59"
 elif toml_config["general"]["sequencing"] == "Exome":
     time = "00-07:59"
 elif toml_config["general"]["sequencing"] == "Genome":
@@ -67,6 +67,8 @@ module load fastqc/0.12.1 bbmap/39.06 star/2.7.11a bwa-mem2/2.2.1 gcc/12.3 openm
 source /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/bin/activate
 #
 ### Launch script
+#
+newgrp rrg-tetreaum
 #
 python -u /lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/pipeline_short_v202402.py --sample {6} --config {7}
 #
