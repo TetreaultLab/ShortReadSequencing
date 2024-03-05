@@ -68,7 +68,7 @@ source /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/bin/
 #
 ### Launch script
 #
-newgrp rrg-tetreaum
+# newgrp rrg-tetreaum
 #
 python -u /lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/pipeline_short_v202402.py --sample {6} --config {7}
 #

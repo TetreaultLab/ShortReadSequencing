@@ -57,7 +57,7 @@ elif args.trimming == "bbduk":
     ordered = "f"   # Set to true to output reads in same order as input.
     kmers = 27  # Kmer length used for finding contaminants.  Contaminants shorter than k will not be found.  k must be at least 1.
     qtrim = "r"    # Trim read ends to remove bases with quality below trimq. Performed AFTER looking for kmers.  Values: rl (trim both ends), f (neither end), r (right end only), l (left end only), w (sliding window).
-    trimq = 6 # Regions with average quality BELOW this will be trimmed, if qtrim is set to something other than f.
+    trimq = 10 # Regions with average quality BELOW this will be trimmed, if qtrim is set to something other than f.
     minlength = 10 # Reads shorter than this after trimming will be discarded.  Pairs will be discarded if both are shorter.
     mlf = 0 # (minlengthfraction) Reads shorter than this fraction of original length after trimming will be discarded.
     minavgquality = 0   # (maq) Reads with average quality (after trimming) below this will be discarded.
@@ -116,7 +116,7 @@ elif args.quantification == "featurecounts":
     options += """# Quantification
 [featurecounts]
     features = "gene"   # Specify feature type(s) in a GTF annotation. If multiple types are provided, they should be separated by ',' with no space in between. 'exon' by default. Rows in the annotation with a matched feature will be extracted and used for read mapping.
-    attribute = "gene_name"   # Specify attribute type in GTF annotation. 'gene_id' by default. Meta-features used for read counting will be extracted from annotation using the provided value.
+    attribute = "gene_id"   # Specify attribute type in GTF annotation. 'gene_id' by default. Meta-features used for read counting will be extracted from annotation using the provided value.
     overlap = 1 # Minimum number of overlapping bases in a read that is required for read assignment. 1 by default. Number of overlapping bases is counted from both reads if paired end.
     \n
 """
@@ -152,8 +152,8 @@ general = """# TOML config file for {0}
     pseudo = "{3}"
     quantification = "{4}"
     variant = "{5}"
-    threads = 8  # Number of threads.
-    memory = 64 # Total memory needed.
+    threads = 16  # Number of threads.
+    memory = 128 # Total memory needed.
     email = "marjorie.labrecque@umontreal.ca" # You e-mail address to receive notification
     
 
