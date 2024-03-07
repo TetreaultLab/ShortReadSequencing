@@ -59,52 +59,52 @@ def main():
     function_queue = []
     print(">>> Parameters:")
 
-    # Quality control
-    print("\t>>> Quality control: FastQC (v0.12.1)")
-    if "FastQC" not in done:
-        function_queue.append(fastqc)
+    # # Quality control
+    # print("\t>>> Quality control: FastQC (v0.12.1)")
+    # if "FastQC" not in done:
+    #     function_queue.append(fastqc)
 
-    # Trimming
-    if toml_config["general"]["trimming"] == "bbduk":
-        print("\t>>> Trimming: BBDuk (v39.06)")
-        if "BBDuk" not in done:
-            function_queue.append(bbduk)
-    else:
-        print("\t>>> Trimming: none")
+    # # Trimming
+    # if toml_config["general"]["trimming"] == "bbduk":
+    #     print("\t>>> Trimming: BBDuk (v39.06)")
+    #     if "BBDuk" not in done:
+    #         function_queue.append(bbduk)
+    # else:
+    #     print("\t>>> Trimming: none")
 
-    # Alignment
-    if toml_config["general"]["alignment"] == "star":
-        print("\t>>> Alignment: STAR (v2.7.11a)")
-        if "STAR" not in done:
-            function_queue.append(star)
-    elif toml_config["general"]["alignment"] == "bwa":
-        print("\t>>> Alignment: BWA-MEM2 (v2.2.1)")
-        if "BWA-MEM2" not in done:
-            function_queue.append(bwa)
-    else:
-        print("\t>>> Alignment: none")
+    # # Alignment
+    # if toml_config["general"]["alignment"] == "star":
+    #     print("\t>>> Alignment: STAR (v2.7.11a)")
+    #     if "STAR" not in done:
+    #         function_queue.append(star)
+    # elif toml_config["general"]["alignment"] == "bwa":
+    #     print("\t>>> Alignment: BWA-MEM2 (v2.2.1)")
+    #     if "BWA-MEM2" not in done:
+    #         function_queue.append(bwa)
+    # else:
+    #     print("\t>>> Alignment: none")
 
-    # Pseudo alignedment
-    if toml_config["general"]["pseudo"] == "salmon":
-        print("\t>>> Pseudo_alignedment: Salmon (v1.10.2)")
-        if "Salmon" not in done:
-            function_queue.append(salmon)
-    else:
-        print("\t>>> Pseudo_alignedment: none")
+    # # Pseudo alignedment
+    # if toml_config["general"]["pseudo"] == "salmon":
+    #     print("\t>>> Pseudo_alignedment: Salmon (v1.10.2)")
+    #     if "Salmon" not in done:
+    #         function_queue.append(salmon)
+    # else:
+    #     print("\t>>> Pseudo_alignedment: none")
 
-    # Sorting and indexing
-    print("\t>>> Sorting/Indexing: Samtools (v1.18)")
-    if "Samtools" not in done:
-        function_queue.append(samtools)
+    # # Sorting and indexing
+    # print("\t>>> Sorting/Indexing: Samtools (v1.18)")
+    # if "Samtools" not in done:
+    #     function_queue.append(samtools)
 
-    # Alignment QC
-    if "FastQC for bam" not in done:
-        function_queue.append(bamqc)
+    # # Alignment QC
+    # if "FastQC for bam" not in done:
+    #     function_queue.append(bamqc)
 
-    # MarkDuplicates
-    print("\t>>> MarkDuplicates: GATK (4.4.0.0) & Picard (v3.0.0)")
-    if "MarkDuplicates" not in done:
-        function_queue.append(markduplicates)
+    # # MarkDuplicates
+    # print("\t>>> MarkDuplicates: GATK (4.4.0.0) & Picard (v3.0.0)")
+    # if "MarkDuplicates" not in done:
+    #     function_queue.append(markduplicates)
 
     # Quantification
     if toml_config["general"]["quantification"] == "featurecounts":
@@ -114,23 +114,23 @@ def main():
     else:
         print("\t>>> Quantification: none")
 
-    # MultiQC
-    print("\t>>> Quality control report: MultiQC (v1.18)")
-    if "MutliQC" not in done:
-        function_queue.append(multiqc)
+    # # MultiQC
+    # print("\t>>> Quality control report: MultiQC (v1.18)")
+    # if "MutliQC" not in done:
+    #     function_queue.append(multiqc)
 
-    # Variant Calling : BAM to VCF
-    print("\t>>> Variant Calling: BCFtools (v1.18)")
-    if "BCFtools" not in done:
-        function_queue.append(bcftools)
+    # # Variant Calling : BAM to VCF
+    # print("\t>>> Variant Calling: BCFtools (v1.18)")
+    # if "BCFtools" not in done:
+    #     function_queue.append(bcftools)
 
-    # Variant Calling : SnpEff (annotation)
-    if toml_config["general"]["variant"] == "snpeff":
-        print("\t>>> Variant Calling: SnpEff + SnpSift (v5.2a)")
-        if "SnpEff" not in done:
-            function_queue.append(snpeff)
-    else:
-        print("\t>>> Variant Calling: none")
+    # # Variant Calling : SnpEff (annotation)
+    # if toml_config["general"]["variant"] == "snpeff":
+    #     print("\t>>> Variant Calling: SnpEff + SnpSift (v5.2a)")
+    #     if "SnpEff" not in done:
+    #         function_queue.append(snpeff)
+    # else:
+    #     print("\t>>> Variant Calling: none")
 
     # Calling each steps
     for func in function_queue:
@@ -600,15 +600,13 @@ def salmon(sample, toml_config):
 
 def samtools(sample, toml_config):
     title("Samtools")
-    input = toml_config["general"]["output"] + "/" + sample + "/Aligned"
-    output = toml_config["general"]["output"] + "/" + sample + "/Samtools"
-    subprocess.run(["mkdir", "-p", output])
+    in_out = toml_config["general"]["output"] + "/" + sample + "/Aligned"
 
-    inBAM = input + "/" + sample + ".bam"
-    bamCoord = output + "/" + sample + "_sortedCoordinate.bam"
-    stats1 = output + "/" + sample + "_stats1.txt"
-    stats2 = output + "/" + sample + "_stats2.txt"
-    stats = output + "/" + sample + "_stats.txt"
+    inBAM = in_out + "/" + sample + ".bam"
+    bamCoord = in_out + "/" + sample + "_sortedCoordinate.bam"
+    stats1 = in_out + "/" + sample + "_stats1.txt"
+    stats2 = in_out + "/" + sample + "_stats2.txt"
+    stats = in_out + "/" + sample + "_stats.txt"
 
     # Sort by coordinate
     subprocess.run(["samtools", "sort", inBAM, "-o", bamCoord])
@@ -654,7 +652,7 @@ def bamqc(sample, toml_config):
         toml_config["general"]["output"]
         + "/"
         + sample
-        + "/Samtools/"
+        + "/Aligned/"
         + sample
         + "_sortedCoordinate.bam"
     )
@@ -692,7 +690,7 @@ def markduplicates(sample, toml_config):
     temporary = toml_config["general"]["temporary"] + "/" + sample + "/md_tmp"
     subprocess.run(["mkdir", "-p", temporary])
 
-    input = toml_config["general"]["output"] + "/" + sample + "/Samtools"
+    input = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     bamCoord = input + "/" + sample + "_sortedCoordinate.bam"
     metrics = output + sample + "_duplicates_metrics.txt"
     records = output + sample + "_duplicates.bam"
@@ -735,7 +733,7 @@ def featurecounts(sample, toml_config):
         toml_config["general"]["output"]
         + "/"
         + sample
-        + "/Samtools/"
+        + "/Aligned/"
         + sample
         + "_sortedCoordinate.bam"
     )
@@ -749,6 +747,7 @@ def featurecounts(sample, toml_config):
             "-t",
             toml_config["featurecounts"]["features"],
             "-O",
+            "--countReadPairs",
             "-F",
             "GTF",
             "-g",
@@ -794,24 +793,29 @@ def featurecounts(sample, toml_config):
     subprocess.run(command)
 
     # Work on counts output
-    with open(output + "/" + sample + '_1.counts"', "w") as outfile:
+    with open(output + "/" + sample + "_0.counts", "w") as outfile:
         subprocess.run(
-            ["cut", "-f1,7", output + "/" + sample + "_geneID.txt"], stdout=outfile
+            ["tail", "-n", "+2", output + "/" + sample + "_geneID.txt"], stdout=outfile
+        )
+
+    with open(output + "/" + sample + "_1.counts", "w") as outfile:
+        subprocess.run(
+            ["cut", "-f1,7", output + "/" + sample + "_0.counts"], stdout=outfile
         )
 
     subprocess.run(
         [
             "sed",
             "-i",
-            '"1s/.*/gene_id\t${sample}/"',
+            "1s|.*|gene_id\t" + sample + "|",
             output + "/" + sample + "_1.counts",
         ]
     )
 
-    with open(output + "/" + sample + '_2.counts"', "w") as outfile:
+    with open(output + "/" + sample + "_2.counts", "w") as outfile:
         subprocess.run(["sort", output + "/" + sample + "_1.counts"], stdout=outfile)
 
-    with open(output + "/" + sample + '_3.counts"', "w") as outfile:
+    with open(output + "/" + sample + "_3.counts", "w") as outfile:
         subprocess.run(
             [
                 "join",
@@ -823,12 +827,12 @@ def featurecounts(sample, toml_config):
             stdout=outfile,
         )
 
-    with open(output + "/" + sample + '_4.counts"', "w") as outfile:
+    with open(output + "/" + sample + "_4.counts", "w") as outfile:
         subprocess.run(
             ["sed", "$!H;1h;$!d;G", output + "/" + sample + "_3.counts"], stdout=outfile
         )
 
-    with open(output + "/" + sample + '_biotype.counts"', "w") as outfile:
+    with open(output + "/" + sample + "_biotype.counts", "w") as outfile:
         subprocess.run(
             [
                 "awk",
@@ -838,7 +842,7 @@ def featurecounts(sample, toml_config):
             stdout=outfile,
         )
 
-    with open(output + "/" + sample + '.counts"', "w") as outfile:
+    with open(output + "/" + sample + ".counts", "w") as outfile:
         subprocess.run(
             [
                 "awk",
@@ -848,7 +852,11 @@ def featurecounts(sample, toml_config):
             stdout=outfile,
         )
 
-    subprocess.run(["rm", output + "/" + sample + "{1..4}.counts"])
+    subprocess.run(["rm", output + "/" + sample + "_0.counts"])
+    subprocess.run(["rm", output + "/" + sample + "_1.counts"])
+    subprocess.run(["rm", output + "/" + sample + "_2.counts"])
+    subprocess.run(["rm", output + "/" + sample + "_3.counts"])
+    subprocess.run(["rm", output + "/" + sample + "_4.counts"])
 
     # Steps done
     with open(
@@ -867,8 +875,6 @@ def multiqc(sample, toml_config):
         f.write(input + "QC/fastQC/\n")
         if toml_config["general"]["trimming"] != "none":
             f.write(input + "Trimmed/\n")
-        if toml_config["general"]["alignment"] != "none":
-            f.write(input + "Aligned/\n")
         if toml_config["general"]["pseudo"] != "none":
             f.write(input + "Salmon/\n")
         if toml_config["general"]["quantification"] != "none":
@@ -902,7 +908,7 @@ def bcftools(sample, toml_config):
         toml_config["general"]["output"]
         + "/"
         + sample
-        + "/Samtools/"
+        + "/Aligned/"
         + sample
         + "_sortedCoordinate.bam"
     )
