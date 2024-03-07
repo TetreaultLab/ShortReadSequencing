@@ -411,7 +411,7 @@ def star(sample, toml_config):
             "--runThreadN",
             str(toml_config["general"]["threads"]),
             "--limitBAMsortRAM",
-            "34105090798",
+            "60000000000",
             "--genomeDir",
             ref,
             "--outFileNamePrefix",
@@ -763,7 +763,7 @@ def featurecounts(sample, toml_config):
             "-a",
             gtf,
             "-o",
-            output + "/" + sample + "_counts.txt",
+            output + "/" + sample + "_geneID.txt",
             input,
         ]
     else:
@@ -785,7 +785,7 @@ def featurecounts(sample, toml_config):
             "-a",
             gtf,
             "-o",
-            output + "/" + sample,
+            output + "/" + sample + "_geneID.txt",
             input,
         ]
 
@@ -793,6 +793,64 @@ def featurecounts(sample, toml_config):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
+    # Work on counts output
+    with open(output + "/" + sample + '_1.counts"', "w") as outfile:
+        subprocess.run(
+            ["cut", "-f1,7", output + "/" + sample + "_geneID.txt"], stdout=outfile
+        )
+
+    subprocess.run(
+        [
+            "sed",
+            "-i",
+            '"1s/.*/gene_id\t${sample}/"',
+            output + "/" + sample + "_1.counts",
+        ]
+    )
+
+    with open(output + "/" + sample + '_2.counts"', "w") as outfile:
+        subprocess.run(["sort", output + "/" + sample + "_1.counts"], stdout=outfile)
+
+    with open(output + "/" + sample + '_3.counts"', "w") as outfile:
+        subprocess.run(
+            [
+                "join",
+                output + "/" + sample + "_2.counts",
+                "/lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/"
+                + toml_config["general"]["reference"]
+                + "_gene_association.txt",
+            ],
+            stdout=outfile,
+        )
+
+    with open(output + "/" + sample + '_4.counts"', "w") as outfile:
+        subprocess.run(
+            ["sed", "$!H;1h;$!d;G", output + "/" + sample + "_3.counts"], stdout=outfile
+        )
+
+    with open(output + "/" + sample + '_biotype.counts"', "w") as outfile:
+        subprocess.run(
+            [
+                "awk",
+                'BEGIN {FS=" "; OFS="\t"} {print $3, $2, $1, $4}',
+                output + "/" + sample + "_4.counts",
+            ],
+            stdout=outfile,
+        )
+
+    with open(output + "/" + sample + '.counts"', "w") as outfile:
+        subprocess.run(
+            [
+                "awk",
+                'BEGIN {FS=" "; OFS="\t"} {print $3, $2}',
+                output + "/" + sample + "_4.counts",
+            ],
+            stdout=outfile,
+        )
+
+    subprocess.run(["rm", output + "/" + sample + "{1..4}.counts"])
+
+    # Steps done
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:

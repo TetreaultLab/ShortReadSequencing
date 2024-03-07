@@ -38,11 +38,11 @@ memory = toml_config["general"]["memory"]
 
 # time
 if toml_config["general"]["sequencing"] == "RNA":
-    time = "00-18:59"
+    time = "01-11:59"
 elif toml_config["general"]["sequencing"] == "Exome":
-    time = "00-07:59"
+    time = "00-23:59"
 elif toml_config["general"]["sequencing"] == "Genome":
-    time = "00-16:59"
+    time = "02-11:59"
 
 f.close()
 
@@ -76,7 +76,6 @@ python -u /lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/pipeline_short
     cores, memory, time, sample_name, sample_name, email, sample_name, path_config
 )
 
-print(slurm)
 print(slurm, file=open(work_dir + "/" + sample_name + ".slurm", "w"))
 
 if args.launch is True:
