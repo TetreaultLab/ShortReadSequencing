@@ -114,23 +114,23 @@ def main():
     else:
         print("\t>>> Quantification: none")
 
-    # # MultiQC
-    # print("\t>>> Quality control report: MultiQC (v1.18)")
-    # if "MutliQC" not in done:
-    #     function_queue.append(multiqc)
+    # MultiQC
+    print("\t>>> Quality control report: MultiQC (v1.18)")
+    if "MutliQC" not in done:
+        function_queue.append(multiqc)
 
-    # # Variant Calling : BAM to VCF
-    # print("\t>>> Variant Calling: BCFtools (v1.18)")
-    # if "BCFtools" not in done:
-    #     function_queue.append(bcftools)
+    # Variant Calling : BAM to VCF
+    print("\t>>> Variant Calling: BCFtools (v1.18)")
+    if "BCFtools" not in done:
+        function_queue.append(bcftools)
 
-    # # Variant Calling : SnpEff (annotation)
-    # if toml_config["general"]["variant"] == "snpeff":
-    #     print("\t>>> Variant Calling: SnpEff + SnpSift (v5.2a)")
-    #     if "SnpEff" not in done:
-    #         function_queue.append(snpeff)
-    # else:
-    #     print("\t>>> Variant Calling: none")
+    # Variant Calling : SnpEff (annotation)
+    if toml_config["general"]["variant"] == "snpeff":
+        print("\t>>> Variant Calling: SnpEff + SnpSift (v5.2a)")
+        if "SnpEff" not in done:
+            function_queue.append(snpeff)
+    else:
+        print("\t>>> Variant Calling: none")
 
     # Calling each steps
     for func in function_queue:
