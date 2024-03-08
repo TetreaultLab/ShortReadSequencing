@@ -59,52 +59,52 @@ def main():
     function_queue = []
     print(">>> Parameters:")
 
-    # # Quality control
-    # print("\t>>> Quality control: FastQC (v0.12.1)")
-    # if "FastQC" not in done:
-    #     function_queue.append(fastqc)
+    # Quality control
+    print("\t>>> Quality control: FastQC (v0.12.1)")
+    if "FastQC" not in done:
+        function_queue.append(fastqc)
 
-    # # Trimming
-    # if toml_config["general"]["trimming"] == "bbduk":
-    #     print("\t>>> Trimming: BBDuk (v39.06)")
-    #     if "BBDuk" not in done:
-    #         function_queue.append(bbduk)
-    # else:
-    #     print("\t>>> Trimming: none")
+    # Trimming
+    if toml_config["general"]["trimming"] == "bbduk":
+        print("\t>>> Trimming: BBDuk (v39.06)")
+        if "BBDuk" not in done:
+            function_queue.append(bbduk)
+    else:
+        print("\t>>> Trimming: none")
 
-    # # Alignment
-    # if toml_config["general"]["alignment"] == "star":
-    #     print("\t>>> Alignment: STAR (v2.7.11a)")
-    #     if "STAR" not in done:
-    #         function_queue.append(star)
-    # elif toml_config["general"]["alignment"] == "bwa":
-    #     print("\t>>> Alignment: BWA-MEM2 (v2.2.1)")
-    #     if "BWA-MEM2" not in done:
-    #         function_queue.append(bwa)
-    # else:
-    #     print("\t>>> Alignment: none")
+    # Alignment
+    if toml_config["general"]["alignment"] == "star":
+        print("\t>>> Alignment: STAR (v2.7.11a)")
+        if "STAR" not in done:
+            function_queue.append(star)
+    elif toml_config["general"]["alignment"] == "bwa":
+        print("\t>>> Alignment: BWA-MEM2 (v2.2.1)")
+        if "BWA-MEM2" not in done:
+            function_queue.append(bwa)
+    else:
+        print("\t>>> Alignment: none")
 
-    # # Pseudo alignedment
-    # if toml_config["general"]["pseudo"] == "salmon":
-    #     print("\t>>> Pseudo_alignedment: Salmon (v1.10.2)")
-    #     if "Salmon" not in done:
-    #         function_queue.append(salmon)
-    # else:
-    #     print("\t>>> Pseudo_alignedment: none")
+    # Pseudo alignedment
+    if toml_config["general"]["pseudo"] == "salmon":
+        print("\t>>> Pseudo_alignedment: Salmon (v1.10.2)")
+        if "Salmon" not in done:
+            function_queue.append(salmon)
+    else:
+        print("\t>>> Pseudo_alignedment: none")
 
-    # # Sorting and indexing
-    # print("\t>>> Sorting/Indexing: Samtools (v1.18)")
-    # if "Samtools" not in done:
-    #     function_queue.append(samtools)
+    # Sorting and indexing
+    print("\t>>> Sorting/Indexing: Samtools (v1.18)")
+    if "Samtools" not in done:
+        function_queue.append(samtools)
 
-    # # Alignment QC
-    # if "FastQC for bam" not in done:
-    #     function_queue.append(bamqc)
+    # Alignment QC
+    if "FastQC for bam" not in done:
+        function_queue.append(bamqc)
 
-    # # MarkDuplicates
-    # print("\t>>> MarkDuplicates: GATK (4.4.0.0) & Picard (v3.0.0)")
-    # if "MarkDuplicates" not in done:
-    #     function_queue.append(markduplicates)
+    # MarkDuplicates
+    print("\t>>> MarkDuplicates: GATK (4.4.0.0) & Picard (v3.0.0)")
+    if "MarkDuplicates" not in done:
+        function_queue.append(markduplicates)
 
     # Quantification
     if toml_config["general"]["quantification"] == "featurecounts":
@@ -138,14 +138,14 @@ def main():
 
     steps.close()
 
+    
+
     end = get_time()
     total_time = end - start
     end_str = ">>> {}-seq pipeline for {} completed in {}.".format(
         toml_config["general"]["sequencing"], sample, total_time
     )
     print("=" * len(end_str) + "\n" + end_str + "\n" + "=" * len(end_str))
-
-    steps.close
 
 
 def get_time():
