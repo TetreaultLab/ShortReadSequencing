@@ -959,19 +959,38 @@ def bcftools(sample, toml_config):
 
 def snpeff(sample, toml_config):
     title("SnpEff")
+    
+    snpeff="/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/snpEff"
+    ref="GRCh37.87"
+    genome = toml_config["general"]["reference"]
+    if genome == "grch37":
+        ref = "GRCh37.87"
+    if genome == "grch38":
+        ref = "GRCh38.105"
 
-    path = toml_config["general"]["output"] + "/" + sample + "/Variants/"
-    print(path)
+    path = toml_config["general"]["output"] + "/" + sample + "/Variants"
     command = []
 
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
-    subprocess.run(command)
 
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("SnpEff\n")
+
+    with open(path + "/" + sample + "_snpeff.vcf", "w") as outfile:
+        subprocess.run(
+            ["java", "-Xmx8g", "-jar", snpeff + "/snpEff.jar", "-noLog", ref, "-c", snpeff + "/snpEff.config", "-stats", path + "/" + sample + "_summary.html", "-csvStats", path + "/" + sample + "_summary.csv", path + "/" + sample + "_all.vcf"],
+            stdout=outfile,
+        )
+
+    with open(path + "/" + sample + "_all.txt", "w") as outfile:
+        subprocess.run(
+            ["java", "-Xmx8g", "-jar", snpeff + "/SnpSift.jar", "-noLog", "-s", "|", "-e", "N/A", path + "/" + sample + "_snpeff.vcf", "CHROM", "POS", "REF", "ALT", "QUAL", "AC", "AN", "DP", "DP4"],
+            stdout=outfile,
+        )
+
+    # with open(
+    #     toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    # ) as steps:
+    #     steps.write("SnpEff\n")
 
 
 if __name__ == "__main__":
