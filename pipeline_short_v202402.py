@@ -961,7 +961,6 @@ def snpeff(sample, toml_config):
     title("SnpEff")
     
     snpeff="/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/snpEff"
-    ref="GRCh37.87"
     genome = toml_config["general"]["reference"]
     if genome == "grch37":
         ref = "GRCh37.87"
@@ -969,21 +968,26 @@ def snpeff(sample, toml_config):
         ref = "GRCh38.105"
 
     path = toml_config["general"]["output"] + "/" + sample + "/Variants"
-    command = []
 
-    command_str = " ".join(command)
-    print(f">>> {command_str}\n")
+    cmd_snpeff = ["java", "-Xmx8g", "-jar", snpeff + "/snpEff.jar", "-noLog", ref, "-c", snpeff + "/snpEff.config", "-stats", path + "/" + sample + "_summary.html", "-csvStats", path + "/" + sample + "_summary.csv", path + "/" + sample + "_all.vcf"]
+            
+    command_str1 = " ".join(cmd_snpeff)
+    print(f">>> {command_str1}\n")
 
+    cmd_extract = ["java", "-Xmx8g", "-jar", snpeff + "/SnpSift.jar", "extractFields", "-noLog", "-s", "|", "-e", '"N/A"', path + "/" + sample + "_snpeff.vcf", "CHROM", "POS", "REF", "ALT", "QUAL", "AC", "AN", "DP", "DP4"]
+
+    command_str2 = " ".join(cmd_extract)
+    print(f">>> {command_str2}\n")
 
     with open(path + "/" + sample + "_snpeff.vcf", "w") as outfile:
         subprocess.run(
-            ["java", "-Xmx8g", "-jar", snpeff + "/snpEff.jar", "-noLog", ref, "-c", snpeff + "/snpEff.config", "-stats", path + "/" + sample + "_summary.html", "-csvStats", path + "/" + sample + "_summary.csv", path + "/" + sample + "_all.vcf"],
+            cmd_snpeff,
             stdout=outfile,
         )
 
     with open(path + "/" + sample + "_all.txt", "w") as outfile:
         subprocess.run(
-            ["java", "-Xmx8g", "-jar", snpeff + "/SnpSift.jar", "-noLog", "-s", "|", "-e", "N/A", path + "/" + sample + "_snpeff.vcf", "CHROM", "POS", "REF", "ALT", "QUAL", "AC", "AN", "DP", "DP4"],
+            cmd_extract,
             stdout=outfile,
         )
 
