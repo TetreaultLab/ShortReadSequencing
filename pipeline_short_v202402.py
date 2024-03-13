@@ -1042,7 +1042,11 @@ def snpeff(sample, toml_config):
         "DP4",
         "HOM",
         "VARTYPE",
-        "MSigDb",
+        "ANN[*].EFFECT",
+        "ANN[*].IMPACT",
+        "ANN[*].BIOTYPE",
+        "ANN[*].HGVS_C",
+        "ANN[*].HGVS_P",
     ]
 
     command_str4 = " ".join(cmd_extract)
