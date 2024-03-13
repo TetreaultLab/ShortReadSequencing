@@ -141,12 +141,12 @@ general = """# TOML config file for {0}
 # Required information
 [general]
     project = "{0}"   # Choose a project name. Should not start with a number.
-    fastq = "/lustre03/project/6019267/shared/data/testShortReadSeq" # Path to raw fastq.gz files. Ex: /lustre03/project/6019267/shared/data/<project>.
+    fastq = "" # Path to raw fastq.gz files. Ex: /lustre03/project/6019267/shared/data/<project>.
     output = "/lustre04/scratch/mlab/pipeline2024/{0}/output" # # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/output/.
     temporary = "/lustre04/scratch/mlab/pipeline2024/{0}/tmp" # The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/tmp/. 
-    sequencing = "RNA" # Type of sequencing. Short read RNA or DNA. Possible values: ["RNA", "Exome", "Genome"].
+    sequencing = "" # Type of sequencing. Short read RNA or DNA. Possible values: ["RNA", "Exome", "Genome"].
     reads = "PE" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].
-    reference = "grch38" # Possible values: Human: ["grch37", "grch38"]. Mouse: ["grcm39"]. Worm: ["wbcel235"]. Zebrafish: ["grcz11"].
+    reference = "" # Possible values: Human: ["grch37", "grch38"]. Mouse: ["grcm39"]. Worm: ["wbcel235"]. Zebrafish: ["grcz11"].
     trimming = "{1}"
     alignment = "{2}"
     pseudo = "{3}"

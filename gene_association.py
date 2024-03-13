@@ -1,7 +1,7 @@
 import pandas as pd
 
-name = "Homo_sapiens.GRCh38.105"
-genome = "grch38"
+name = "Danio_rerio.GRCz11.105"
+genome = "grcz11"
 lines = []
 with open(
     "/lustre03/project/6019267/shared/tools/PIPELINES/References/" + name + ".gtf", "r"

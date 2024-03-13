@@ -138,8 +138,6 @@ def main():
 
     steps.close()
 
-    
-
     end = get_time()
     total_time = end - start
     end_str = ">>> {}-seq pipeline for {} completed in {}.".format(
@@ -832,7 +830,7 @@ def featurecounts(sample, toml_config):
             ["sed", "$!H;1h;$!d;G", output + "/" + sample + "_3.counts"], stdout=outfile
         )
 
-    with open(output + "/" + sample + "_biotype.counts", "w") as outfile:
+    with open(output + "/" + sample + "_biotype_counts.txt", "w") as outfile:
         subprocess.run(
             [
                 "awk",
@@ -959,29 +957,115 @@ def bcftools(sample, toml_config):
 
 def snpeff(sample, toml_config):
     title("SnpEff")
-    
-    snpeff="/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/snpEff"
+
+    snpeff = (
+        "/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/snpEff"
+    )
+
     genome = toml_config["general"]["reference"]
     if genome == "grch37":
         ref = "GRCh37.87"
     if genome == "grch38":
         ref = "GRCh38.105"
+    if genome == "grcz11":
+        ref = "GRCz11.105"
+    if genome == "grcm39":
+        ref = "GRCm39.105"
+    if genome == "wbcel235":
+        ref == "WBcel235.105"
 
     path = toml_config["general"]["output"] + "/" + sample + "/Variants"
 
-    cmd_snpeff = ["java", "-Xmx8g", "-jar", snpeff + "/snpEff.jar", "-noLog", ref, "-c", snpeff + "/snpEff.config", "-stats", path + "/" + sample + "_summary.html", "-csvStats", path + "/" + sample + "_summary.csv", path + "/" + sample + "_all.vcf"]
-            
+    cmd_snpeff = [
+        "java",
+        "-Xmx8g",
+        "-jar",
+        snpeff + "/snpEff.jar",
+        "-noLog",
+        ref,
+        "-c",
+        snpeff + "/snpEff.config",
+        "-stats",
+        path + "/" + sample + "_summary.html",
+        "-csvStats",
+        path + "/" + sample + "_summary.csv",
+        path + "/" + sample + "_all.vcf",
+    ]
+
     command_str1 = " ".join(cmd_snpeff)
     print(f">>> {command_str1}\n")
 
-    cmd_extract = ["java", "-Xmx8g", "-jar", snpeff + "/SnpSift.jar", "extractFields", "-noLog", "-s", "|", "-e", '"N/A"', path + "/" + sample + "_snpeff.vcf", "CHROM", "POS", "REF", "ALT", "QUAL", "AC", "AN", "DP", "DP4"]
+    cmd_vartype = [
+        "java",
+        "-Xmx8g",
+        "-jar",
+        snpeff + "/SnpSift.jar",
+        "varType",
+        "-noLog",
+        path + "/" + sample + "_snpeff.vcf",
+    ]
 
-    command_str2 = " ".join(cmd_extract)
+    command_str2 = " ".join(cmd_vartype)
     print(f">>> {command_str2}\n")
+
+    cmd_msigdb = [
+        "java",
+        "-Xmx8g",
+        "-jar",
+        snpeff + "/SnpSift.jar",
+        "geneSets",
+        "-noLog",
+        snpeff + "/db/msigDb/human/msigdb.Hs.v2023.2.symbols.gmt",
+        path + "/" + sample + "_vartype.vcf",
+    ]
+
+    command_str3 = " ".join(cmd_msigdb)
+    print(f">>> {command_str3}\n")
+
+    cmd_extract = [
+        "java",
+        "-Xmx8g",
+        "-jar",
+        snpeff + "/SnpSift.jar",
+        "extractFields",
+        "-noLog",
+        "-s",
+        "|",
+        "-e",
+        '"N/A"',
+        path + "/" + sample + "_msigdb.vcf",
+        "CHROM",
+        "POS",
+        "REF",
+        "ALT",
+        "QUAL",
+        "AC",
+        "AN",
+        "DP",
+        "DP4",
+        "HOM",
+        "VARTYPE",
+        "MSigDb",
+    ]
+
+    command_str4 = " ".join(cmd_extract)
+    print(f">>> {command_str4}\n")
 
     with open(path + "/" + sample + "_snpeff.vcf", "w") as outfile:
         subprocess.run(
             cmd_snpeff,
+            stdout=outfile,
+        )
+
+    with open(path + "/" + sample + "_vartype.vcf", "w") as outfile:
+        subprocess.run(
+            cmd_vartype,
+            stdout=outfile,
+        )
+
+    with open(path + "/" + sample + "_msigdb.vcf", "w") as outfile:
+        subprocess.run(
+            cmd_msigdb,
             stdout=outfile,
         )
 
