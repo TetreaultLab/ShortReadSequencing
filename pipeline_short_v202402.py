@@ -824,7 +824,7 @@ def featurecounts(sample, toml_config):
             ],
             stdout=outfile,
         )
-
+    # bring last line to the top
     with open(output + "/" + sample + "_4.counts", "w") as outfile:
         subprocess.run(
             ["sed", "$!H;1h;$!d;G", output + "/" + sample + "_3.counts"], stdout=outfile
@@ -1039,9 +1039,6 @@ def snpeff(sample, toml_config):
         "REF",
         "ALT",
         "QUAL",
-        "AC",
-        "AN",
-        "DP",
         "DP4",
         "HOM",
         "VARTYPE",
