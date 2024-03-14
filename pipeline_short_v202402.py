@@ -211,7 +211,7 @@ def get_reference(ref, tool):
         case "grch38":
             reference = {
                 "fasta": path + "Homo_sapiens.GRCh38.105.dna.primary_assembly.fa",
-                "index": path + "index_" + tool + "/" + ref,
+                "index": path + "index_" + tool + "/" + ref + "94",
                 "gtf": path + "Homo_sapiens.GRCh38.105.gtf",
                 "gff3": path + "Homo_sapiens.GRCh38.105.gff3.gz",
             }
@@ -630,6 +630,7 @@ def samtools(sample, toml_config):
 
     subprocess.run(["rm", stats1])
     subprocess.run(["rm", stats2])
+    subprocess.run(["rm", inBAM])
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -1008,18 +1009,18 @@ def snpeff(sample, toml_config):
     command_str2 = " ".join(cmd_vartype)
     print(f">>> {command_str2}\n")
 
-    cmd_msigdb = [
+    cmd_id = [
         "java",
         "-Xmx8g",
         "-jar",
         snpeff + "/SnpSift.jar",
-        "geneSets",
+        "annotate",
         "-noLog",
-        snpeff + "/db/msigDb/human/msigdb.Hs.v2023.2.symbols.gmt",
+        snpeff + "db/dbSnp/" + genome + "/dbSnp.vcf",
         path + "/" + sample + "_vartype.vcf",
     ]
 
-    command_str3 = " ".join(cmd_msigdb)
+    command_str3 = " ".join(cmd_id)
     print(f">>> {command_str3}\n")
 
     cmd_extract = [
@@ -1033,7 +1034,7 @@ def snpeff(sample, toml_config):
         "|",
         "-e",
         '"N/A"',
-        path + "/" + sample + "_msigdb.vcf",
+        path + "/" + sample + "_id.vcf",
         "CHROM",
         "POS",
         "REF",
@@ -1042,6 +1043,9 @@ def snpeff(sample, toml_config):
         "DP4",
         "HOM",
         "VARTYPE",
+        "ID",
+        "ANN[*].GENE",
+        "ANN[*].FEATUREID",
         "ANN[*].EFFECT",
         "ANN[*].IMPACT",
         "ANN[*].BIOTYPE",
@@ -1064,9 +1068,9 @@ def snpeff(sample, toml_config):
             stdout=outfile,
         )
 
-    with open(path + "/" + sample + "_msigdb.vcf", "w") as outfile:
+    with open(path + "/" + sample + "_id.vcf", "w") as outfile:
         subprocess.run(
-            cmd_msigdb,
+            cmd_id,
             stdout=outfile,
         )
 
