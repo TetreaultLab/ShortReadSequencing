@@ -211,7 +211,7 @@ def get_reference(ref, tool):
         case "grch38":
             reference = {
                 "fasta": path + "Homo_sapiens.GRCh38.105.dna.primary_assembly.fa",
-                "index": path + "index_" + tool + "/" + ref + "94",
+                "index": path + "index_" + tool + "/" + ref,
                 "gtf": path + "Homo_sapiens.GRCh38.105.gtf",
                 "gff3": path + "Homo_sapiens.GRCh38.105.gff3.gz",
             }
@@ -878,6 +878,7 @@ def multiqc(sample, toml_config):
             f.write(input + "Salmon/\n")
         if toml_config["general"]["quantification"] != "none":
             f.write(input + "FeatureCounts/\n")
+        f.write(input + "Aligned/\n")
         f.write(input + "Samtools/\n")
         f.write(input + "MarkDuplicates/\n")
     f.close()
@@ -1009,20 +1010,6 @@ def snpeff(sample, toml_config):
     command_str2 = " ".join(cmd_vartype)
     print(f">>> {command_str2}\n")
 
-    cmd_id = [
-        "java",
-        "-Xmx8g",
-        "-jar",
-        snpeff + "/SnpSift.jar",
-        "annotate",
-        "-noLog",
-        snpeff + "db/dbSnp/" + genome + "/dbSnp.vcf",
-        path + "/" + sample + "_vartype.vcf",
-    ]
-
-    command_str3 = " ".join(cmd_id)
-    print(f">>> {command_str3}\n")
-
     cmd_extract = [
         "java",
         "-Xmx8g",
@@ -1033,17 +1020,21 @@ def snpeff(sample, toml_config):
         "-s",
         "|",
         "-e",
-        '"N/A"',
-        path + "/" + sample + "_id.vcf",
+        ".",
+        path + "/" + sample + "_vartype.vcf",
         "CHROM",
         "POS",
         "REF",
         "ALT",
         "QUAL",
+        "MQBZ",
+        "RPBZ",
+        "SCBZ",
         "DP4",
         "HOM",
+        "AN",
+        "AC",
         "VARTYPE",
-        "ID",
         "ANN[*].GENE",
         "ANN[*].FEATUREID",
         "ANN[*].EFFECT",
@@ -1053,8 +1044,8 @@ def snpeff(sample, toml_config):
         "ANN[*].HGVS_P",
     ]
 
-    command_str4 = " ".join(cmd_extract)
-    print(f">>> {command_str4}\n")
+    command_str3 = " ".join(cmd_extract)
+    print(f">>> {command_str3}\n")
 
     with open(path + "/" + sample + "_snpeff.vcf", "w") as outfile:
         subprocess.run(
@@ -1065,12 +1056,6 @@ def snpeff(sample, toml_config):
     with open(path + "/" + sample + "_vartype.vcf", "w") as outfile:
         subprocess.run(
             cmd_vartype,
-            stdout=outfile,
-        )
-
-    with open(path + "/" + sample + "_id.vcf", "w") as outfile:
-        subprocess.run(
-            cmd_id,
             stdout=outfile,
         )
 
