@@ -137,7 +137,8 @@ def main():
     for func in function_queue:
         func(sample, toml_config)
 
-    steps.close()
+    ## Get log and extract all >>> lines from it and save to file "steps_summary.txt"
+    # TO-DO
 
     end = get_time()
     total_time = end - start
@@ -1218,11 +1219,11 @@ def snpeff(sample, toml_config):
             info_concat = []
             if len(infos) > 1:
                 for r in range(len(infos[0])):
-                    l = []
+                    li = []
                     for s in range(len(infos)):
                         concat = infos[s][r]
-                        l.append(concat)
-                    info_concat.append("|".join(l))
+                        li.append(concat)
+                    info_concat.append("|".join(li))
                 final_str = "; ".join(info_concat)
                 final.loc[index, "infos"] = final_str
             if len(infos) == 1:
