@@ -1168,7 +1168,7 @@ def snpeff(sample, toml_config):
                 "clinvar_OMIM_id": "OMIM",
             }
         )
-        # print(df)
+
         final["position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
         final["quality"] = round(final["quality"], 2)
         final["alt_reads"] = final["DP4"].str.split(",").str[2].astype(int) + final[
