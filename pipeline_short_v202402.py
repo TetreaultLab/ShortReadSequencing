@@ -1054,192 +1054,145 @@ def snpeff(sample, toml_config):
         )
 
     title("Adding dbNSFP")
+    if genome == "grch37" or genome == "grch38":
+        chromosomes = [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21",
+            "22",
+            "X",
+            "Y",
+            "MT",
+        ]
 
-    chromosomes = [
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "9",
-        "10",
-        "11",
-        "12",
-        "13",
-        "14",
-        "15",
-        "16",
-        "17",
-        "18",
-        "19",
-        "20",
-        "21",
-        "22",
-        "X",
-        "Y",
-        "MT",
-    ]
-
-    var = pd.read_csv(
-        path + "/" + sample + "_all.txt", header=0, sep="\t", low_memory=False
-    )
-    var = var.astype({"CHROM": str, "POS": str})
-    var = var[var["CHROM"].isin(chromosomes)]
-
-    appended_data = []
-    ref = "/lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/dbNSFP"
-    for chromosome in chromosomes:
-        db = pd.read_csv(
-            ref + "/dbNSFP4.7a_variant.chr" + chromosome + "_small.txt",
-            header=0,
-            sep="\t",
-            low_memory=False,
+        var = pd.read_csv(
+            path + "/" + sample + "_all.txt", header=0, sep="\t", low_memory=False
         )
-        db = db.rename(
-            columns={"chr": "CHROM", "pos": "POS", "ref": "REF", "alt": "ALT"}
-        )
-        db = db.astype({"CHROM": str, "POS": str})
+        var = var.astype({"CHROM": str, "POS": str})
+        var = var[var["CHROM"].isin(chromosomes)]
 
-        var_chr = var[var["CHROM"] == chromosome]
+        appended_data = []
+        ref = "/lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/dbNSFP"
+        for chromosome in chromosomes:
+            db = pd.read_csv(
+                ref + "/dbNSFP4.7a_variant.chr" + chromosome + "_small.txt",
+                header=0,
+                sep="\t",
+                low_memory=False,
+            )
+            db = db.rename(
+                columns={"chr": "CHROM", "pos": "POS", "ref": "REF", "alt": "ALT"}
+            )
+            db = db.astype({"CHROM": str, "POS": str})
 
-        m = pd.merge(var_chr, db, how="left", on=["CHROM", "POS", "REF", "ALT"])
-        appended_data.append(m)
+            var_chr = var[var["CHROM"] == chromosome]
 
-        n_rows = len(m.index)
-        rows_ann = m["rs_dbSNP"].count()
+            m = pd.merge(var_chr, db, how="left", on=["CHROM", "POS", "REF", "ALT"])
+            appended_data.append(m)
+
+            n_rows = len(m.index)
+            rows_ann = m["rs_dbSNP"].count()
+            percentage = rows_ann / n_rows * 100
+
+            print(
+                "Chromosome ",
+                chromosome,
+                "\nannotated rows: ",
+                rows_ann,
+                "\ntotal rows/variants:",
+                n_rows,
+                "\npercentage dbNSFP annotation: ",
+                percentage,
+                "%",
+            )
+
+        final = pd.concat(appended_data)
+        final.to_csv(path + "/" + sample + "_all_dbNSFP.txt", sep="\t", index=False)
+
+        n_rows = len(final.index)
+        rows_ann = final["rs_dbSNP"].count()
         percentage = rows_ann / n_rows * 100
 
         print(
-            "Chromosome ",
-            chromosome,
-            "\nannotated rows: ",
+            "\nFinal\nannotated variants: ",
             rows_ann,
-            "\ntotal rows/variants:",
+            "\ntotal variants:",
             n_rows,
             "\npercentage dbNSFP annotation: ",
             percentage,
             "%",
         )
 
-    final = pd.concat(appended_data)
-    final.to_csv(path + "/" + sample + "_all_dbNSFP.txt", sep="\t", index=False)
+        title("Merging transcripts annotations/infos")
 
-    n_rows = len(final.index)
-    rows_ann = final["rs_dbSNP"].count()
-    percentage = rows_ann / n_rows * 100
+        final = final.rename(
+            columns={
+                "REF": "ref",
+                "ALT": "alt",
+                "QUAL": "quality",
+                "HOM": "zygosity",
+                "VARTYPE": "vartype",
+                "ANN[*].GENE": "gene",
+                "ANN[*].FEATUREID": "transcript",
+                "ANN[*].EFFECT": "effect",
+                "ANN[*].IMPACT": "impact",
+                "ANN[*].BIOTYPE": "biotype",
+                "ANN[*].HGVS_C": "codon change",
+                "ANN[*].HGVS_P": "protein change",
+                "rs_dbSNP": "rsID",
+                "Polyphen2_HDIV_score": "PolyPhen2_HDIV_score",
+                "CADD_phred": "CADD_phred_score",
+                "GERP++_RS": "GERP_score",
+                "phyloP100way_vertebrate": "phyloP_score",
+                "phastCons100way_vertebrate": "phastCons_score",
+                "1000Gp3_AF": "1000G_AF",
+                "clinvar_OMIM_id": "OMIM",
+            }
+        )
+        # print(df)
+        final["position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
+        final["quality"] = round(final["quality"], 2)
+        final["alt_reads"] = final["DP4"].str.split(",").str[2].astype(int) + final[
+            "DP4"
+        ].str.split(",").str[3].astype(int)
+        final["total_reads"] = (
+            final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int)
+        )
+        final = final.replace({"zygosity": {True: "Hom", False: "Het"}})
 
-    print(
-        "\nFinal\nannotated variants: ",
-        rows_ann,
-        "\ntotal variants:",
-        n_rows,
-        "\npercentage dbNSFP annotation: ",
-        percentage,
-        "%",
-    )
+        filters = [
+            "SIFT4G_score",
+            "PolyPhen2_HDIV_score",
+            "MutationTaster_score",
+            "FATHMM_score",
+            "REVEL_score",
+            "AlphaMissense_score",
+        ]
+        for index in final.index:
+            for f in filters:
+                if ";" in str(final.loc[index, f]):
+                    str_split = final.loc[index, f].split(";")
+                    final.loc[index, f] = str_split[0]
 
-    title("Merging transcripts annotations/infos")
-
-    final = final.rename(
-        columns={
-            "REF": "ref",
-            "ALT": "alt",
-            "QUAL": "quality",
-            "HOM": "zygosity",
-            "VARTYPE": "vartype",
-            "ANN[*].GENE": "gene",
-            "ANN[*].FEATUREID": "transcript",
-            "ANN[*].EFFECT": "effect",
-            "ANN[*].IMPACT": "impact",
-            "ANN[*].BIOTYPE": "biotype",
-            "ANN[*].HGVS_C": "codon change",
-            "ANN[*].HGVS_P": "protein change",
-            "rs_dbSNP": "rsID",
-            "Polyphen2_HDIV_score": "PolyPhen2_HDIV_score",
-            "CADD_phred": "CADD_phred_score",
-            "GERP++_RS": "GERP_score",
-            "phyloP100way_vertebrate": "phyloP_score",
-            "phastCons100way_vertebrate": "phastCons_score",
-            "1000Gp3_AF": "1000G_AF",
-            "clinvar_OMIM_id": "OMIM",
-        }
-    )
-    # print(df)
-    final["position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
-    final["quality"] = round(final["quality"], 2)
-    final["alt_reads"] = final["DP4"].str.split(",").str[2].astype(int) + final[
-        "DP4"
-    ].str.split(",").str[3].astype(int)
-    final["total_reads"] = (
-        final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int)
-    )
-    final = final.replace({"zygosity": {True: "Hom", False: "Het"}})
-
-    filters = [
-        "SIFT4G_score",
-        "PolyPhen2_HDIV_score",
-        "MutationTaster_score",
-        "FATHMM_score",
-        "REVEL_score",
-        "AlphaMissense_score",
-    ]
-    for index in final.index:
-        for f in filters:
-            if ";" in str(final.loc[index, f]):
-                str_split = final.loc[index, f].split(";")
-                final.loc[index, f] = str_split[0]
-
-    columns = [
-        "gene",
-        "transcript",
-        "effect",
-        "impact",
-        "biotype",
-        "codon change",
-        "protein change",
-    ]
-    for index in final.index:
-        infos = []
-        for c in columns:
-            n = final.loc[index, c].count("|") + 1
-            if n != 1:
-                str_split = final.loc[index, c].split("|")
-                str_split = [sub.replace('"', "") for sub in str_split]
-
-                final.loc[index, c] = str_split[0]
-                if str_split.count(str_split[0]) != n:
-                    infos.append(str_split)
-            else:
-                infos.append([final.loc[index, c]])
-
-        info_concat = []
-        if len(infos) > 1:
-            for r in range(len(infos[0])):
-                l = []
-                for s in range(len(infos)):
-                    concat = infos[s][r]
-                    l.append(concat)
-                info_concat.append("|".join(l))
-            final_str = "; ".join(info_concat)
-            final.loc[index, "infos"] = final_str
-        if len(infos) == 1:
-            final_str = "; ".join(infos[0])
-            final.loc[index, "infos"] = final_str
-
-    final = final[
-        [
-            "position",
-            "ref",
-            "alt",
-            "quality",
-            "alt_reads",
-            "total_reads",
-            "zygosity",
-            "rsID",
-            "vartype",
+        columns = [
             "gene",
             "transcript",
             "effect",
@@ -1247,63 +1200,110 @@ def snpeff(sample, toml_config):
             "biotype",
             "codon change",
             "protein change",
-            "infos",
-            "SIFT4G_score",
-            "PolyPhen2_HDIV_score",
-            "GERP_score",
-            "phyloP_score",
-            "phastCons_score",
-            "MutationTaster_score",
-            "FATHMM_score",
-            "REVEL_score",
-            "AlphaMissense_score",
-            "CADD_phred_score",
-            "1000G_AF",
-            "ExAC_AF",
-            "gnomAD_exomes_AF",
-            "gnomAD_exomes_NFE_AF",
-            "gnomAD_genomes_AF",
-            "gnomAD_genomes_NFE_AF",
-            "clinvar_id",
-            "clinvar_trait",
-            "clinvar_clnsig",
-            "OMIM",
         ]
-    ]
+        for index in final.index:
+            infos = []
+            for c in columns:
+                n = final.loc[index, c].count("|") + 1
+                if n != 1:
+                    str_split = final.loc[index, c].split("|")
+                    str_split = [sub.replace('"', "") for sub in str_split]
 
-    final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
+                    final.loc[index, c] = str_split[0]
+                    if str_split.count(str_split[0]) != n:
+                        infos.append(str_split)
+                else:
+                    infos.append([final.loc[index, c]])
 
-    title("Filtering variants")
+            info_concat = []
+            if len(infos) > 1:
+                for r in range(len(infos[0])):
+                    l = []
+                    for s in range(len(infos)):
+                        concat = infos[s][r]
+                        l.append(concat)
+                    info_concat.append("|".join(l))
+                final_str = "; ".join(info_concat)
+                final.loc[index, "infos"] = final_str
+            if len(infos) == 1:
+                final_str = "; ".join(infos[0])
+                final.loc[index, "infos"] = final_str
 
-    ## Filtered
-    # https://www.htslib.org/workflow/filter.html
-    # https://jp.support.illumina.com/content/dam/illumina-support/help/Illumina_DRAGEN_Bio_IT_Platform_v3_7_1000000141465/Content/SW/Informatics/Dragen/QUAL_QD_GQ_Formulation_fDG.htm
+        final = final[
+            [
+                "position",
+                "ref",
+                "alt",
+                "quality",
+                "alt_reads",
+                "total_reads",
+                "zygosity",
+                "rsID",
+                "vartype",
+                "gene",
+                "transcript",
+                "effect",
+                "impact",
+                "biotype",
+                "codon change",
+                "protein change",
+                "infos",
+                "SIFT4G_score",
+                "PolyPhen2_HDIV_score",
+                "GERP_score",
+                "phyloP_score",
+                "phastCons_score",
+                "MutationTaster_score",
+                "FATHMM_score",
+                "REVEL_score",
+                "AlphaMissense_score",
+                "CADD_phred_score",
+                "1000G_AF",
+                "ExAC_AF",
+                "gnomAD_exomes_AF",
+                "gnomAD_exomes_NFE_AF",
+                "gnomAD_genomes_AF",
+                "gnomAD_genomes_NFE_AF",
+                "clinvar_id",
+                "clinvar_trait",
+                "clinvar_clnsig",
+                "OMIM",
+            ]
+        ]
 
-    df_filtered = final[(final["alt_reads"] >= 3) & (final["total_reads"] >= 5)]
+        final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
 
-    # From https://useast.ensembl.org/info/genome/variation/prediction/predicted_data.html
-    # keep rows from HIGH, MODERATE and LOW impact variants
-    impact = ["HIGH", "MODERATE", "LOW"]
-    df_filtered = df_filtered["impact"].isin(impact)
+        title("Filtering variants")
 
-    df_filtered.to_csv(
-        path + "/" + sample + "_variants_filtered.txt", sep="\t", index=False
-    )
+        ## Filtered
+        # https://www.htslib.org/workflow/filter.html
+        # https://jp.support.illumina.com/content/dam/illumina-support/help/Illumina_DRAGEN_Bio_IT_Platform_v3_7_1000000141465/Content/SW/Informatics/Dragen/QUAL_QD_GQ_Formulation_fDG.htm
 
-    print(">>> Filters:")
-    print("\t>>> Number of alt reads >= 3")
-    print("\t>>> Number of total reads >= 5")
-    print("\t>>> Impact is HIGH, MODERATE or LOW")
+        df_filtered = final[(final["alt_reads"] >= 3) & (final["total_reads"] >= 5)]
 
-    all_var = len(final.index)
-    filtered_var = len(df_filtered.index)
+        # From https://useast.ensembl.org/info/genome/variation/prediction/predicted_data.html
+        # keep rows from HIGH, MODERATE and LOW impact variants
+        impact = ["HIGH", "MODERATE", "LOW"]
+        df_filtered = df_filtered["impact"].isin(impact)
 
-    print(
-        "\nNumber of variants in all: ",
-        all_var,
-        "\nNumber of variants in filtered: ",
-        filtered_var,
-    )
+        df_filtered.to_csv(
+            path + "/" + sample + "_variants_filtered.txt", sep="\t", index=False
+        )
+
+        print(">>> Filters:")
+        print("\t>>> Number of alt reads >= 3")
+        print("\t>>> Number of total reads >= 5")
+        print("\t>>> Impact is HIGH, MODERATE or LOW")
+
+        all_var = len(final.index)
+        filtered_var = len(df_filtered.index)
+
+        print(
+            "\nNumber of variants in all: ",
+            all_var,
+            "\nNumber of variants in filtered: ",
+            filtered_var,
+        )
 
     # with open(
     #     toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
