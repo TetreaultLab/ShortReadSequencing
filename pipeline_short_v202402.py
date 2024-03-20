@@ -1036,23 +1036,23 @@ def snpeff(sample, toml_config):
     command_str3 = " ".join(cmd_extract)
     print(f">>> {command_str3}\n")
 
-    with open(path + "/" + sample + "_snpeff.vcf", "w") as outfile:
-        subprocess.run(
-            cmd_snpeff,
-            stdout=outfile,
-        )
+    # with open(path + "/" + sample + "_snpeff.vcf", "w") as outfile:
+    #     subprocess.run(
+    #         cmd_snpeff,
+    #         stdout=outfile,
+    #     )
 
-    with open(path + "/" + sample + "_vartype.vcf", "w") as outfile:
-        subprocess.run(
-            cmd_vartype,
-            stdout=outfile,
-        )
+    # with open(path + "/" + sample + "_vartype.vcf", "w") as outfile:
+    #     subprocess.run(
+    #         cmd_vartype,
+    #         stdout=outfile,
+    #     )
 
-    with open(path + "/" + sample + "_all.txt", "w") as outfile:
-        subprocess.run(
-            cmd_extract,
-            stdout=outfile,
-        )
+    # with open(path + "/" + sample + "_all.txt", "w") as outfile:
+    #     subprocess.run(
+    #         cmd_extract,
+    #         stdout=outfile,
+    #     )
 
     title("Adding dbNSFP")
     if genome == "grch37" or genome == "grch38":
@@ -1109,16 +1109,19 @@ def snpeff(sample, toml_config):
             m = pd.merge(var_chr, db, how="left", on=["CHROM", "POS", "REF", "ALT"])
             appended_data.append(m)
 
+            n_dbnsfp = len(db.index)
             n_rows = len(m.index)
             rows_ann = m["rs_dbSNP"].count()
             percentage = rows_ann / n_rows * 100
 
             print(
-                "Chromosome ",
+                "\nChromosome ",
                 chromosome,
+                "\nannotations in dbNSFP: ",
+                n_dbnsfp,
                 "\nannotated rows: ",
                 rows_ann,
-                "\ntotal rows/variants:",
+                "\ntotal variants:",
                 n_rows,
                 "\npercentage dbNSFP annotation: ",
                 percentage,
@@ -1146,19 +1149,20 @@ def snpeff(sample, toml_config):
 
         final = final.rename(
             columns={
-                "REF": "ref",
-                "ALT": "alt",
-                "QUAL": "quality",
-                "HOM": "zygosity",
-                "VARTYPE": "vartype",
-                "ANN[*].GENE": "gene",
-                "ANN[*].FEATUREID": "transcript",
-                "ANN[*].EFFECT": "effect",
-                "ANN[*].IMPACT": "impact",
-                "ANN[*].BIOTYPE": "biotype",
-                "ANN[*].HGVS_C": "codon change",
-                "ANN[*].HGVS_P": "protein change",
+                "REF": "Ref",
+                "ALT": "Alt",
+                "QUAL": "Quality",
+                "HOM": "Zygosity",
+                "VARTYPE": "Variation",
+                "ANN[*].GENE": "Gene",
+                "ANN[*].FEATUREID": "Transcript",
+                "ANN[*].EFFECT": "Effect",
+                "ANN[*].IMPACT": "Impact",
+                "ANN[*].BIOTYPE": "Biotype",
+                "ANN[*].HGVS_C": "Codon_change",
+                "ANN[*].HGVS_P": "Protein_change",
                 "rs_dbSNP": "rsID",
+                "SIFT4G_score": "SIFT_score",
                 "Polyphen2_HDIV_score": "PolyPhen2_HDIV_score",
                 "CADD_phred": "CADD_phred_score",
                 "GERP++_RS": "GERP_score",
@@ -1169,18 +1173,18 @@ def snpeff(sample, toml_config):
             }
         )
 
-        final["position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
-        final["quality"] = round(final["quality"], 2)
-        final["alt_reads"] = final["DP4"].str.split(",").str[2].astype(int) + final[
+        final["Position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
+        final["Quality"] = round(final["Quality"], 2)
+        final["Alt_reads"] = final["DP4"].str.split(",").str[2].astype(int) + final[
             "DP4"
         ].str.split(",").str[3].astype(int)
-        final["total_reads"] = (
+        final["Total_reads"] = (
             final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int)
         )
-        final = final.replace({"zygosity": {True: "Hom", False: "Het"}})
+        final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
 
         filters = [
-            "SIFT4G_score",
+            "SIFT_score",
             "PolyPhen2_HDIV_score",
             "MutationTaster_score",
             "FATHMM_score",
@@ -1190,17 +1194,17 @@ def snpeff(sample, toml_config):
         for index in final.index:
             for f in filters:
                 if ";" in str(final.loc[index, f]):
-                    str_split = final.loc[index, f].split(";")
+                    str_split = str(final.loc[index, f]).split(";")
                     final.loc[index, f] = str_split[0]
 
         columns = [
-            "gene",
-            "transcript",
-            "effect",
-            "impact",
-            "biotype",
-            "codon change",
-            "protein change",
+            "Gene",
+            "Transcript",
+            "Effect",
+            "Impact",
+            "Biotype",
+            "Codon_change",
+            "Protein_change",
         ]
         for index in final.index:
             infos = []
@@ -1225,31 +1229,31 @@ def snpeff(sample, toml_config):
                         li.append(concat)
                     info_concat.append("|".join(li))
                 final_str = "; ".join(info_concat)
-                final.loc[index, "infos"] = final_str
+                final.loc[index, "Infos"] = final_str
             if len(infos) == 1:
                 final_str = "; ".join(infos[0])
-                final.loc[index, "infos"] = final_str
+                final.loc[index, "Infos"] = final_str
 
         final = final[
             [
-                "position",
-                "ref",
-                "alt",
-                "quality",
-                "alt_reads",
-                "total_reads",
-                "zygosity",
+                "Position",
+                "Ref",
+                "Alt",
+                "Quality",
+                "Alt_reads",
+                "Total_reads",
+                "Zygosity",
                 "rsID",
-                "vartype",
-                "gene",
-                "transcript",
-                "effect",
-                "impact",
-                "biotype",
-                "codon change",
-                "protein change",
-                "infos",
-                "SIFT4G_score",
+                "Variation",
+                "Gene",
+                "Transcript",
+                "Effect",
+                "Impact",
+                "Biotype",
+                "Codon_change",
+                "Protein_change",
+                "Infos",
+                "SIFT_score",
                 "PolyPhen2_HDIV_score",
                 "GERP_score",
                 "phyloP_score",
@@ -1280,21 +1284,25 @@ def snpeff(sample, toml_config):
         # https://www.htslib.org/workflow/filter.html
         # https://jp.support.illumina.com/content/dam/illumina-support/help/Illumina_DRAGEN_Bio_IT_Platform_v3_7_1000000141465/Content/SW/Informatics/Dragen/QUAL_QD_GQ_Formulation_fDG.htm
 
-        df_filtered = final[(final["alt_reads"] >= 3) & (final["total_reads"] >= 5)]
+        df_filtered = final[
+            (final["Alt_reads"] > 3)
+            & (final["Total_reads"] > 5)
+            & (final["Quality"] > 20)
+        ]
 
         # From https://useast.ensembl.org/info/genome/variation/prediction/predicted_data.html
         # keep rows from HIGH, MODERATE and LOW impact variants
-        impact = ["HIGH", "MODERATE", "LOW"]
-        df_filtered = df_filtered["impact"].isin(impact)
+        # impact = ["HIGH", "MODERATE", "LOW"]
+        # df_filtered = df_filtered["Impact"].isin(impact)
 
         df_filtered.to_csv(
             path + "/" + sample + "_variants_filtered.txt", sep="\t", index=False
         )
 
         print(">>> Filters:")
-        print("\t>>> Number of alt reads >= 3")
-        print("\t>>> Number of total reads >= 5")
-        print("\t>>> Impact is HIGH, MODERATE or LOW")
+        print("\t>>> Quality Phred > 20")
+        print("\t>>> Number of alt reads > 3")
+        print("\t>>> Number of total reads > 5")
 
         all_var = len(final.index)
         filtered_var = len(df_filtered.index)
