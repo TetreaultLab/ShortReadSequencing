@@ -1197,6 +1197,8 @@ def snpeff(sample, toml_config):
                     str_split = str(final.loc[index, f]).split(";")
                     final.loc[index, f] = str_split[0]
 
+        print("Filters reformated")
+
         columns = [
             "Gene",
             "Transcript",
@@ -1233,6 +1235,8 @@ def snpeff(sample, toml_config):
             if len(infos) == 1:
                 final_str = "; ".join(infos[0])
                 final.loc[index, "Infos"] = final_str
+
+        print("Variant information reformated")
 
         final = final[
             [
