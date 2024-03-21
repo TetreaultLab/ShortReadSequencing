@@ -1109,7 +1109,11 @@ def snpeff(sample, toml_config):
             "%",
         )
 
+        print(final)
         title("Merge transcripts annotations/infos")
+
+        final = pd.DataFrame(final)
+        print(final)
 
         final = final.rename(
             columns={
@@ -1157,6 +1161,7 @@ def snpeff(sample, toml_config):
             "Protein_change",
         ]
         final[columns] = final[columns].fillna(value=".")
+        print(final)
 
         for index in final.index:
             infos = []
