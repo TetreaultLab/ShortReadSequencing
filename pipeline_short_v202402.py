@@ -1077,7 +1077,7 @@ def snpeff(sample, toml_config):
             n_dbnsfp = len(db.index)
             n_rows = len(m.index)
             rows_ann = m["rs_dbSNP"].count()
-            percentage = rows_ann / n_rows * 100
+            percentage = round(rows_ann / n_rows * 100, 2)
 
             print(
                 "\nChromosome ",
@@ -1098,7 +1098,7 @@ def snpeff(sample, toml_config):
 
         n_rows = len(final.index)
         rows_ann = final["rs_dbSNP"].count()
-        percentage = rows_ann / n_rows * 100
+        percentage = round(rows_ann / n_rows * 100, 2)
 
         print(
             "\nFinal\nannotated variants: ",
