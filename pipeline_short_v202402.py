@@ -989,6 +989,7 @@ def snpeff(sample, toml_config):
         "HOM",
         "VARTYPE",
         "ANN[*].GENE",
+        "ANN[*].GENEID",
         "ANN[*].FEATUREID",
         "ANN[*].EFFECT",
         "ANN[*].IMPACT",
@@ -1000,25 +1001,25 @@ def snpeff(sample, toml_config):
     command_str3 = " ".join(cmd_extract)
     print(f">>> {command_str3}\n")
 
-    # with open(path + "/" + sample + "_snpeff.vcf", "w") as outfile:
-    #     subprocess.run(
-    #         cmd_snpeff,
-    #         stdout=outfile,
-    #     )
+    with open(path + "/" + sample + "_snpeff.vcf", "w") as outfile:
+        subprocess.run(
+            cmd_snpeff,
+            stdout=outfile,
+        )
 
-    # with open(path + "/" + sample + "_vartype.vcf", "w") as outfile:
-    #     subprocess.run(
-    #         cmd_vartype,
-    #         stdout=outfile,
-    #     )
+    with open(path + "/" + sample + "_vartype.vcf", "w") as outfile:
+        subprocess.run(
+            cmd_vartype,
+            stdout=outfile,
+        )
 
-    # with open(path + "/" + sample + "_all.txt", "w") as outfile:
-    #     subprocess.run(
-    #         cmd_extract,
-    #         stdout=outfile,
-    #     )
+    with open(path + "/" + sample + "_all.txt", "w") as outfile:
+        subprocess.run(
+            cmd_extract,
+            stdout=outfile,
+        )
 
-    title("Adding dbNSFP")
+    title("Add dbNSFP to snpEff output")
     if genome == "grch37" or genome == "grch38":
         chromosomes = [
             "1",
@@ -1109,11 +1110,7 @@ def snpeff(sample, toml_config):
             "%",
         )
 
-        print(final)
-        title("Merge transcripts annotations/infos")
-
-        final = pd.DataFrame(final)
-        print(final)
+        title("Format variants output")
 
         final = final.rename(
             columns={
@@ -1122,7 +1119,8 @@ def snpeff(sample, toml_config):
                 "QUAL": "Quality",
                 "HOM": "Zygosity",
                 "VARTYPE": "Variation",
-                "ANN[*].GENE": "Gene",
+                "ANN[*].GENE": "Gene_name",
+                "ANN[*].GENEID": "Gene_id",
                 "ANN[*].FEATUREID": "Transcript",
                 "ANN[*].EFFECT": "Effect",
                 "ANN[*].IMPACT": "Impact",
@@ -1152,7 +1150,8 @@ def snpeff(sample, toml_config):
         final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
 
         columns = [
-            "Gene",
+            "Gene_name",
+            "Gene_id",
             "Transcript",
             "Effect",
             "Impact",
@@ -1160,26 +1159,28 @@ def snpeff(sample, toml_config):
             "Codon_change",
             "Protein_change",
         ]
+
+        final = final.replace("N/A", ".")
         final[columns] = final[columns].fillna(value=".")
-        print(final)
 
         for index in final.index:
             infos = []
             for c in columns:
-                n = final.loc[index, c].count("|") + 1
+                n = (str(final.loc[index, c]).count("|")) + 1
                 if n != 1:
-                    str_split = final.loc[index, c].split("|")
+                    str_split = str(final.loc[index, c]).split("|")
                     str_split = [sub.replace('"', "") for sub in str_split]
 
                     final.loc[index, c] = str_split[0]
                     if str_split.count(str_split[0]) != n:
                         infos.append(str_split)
                 else:
+                    # Need the double [] to make a list of list so the len() == 1
                     infos.append([final.loc[index, c]])
 
             info_concat = []
+
             if len(infos) > 1:
-                print(infos)
                 for r in range(len(infos[0])):
                     li = []
                     for s in range(len(infos)):
@@ -1191,8 +1192,6 @@ def snpeff(sample, toml_config):
             elif len(infos) == 1:
                 final_str = "; ".join(infos[0])
                 final.loc[index, "Infos"] = final_str
-
-        title("Variant information reformated")
 
         filters = [
             "SIFT_score",
@@ -1208,8 +1207,6 @@ def snpeff(sample, toml_config):
                     str_split = str(final.loc[index, f]).split(";")
                     final.loc[index, f] = str_split[0]
 
-        title("Filters reformated")
-
         final = final[
             [
                 "Position",
@@ -1221,7 +1218,8 @@ def snpeff(sample, toml_config):
                 "Zygosity",
                 "rsID",
                 "Variation",
-                "Gene",
+                "Gene_name",
+                "Gene_id",
                 "Transcript",
                 "Effect",
                 "Impact",
@@ -1253,8 +1251,6 @@ def snpeff(sample, toml_config):
         ]
 
         final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
-
-        title("Create filtered file")
 
         ## Filtering
         # https://www.htslib.org/workflow/filter.html
@@ -1290,10 +1286,10 @@ def snpeff(sample, toml_config):
             filtered_var,
         )
 
-    # with open(
-    #     toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    # ) as steps:
-    #     steps.write("SnpEff\n")
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("SnpEff\n")
 
 
 if __name__ == "__main__":
