@@ -1181,12 +1181,16 @@ def snpeff(sample, toml_config):
             info_concat = []
 
             if len(infos) > 1:
-                for r in range(len(infos[0])):
+                r = 0
+                while r < len(infos[0]):
                     li = []
-                    for s in range(len(infos)):
+                    s = 0
+                    while s < len(infos):
                         concat = infos[s][r]
                         li.append(concat)
+                        s += 1
                     info_concat.append("|".join(li))
+                    r += 1
                 final_str = "; ".join(info_concat)
                 final.loc[index, "Infos"] = final_str
             elif len(infos) == 1:
