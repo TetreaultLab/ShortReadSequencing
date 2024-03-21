@@ -38,11 +38,11 @@ memory = toml_config["general"]["memory"]
 
 # time
 if toml_config["general"]["sequencing"] == "RNA":
-    time = "00-10:59"
+    time = "00-11:59"
 elif toml_config["general"]["sequencing"] == "Exome":
-    time = "00-10:59"
+    time = "00-11:59"
 elif toml_config["general"]["sequencing"] == "Genome":
-    time = "02-11:59"
+    time = "00-23:59"
 
 f.close()
 
