@@ -793,13 +793,13 @@ def featurecounts(sample, toml_config):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
-    # Work on counts output
+    # Keep Geneid and counts
     with open(output + "/" + sample + "_0.counts", "w") as outfile:
         subprocess.run(
             ["tail", "-n", "+2", output + "/" + sample + "_geneID.txt"], stdout=outfile
         )
 
-    with open(output + "/" + sample + "_1.counts", "w") as outfile:
+    with open(output + "/" + sample + ".counts", "w") as outfile:
         subprocess.run(
             ["cut", "-f1,7", output + "/" + sample + "_0.counts"], stdout=outfile
         )
@@ -809,47 +809,11 @@ def featurecounts(sample, toml_config):
             "sed",
             "-i",
             "1s|.*|gene_id\t" + sample + "|",
-            output + "/" + sample + "_1.counts",
+            output + "/" + sample + ".counts",
         ]
     )
 
-    with open(output + "/" + sample + "_2.counts", "w") as outfile:
-        subprocess.run(["sort", output + "/" + sample + "_1.counts"], stdout=outfile)
-
-    # merge counts file to gene association
-    with open(output + "/" + sample + "_3.counts", "w") as outfile:
-        subprocess.run(
-            [
-                "join",
-                output + "/" + sample + "_2.counts",
-                "/lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/"
-                + toml_config["general"]["reference"]
-                + "_gene_association.txt",
-            ],
-            stdout=outfile,
-        )
-    # bring last line to the top
-    with open(output + "/" + sample + "_4.counts", "w") as outfile:
-        subprocess.run(
-            ["sed", "$!H;1h;$!d;G", output + "/" + sample + "_3.counts"], stdout=outfile
-        )
-
-    # change column order (keep gene name and counts)
-    with open(output + "/" + sample + ".counts", "w") as outfile:
-        subprocess.run(
-            [
-                "awk",
-                'BEGIN {FS=" "; OFS="\t"} {print $3, $2}',
-                output + "/" + sample + "_4.counts",
-            ],
-            stdout=outfile,
-        )
-
     subprocess.run(["rm", output + "/" + sample + "_0.counts"])
-    subprocess.run(["rm", output + "/" + sample + "_1.counts"])
-    subprocess.run(["rm", output + "/" + sample + "_2.counts"])
-    subprocess.run(["rm", output + "/" + sample + "_3.counts"])
-    subprocess.run(["rm", output + "/" + sample + "_4.counts"])
 
     # Steps done
     with open(
@@ -1145,7 +1109,7 @@ def snpeff(sample, toml_config):
             "%",
         )
 
-        title("Merging transcripts annotations/infos")
+        title("Merge transcripts annotations/infos")
 
         final = final.rename(
             columns={
@@ -1183,22 +1147,6 @@ def snpeff(sample, toml_config):
         )
         final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
 
-        filters = [
-            "SIFT_score",
-            "PolyPhen2_HDIV_score",
-            "MutationTaster_score",
-            "FATHMM_score",
-            "REVEL_score",
-            "AlphaMissense_score",
-        ]
-        for index in final.index:
-            for f in filters:
-                if ";" in str(final.loc[index, f]):
-                    str_split = str(final.loc[index, f]).split(";")
-                    final.loc[index, f] = str_split[0]
-
-        print("Filters reformated")
-
         columns = [
             "Gene",
             "Transcript",
@@ -1208,6 +1156,8 @@ def snpeff(sample, toml_config):
             "Codon_change",
             "Protein_change",
         ]
+        final[columns] = final[columns].fillna(value=".")
+
         for index in final.index:
             infos = []
             for c in columns:
@@ -1224,6 +1174,7 @@ def snpeff(sample, toml_config):
 
             info_concat = []
             if len(infos) > 1:
+                print(infos)
                 for r in range(len(infos[0])):
                     li = []
                     for s in range(len(infos)):
@@ -1232,11 +1183,27 @@ def snpeff(sample, toml_config):
                     info_concat.append("|".join(li))
                 final_str = "; ".join(info_concat)
                 final.loc[index, "Infos"] = final_str
-            if len(infos) == 1:
+            elif len(infos) == 1:
                 final_str = "; ".join(infos[0])
                 final.loc[index, "Infos"] = final_str
 
-        print("Variant information reformated")
+        title("Variant information reformated")
+
+        filters = [
+            "SIFT_score",
+            "PolyPhen2_HDIV_score",
+            "MutationTaster_score",
+            "FATHMM_score",
+            "REVEL_score",
+            "AlphaMissense_score",
+        ]
+        for index in final.index:
+            for f in filters:
+                if ";" in str(final.loc[index, f]):
+                    str_split = str(final.loc[index, f]).split(";")
+                    final.loc[index, f] = str_split[0]
+
+        title("Filters reformated")
 
         final = final[
             [
@@ -1282,16 +1249,16 @@ def snpeff(sample, toml_config):
 
         final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
 
-        title("Filtering variants")
+        title("Create filtered file")
 
-        ## Filtered
+        ## Filtering
         # https://www.htslib.org/workflow/filter.html
         # https://jp.support.illumina.com/content/dam/illumina-support/help/Illumina_DRAGEN_Bio_IT_Platform_v3_7_1000000141465/Content/SW/Informatics/Dragen/QUAL_QD_GQ_Formulation_fDG.htm
 
         df_filtered = final[
-            (final["Alt_reads"] > 3)
+            (final["Quality"] > 20)
             & (final["Total_reads"] > 5)
-            & (final["Quality"] > 20)
+            & (final["Alt_reads"] > 3)
         ]
 
         # From https://useast.ensembl.org/info/genome/variation/prediction/predicted_data.html
