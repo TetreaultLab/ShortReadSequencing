@@ -4,6 +4,7 @@ from datetime import datetime
 import subprocess
 import sys
 import pandas as pd
+import numpy as np
 
 
 def main():
@@ -978,7 +979,7 @@ def snpeff(sample, toml_config):
         "-s",
         "|",
         "-e",
-        "N/A",
+        ".",
         path + "/" + sample + "_vartype.vcf",
         "CHROM",
         "POS",
@@ -1111,6 +1112,12 @@ def snpeff(sample, toml_config):
         )
 
         title("Format variants output")
+        final = pd.read_csv(
+            path + "/" + sample + "_all_dbNSFP.txt",
+            sep="\t",
+            header=0,
+            low_memory=False,
+        )
 
         final = final.rename(
             columns={
@@ -1160,9 +1167,6 @@ def snpeff(sample, toml_config):
             "Protein_change",
         ]
 
-        final = final.replace("N/A", ".")
-        final[columns] = final[columns].fillna(value=".")
-
         for index in final.index:
             infos = []
             for c in columns:
@@ -1179,18 +1183,13 @@ def snpeff(sample, toml_config):
                     infos.append([final.loc[index, c]])
 
             info_concat = []
-
             if len(infos) > 1:
-                r = 0
-                while r < len(infos[0]):
+                for r in range(len(infos[0])):
                     li = []
-                    s = 0
-                    while s < len(infos):
+                    for s in range(len(infos)):
                         concat = infos[s][r]
                         li.append(concat)
-                        s += 1
                     info_concat.append("|".join(li))
-                    r += 1
                 final_str = "; ".join(info_concat)
                 final.loc[index, "Infos"] = final_str
             elif len(infos) == 1:
@@ -1254,6 +1253,41 @@ def snpeff(sample, toml_config):
             ]
         ]
 
+        final[
+            "SIFT_score",
+            "PolyPhen2_HDIV_score",
+            "GERP_score",
+            "phyloP_score",
+            "phastCons_score",
+            "MutationTaster_score",
+            "FATHMM_score",
+            "REVEL_score",
+            "AlphaMissense_score",
+            "CADD_phred_score",
+            "1000G_AF",
+            "ExAC_AF",
+            "gnomAD_exomes_AF",
+            "gnomAD_exomes_NFE_AF",
+            "gnomAD_genomes_AF",
+            "gnomAD_genomes_NFE_AF",
+        ] = final[
+            "SIFT_score",
+            "PolyPhen2_HDIV_score",
+            "GERP_score",
+            "phyloP_score",
+            "phastCons_score",
+            "MutationTaster_score",
+            "FATHMM_score",
+            "REVEL_score",
+            "AlphaMissense_score",
+            "CADD_phred_score",
+            "1000G_AF",
+            "ExAC_AF",
+            "gnomAD_exomes_AF",
+            "gnomAD_exomes_NFE_AF",
+            "gnomAD_genomes_AF",
+            "gnomAD_genomes_NFE_AF",
+        ].replace(".", np.nan)
         final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
 
         ## Filtering
