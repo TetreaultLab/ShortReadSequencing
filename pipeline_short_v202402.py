@@ -1253,41 +1253,7 @@ def snpeff(sample, toml_config):
             ]
         ]
 
-        final[
-            "SIFT_score",
-            "PolyPhen2_HDIV_score",
-            "GERP_score",
-            "phyloP_score",
-            "phastCons_score",
-            "MutationTaster_score",
-            "FATHMM_score",
-            "REVEL_score",
-            "AlphaMissense_score",
-            "CADD_phred_score",
-            "1000G_AF",
-            "ExAC_AF",
-            "gnomAD_exomes_AF",
-            "gnomAD_exomes_NFE_AF",
-            "gnomAD_genomes_AF",
-            "gnomAD_genomes_NFE_AF",
-        ] = final[
-            "SIFT_score",
-            "PolyPhen2_HDIV_score",
-            "GERP_score",
-            "phyloP_score",
-            "phastCons_score",
-            "MutationTaster_score",
-            "FATHMM_score",
-            "REVEL_score",
-            "AlphaMissense_score",
-            "CADD_phred_score",
-            "1000G_AF",
-            "ExAC_AF",
-            "gnomAD_exomes_AF",
-            "gnomAD_exomes_NFE_AF",
-            "gnomAD_genomes_AF",
-            "gnomAD_genomes_NFE_AF",
-        ].replace(".", np.nan)
+        final = final.replace(".", np.nan)
         final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
 
         ## Filtering
