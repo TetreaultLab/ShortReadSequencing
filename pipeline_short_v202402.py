@@ -460,10 +460,9 @@ def star(sample, toml_config):
         ]
     )
     subprocess.run(["rm", output + "/" + sample + "_Log.progress.out"])
-
     subprocess.run(["rm", output + "/" + sample + "_Unmapped.out.mate1"])
-
     subprocess.run(["rm", output + "/" + sample + "_Unmapped.out.mate2"])
+    subprocess.run(["rm", "-r", output + "/DM01P__STARpass1"])
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -592,6 +591,17 @@ def salmon(sample, toml_config):
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
     subprocess.run(command)
+
+    subprocess.run(
+        ["mv", output + "/logs/salmon_quant.log", output + "/" + sample + "_log.out"]
+    )
+    subprocess.run(
+        ["mv", output + "/quant.sf", output + "/" + sample + "_transcript_quant.sf"]
+    )
+    subprocess.run(["rm", output + "/cmd_info.json"])
+    subprocess.run(["rm", "-r", output + "/libParams"])
+    subprocess.run(["rm", "-r", output + "/logs"])
+    subprocess.run(["rm", "-r", output + "/salmon_tmp"])
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -884,7 +894,7 @@ def bcftools(sample, toml_config):
         "-d",
         "10000",
         "-o",
-        output + sample + ".vcf",
+        output + sample + "_mpileup.vcf",
         "-f",
         ref,
         input,
@@ -898,8 +908,8 @@ def bcftools(sample, toml_config):
         "--multiallelic-caller",
         "--variants-only",
         "-o",
-        output + sample + "_all.vcf",
         output + sample + ".vcf",
+        output + sample + "_mpileup.vcf",
     ]
 
     command_1 = " ".join(mpileup)
@@ -909,6 +919,8 @@ def bcftools(sample, toml_config):
     command_2 = " ".join(call)
     print(f">>> {command_2}\n")
     subprocess.run(call)
+
+    subprocess.run(["rm", output + sample + "_mpileup.vcf"])
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -950,7 +962,7 @@ def snpeff(sample, toml_config):
         path + "/" + sample + "_summary.html",
         "-csvStats",
         path + "/" + sample + "_summary.csv",
-        path + "/" + sample + "_all.vcf",
+        path + "/" + sample + ".vcf",
     ]
 
     command_str1 = " ".join(cmd_snpeff)
@@ -980,7 +992,7 @@ def snpeff(sample, toml_config):
         "|",
         "-e",
         ".",
-        path + "/" + sample + "_vartype.vcf",
+        path + "/" + sample + "_annotated.vcf",
         "CHROM",
         "POS",
         "REF",
@@ -1008,17 +1020,20 @@ def snpeff(sample, toml_config):
             stdout=outfile,
         )
 
-    with open(path + "/" + sample + "_vartype.vcf", "w") as outfile:
+    with open(path + "/" + sample + "_annotated.vcf", "w") as outfile:
         subprocess.run(
             cmd_vartype,
             stdout=outfile,
         )
 
-    with open(path + "/" + sample + "_all.txt", "w") as outfile:
+    with open(path + "/" + sample + "_annotated.txt", "w") as outfile:
         subprocess.run(
             cmd_extract,
             stdout=outfile,
         )
+
+    subprocess.run(["rm", path + "/" + sample + ".vcf"])
+    subprocess.run(["rm", path + "/" + sample + "_snpeff.vcf"])
 
     title("Add dbNSFP to snpEff output")
     if genome == "grch37" or genome == "grch38":
@@ -1051,7 +1066,7 @@ def snpeff(sample, toml_config):
         ]
 
         var = pd.read_csv(
-            path + "/" + sample + "_all.txt", header=0, sep="\t", low_memory=False
+            path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
         )
         var = var.astype({"CHROM": str, "POS": str})
         var = var[var["CHROM"].isin(chromosomes)]
@@ -1076,7 +1091,9 @@ def snpeff(sample, toml_config):
             appended_data.append(m)
 
         final = pd.concat(appended_data)
-        final.to_csv(path + "/" + sample + "_all_dbNSFP.txt", sep="\t", index=False)
+        final.to_csv(
+            path + "/" + sample + "_annotated_dbNSFP.txt", sep="\t", index=False
+        )
 
         n_rows = len(final.index)
         rows_ann = final["rs_dbSNP"].count()
@@ -1094,7 +1111,7 @@ def snpeff(sample, toml_config):
 
         title("Format variants output")
         final = pd.read_csv(
-            path + "/" + sample + "_all_dbNSFP.txt",
+            path + "/" + sample + "_annotated_dbNSFP.txt",
             sep="\t",
             header=0,
             low_memory=False,
