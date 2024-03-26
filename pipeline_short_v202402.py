@@ -1075,25 +1075,6 @@ def snpeff(sample, toml_config):
             m = pd.merge(var_chr, db, how="left", on=["CHROM", "POS", "REF", "ALT"])
             appended_data.append(m)
 
-            n_dbnsfp = len(db.index)
-            n_rows = len(m.index)
-            rows_ann = m["rs_dbSNP"].count()
-            percentage = round(rows_ann / n_rows * 100, 2)
-
-            print(
-                "\nChromosome ",
-                chromosome,
-                "\nannotations in dbNSFP: ",
-                n_dbnsfp,
-                "\nannotated rows: ",
-                rows_ann,
-                "\ntotal variants:",
-                n_rows,
-                "\npercentage dbNSFP annotation: ",
-                percentage,
-                "%",
-            )
-
         final = pd.concat(appended_data)
         final.to_csv(path + "/" + sample + "_all_dbNSFP.txt", sep="\t", index=False)
 
@@ -1282,12 +1263,16 @@ def snpeff(sample, toml_config):
 
         all_var = len(final.index)
         filtered_var = len(df_filtered.index)
+        percentage = round(filtered_var / all_var * 100, 2)
 
         print(
             "\nNumber of variants in all: ",
             all_var,
             "\nNumber of variants in filtered: ",
             filtered_var,
+            "\npercentage filtered variants: ",
+            percentage,
+            "%",
         )
 
     with open(
