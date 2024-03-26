@@ -1264,10 +1264,133 @@ def snpeff(sample, toml_config):
             & (final["Alt_reads"] > 3)
         ]
 
-        # From https://useast.ensembl.org/info/genome/variation/prediction/predicted_data.html
-        # keep rows from HIGH, MODERATE and LOW impact variants
-        # impact = ["HIGH", "MODERATE", "LOW"]
-        # df_filtered = df_filtered["Impact"].isin(impact)
+        df_filtered.to_csv(
+            path + "/" + sample + "_variants_filtered.txt", sep="\t", index=False
+        )
+
+        print(">>> Filters:")
+        print("\t>>> Quality Phred > 20")
+        print("\t>>> Number of alt reads > 3")
+        print("\t>>> Number of total reads > 5")
+
+        all_var = len(final.index)
+        filtered_var = len(df_filtered.index)
+        percentage = round(filtered_var / all_var * 100, 2)
+
+        print(
+            "\nNumber of variants in all: ",
+            all_var,
+            "\nNumber of variants in filtered: ",
+            filtered_var,
+            "\npercentage filtered variants: ",
+            percentage,
+            "%",
+        )
+
+    else:
+        title("Format variants output")
+        final = pd.read_csv(
+            path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
+        )
+
+        final = final.rename(
+            columns={
+                "REF": "Ref",
+                "ALT": "Alt",
+                "QUAL": "Quality",
+                "HOM": "Zygosity",
+                "VARTYPE": "Variation",
+                "ANN[*].GENE": "Gene_name",
+                "ANN[*].GENEID": "Gene_id",
+                "ANN[*].FEATUREID": "Transcript",
+                "ANN[*].EFFECT": "Effect",
+                "ANN[*].IMPACT": "Impact",
+                "ANN[*].BIOTYPE": "Biotype",
+                "ANN[*].HGVS_C": "Codon_change",
+                "ANN[*].HGVS_P": "Protein_change",
+            }
+        )
+
+        final["Position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
+        final["Quality"] = round(final["Quality"], 2)
+        final["Alt_reads"] = final["DP4"].str.split(",").str[2].astype(int) + final[
+            "DP4"
+        ].str.split(",").str[3].astype(int)
+        final["Total_reads"] = (
+            final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int)
+        )
+        final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
+
+        columns = [
+            "Gene_name",
+            "Gene_id",
+            "Transcript",
+            "Effect",
+            "Impact",
+            "Biotype",
+            "Codon_change",
+            "Protein_change",
+        ]
+
+        for index in final.index:
+            infos = []
+            for c in columns:
+                n = (str(final.loc[index, c]).count("|")) + 1
+                if n != 1:
+                    str_split = str(final.loc[index, c]).split("|")
+                    str_split = [sub.replace('"', "") for sub in str_split]
+
+                    final.loc[index, c] = str_split[0]
+                    if str_split.count(str_split[0]) != n:
+                        infos.append(str_split)
+                else:
+                    # Need the double [] to make a list of list so the len() == 1
+                    infos.append([final.loc[index, c]])
+
+            info_concat = []
+            if len(infos) > 1:
+                for r in range(len(infos[0])):
+                    li = []
+                    for s in range(len(infos)):
+                        concat = infos[s][r]
+                        li.append(concat)
+                    info_concat.append("|".join(li))
+                final_str = "; ".join(info_concat)
+                final.loc[index, "Infos"] = final_str
+            elif len(infos) == 1:
+                final_str = "; ".join(infos[0])
+                final.loc[index, "Infos"] = final_str
+
+        final = final[
+            [
+                "Position",
+                "Ref",
+                "Alt",
+                "Quality",
+                "Alt_reads",
+                "Total_reads",
+                "Zygosity",
+                "rsID",
+                "Variation",
+                "Gene_name",
+                "Gene_id",
+                "Transcript",
+                "Effect",
+                "Impact",
+                "Biotype",
+                "Codon_change",
+                "Protein_change",
+                "Infos",
+            ]
+        ]
+
+        final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
+
+        df_filtered = final[
+            (final["Quality"] > 20)
+            & (final["Total_reads"] > 5)
+            & (final["Alt_reads"] > 3)
+        ]
 
         df_filtered.to_csv(
             path + "/" + sample + "_variants_filtered.txt", sep="\t", index=False
