@@ -88,11 +88,11 @@ def main():
 
     # Pseudo alignedment
     if toml_config["general"]["pseudo"] == "salmon":
-        print("\t>>> Pseudo_alignedment: Salmon (v1.10.2)")
+        print("\t>>> Pseudoalignment: Salmon (v1.10.2)")
         if "Salmon" not in done:
             function_queue.append(salmon)
     else:
-        print("\t>>> Pseudo_alignedment: none")
+        print("\t>>> Pseudoalignment: none")
 
     # Sorting and indexing
     print("\t>>> Sorting/Indexing: Samtools (v1.18)")
@@ -1035,8 +1035,9 @@ def snpeff(sample, toml_config):
     subprocess.run(["rm", path + "/" + sample + ".vcf"])
     subprocess.run(["rm", path + "/" + sample + "_snpeff.vcf"])
 
-    title("Add dbNSFP to snpEff output")
     if genome == "grch37" or genome == "grch38":
+        title("Add dbNSFP to snpEff output")
+
         chromosomes = [
             "1",
             "2",
@@ -1409,7 +1410,7 @@ def snpeff(sample, toml_config):
             all_var,
             "\nNumber of variants in filtered: ",
             filtered_var,
-            "\npercentage filtered variants: ",
+            "\nPercentage filtered variants: ",
             percentage,
             "%",
         )
