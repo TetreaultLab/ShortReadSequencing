@@ -152,8 +152,8 @@ general = """# TOML config file for {0}
     pseudo = "{3}"
     quantification = "{4}"
     variant = "{5}"
-    threads = 16  # Number of threads.
-    memory = 128 # Total memory needed.
+    threads = 8  # Number of threads.
+    memory = 64 # Total memory needed.
     email = "marjorie.labrecque@umontreal.ca" # You e-mail address to receive notification
     
 

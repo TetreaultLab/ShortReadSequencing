@@ -1370,7 +1370,6 @@ def snpeff(sample, toml_config):
                 "Alt_reads",
                 "Total_reads",
                 "Zygosity",
-                "rsID",
                 "Variation",
                 "Gene_name",
                 "Gene_id",
