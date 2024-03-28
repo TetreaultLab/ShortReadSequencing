@@ -264,7 +264,7 @@ def fastqc(sample, toml_config):
             output,
             "--noextract",
             "--threads",
-            "2",
+            "6",
             "--dir",
             temporary,
             "--kmers",
@@ -321,8 +321,10 @@ def bbduk(sample, toml_config):
             "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
             "k=" + str(toml_config["bbduk"]["kmers"]),
-            "qtrim=" + toml_config["bbduk"]["qtrim"],
+            "mink=" + str(toml_config["bbduk"]["mink"]),
+            "ktrim=" + str(toml_config["bbduk"]["ktrim"]),
             "trimq=" + str(toml_config["bbduk"]["trimq"]),
+            "qtrim=" + toml_config["bbduk"]["qtrim"],
             "minlength=" + str(toml_config["bbduk"]["minlength"]),
             "mlf=" + str(toml_config["bbduk"]["mlf"]),
             "minavgquality=" + str(toml_config["bbduk"]["minavgquality"]),
@@ -334,12 +336,15 @@ def bbduk(sample, toml_config):
             "bbduk.sh",
             "in=" + Iduk,
             "out=" + Oduk,
+            "literal=TAAGGCGA,CGTACTAG,AGGCAGAA,TCCTGAGC,GGACTCCT,TAGGCATG",
             "stats=" + output + "/contaminants_stats.txt",
             "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
             "k=" + str(toml_config["bbduk"]["kmers"]),
-            "qtrim=" + toml_config["bbduk"]["qtrim"],
+            "mink=" + str(toml_config["bbduk"]["mink"]),
+            "ktrim=" + str(toml_config["bbduk"]["ktrim"]),
             "trimq=" + str(toml_config["bbduk"]["trimq"]),
+            "qtrim=" + toml_config["bbduk"]["qtrim"],
             "minlength=" + str(toml_config["bbduk"]["minlength"]),
             "mlf=" + str(toml_config["bbduk"]["mlf"]),
             "minavgquality=" + str(toml_config["bbduk"]["minavgquality"]),
@@ -462,7 +467,7 @@ def star(sample, toml_config):
     subprocess.run(["rm", output + "/" + sample + "_Log.progress.out"])
     subprocess.run(["rm", output + "/" + sample + "_Unmapped.out.mate1"])
     subprocess.run(["rm", output + "/" + sample + "_Unmapped.out.mate2"])
-    subprocess.run(["rm", "-r", output + "/DM01P__STARpass1"])
+    subprocess.run(["rm", "-r", output + "/" + sample + "__STARpass1"])
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"

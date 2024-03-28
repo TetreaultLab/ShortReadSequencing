@@ -55,8 +55,10 @@ elif args.trimming == "bbduk":
     options += """# Trimming
 [bbduk]
     ordered = "f"   # Set to true to output reads in same order as input.
-    kmers = 27  # Kmer length used for finding contaminants.  Contaminants shorter than k will not be found.  k must be at least 1.
-    qtrim = "r"    # Trim read ends to remove bases with quality below trimq. Performed AFTER looking for kmers.  Values: rl (trim both ends), f (neither end), r (right end only), l (left end only), w (sliding window).
+    kmers = 8  # Kmer length used for finding contaminants.  Contaminants shorter than k will not be found.  k must be at least 1.
+    mink = 7  # look for shorter kmers at read tips to this min 
+    ktrim = "r"  # trim bases that match adapters, trim to the right
+    qtrim = "rl"    # Trim read ends to remove bases with quality below trimq. Performed AFTER looking for kmers.  Values: rl (trim both ends), f (neither end), r (right end only), l (left end only), w (sliding window).
     trimq = 10 # Regions with average quality BELOW this will be trimmed, if qtrim is set to something other than f.
     minlength = 10 # Reads shorter than this after trimming will be discarded.  Pairs will be discarded if both are shorter.
     mlf = 0 # (minlengthfraction) Reads shorter than this fraction of original length after trimming will be discarded.
