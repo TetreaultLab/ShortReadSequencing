@@ -320,6 +320,10 @@ def bbduk(sample, toml_config):
             "stats=" + output + "/contaminants_stats.txt",
             "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
+            "ref=",
+            "/lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/adapters.fa"
+            "hdist=",
+            "1",
             "k=" + str(toml_config["bbduk"]["kmers"]),
             "mink=" + str(toml_config["bbduk"]["mink"]),
             "ktrim=" + str(toml_config["bbduk"]["ktrim"]),
@@ -328,6 +332,8 @@ def bbduk(sample, toml_config):
             "minlength=" + str(toml_config["bbduk"]["minlength"]),
             "mlf=" + str(toml_config["bbduk"]["mlf"]),
             "minavgquality=" + str(toml_config["bbduk"]["minavgquality"]),
+            "tbo",
+            "tpe",
         ]
     else:
         Iduk = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
@@ -336,10 +342,13 @@ def bbduk(sample, toml_config):
             "bbduk.sh",
             "in=" + Iduk,
             "out=" + Oduk,
-            "literal=TAAGGCGA,CGTACTAG,AGGCAGAA,TCCTGAGC,GGACTCCT,TAGGCATG",
             "stats=" + output + "/contaminants_stats.txt",
             "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
+            "ref=",
+            "/lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/adapters.fa"
+            "hdist=",
+            "1",
             "k=" + str(toml_config["bbduk"]["kmers"]),
             "mink=" + str(toml_config["bbduk"]["mink"]),
             "ktrim=" + str(toml_config["bbduk"]["ktrim"]),
@@ -348,6 +357,8 @@ def bbduk(sample, toml_config):
             "minlength=" + str(toml_config["bbduk"]["minlength"]),
             "mlf=" + str(toml_config["bbduk"]["mlf"]),
             "minavgquality=" + str(toml_config["bbduk"]["minavgquality"]),
+            "tbo",
+            "tpe",
         ]
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
@@ -396,6 +407,12 @@ def star(sample, toml_config):
             "99",
             "--readFilesCommand",
             "zcat",
+            "--chimSegmentMin",
+            "10",
+            "--winAnchorMultimapNmax",
+            "200",
+            "--outFilterMultimapNmax",
+            "100",
             "--readFilesIn",
             I1_toAlign,
             I2_toAlign,
@@ -426,6 +443,12 @@ def star(sample, toml_config):
             temporary,
             "--readFilesCommand",
             "zcat",
+            "--chimSegmentMin",
+            "10",
+            "--winAnchorMultimapNmax",
+            "200",
+            "--outFilterMultimapNmax",
+            "100",
             "--readFilesIn",
             I_toAlign,
             "--outSAMtype",
