@@ -320,7 +320,7 @@ def bbduk(sample, toml_config):
             "stats=" + output + "/contaminants_stats.txt",
             "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
-            "ref=/lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/adapters.fa",
+            "ref=/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/adapters.fa",
             "k=" + str(toml_config["bbduk"]["kmers"]),
             "mink=" + str(toml_config["bbduk"]["mink"]),
             "ktrim=" + str(toml_config["bbduk"]["ktrim"]),
@@ -342,7 +342,7 @@ def bbduk(sample, toml_config):
             "stats=" + output + "/contaminants_stats.txt",
             "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
-            "ref=/lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/adapters.fa",
+            "ref=/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/adapters.fa",
             "k=" + str(toml_config["bbduk"]["kmers"]),
             "mink=" + str(toml_config["bbduk"]["mink"]),
             "ktrim=" + str(toml_config["bbduk"]["ktrim"]),
@@ -1083,7 +1083,7 @@ def snpeff(sample, toml_config):
         var = var[var["CHROM"].isin(chromosomes)]
 
         appended_data = []
-        ref = "/lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/dbNSFP"
+        ref = "/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/dbNSFP"
         for chromosome in chromosomes:
             db = pd.read_csv(
                 ref + "/dbNSFP4.7a_variant.chr" + chromosome + "_small.txt",
