@@ -35,14 +35,7 @@ with open(toml_file, "r") as f:
 email = toml_config["general"]["email"]
 cores = toml_config["general"]["threads"]
 memory = toml_config["general"]["memory"]
-
-# time
-if toml_config["general"]["sequencing"] == "RNA":
-    time = "00-23:59"
-elif toml_config["general"]["sequencing"] == "Exome":
-    time = "00-23:59"
-elif toml_config["general"]["sequencing"] == "Genome":
-    time = "03-23:59"
+time = toml_config["general"]["time"]
 
 f.close()
 
@@ -70,7 +63,7 @@ source /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/bin/
 #
 # newgrp rrg-tetreaum
 #
-python -u /lustre04/scratch/mlab/pipeline2024/ShortReadSequencing/pipeline_short.py --sample {6} --config {7}
+python -u /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/ShortReadSequencing/pipeline_short.py --sample {6} --config {7}
 #
 """.format(
     cores, memory, time, sample_name, sample_name, email, sample_name, path_config

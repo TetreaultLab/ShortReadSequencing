@@ -136,7 +136,11 @@ def main():
 
     # Calling each steps
     for func in function_queue:
-        func(sample, toml_config)
+        try:
+            func(sample, toml_config)
+        except:
+            print("An error occured")
+            sys.exit(1)
 
     ## Get log and extract all >>> lines from it and save to file "steps_summary.txt"
     # TO-DO
