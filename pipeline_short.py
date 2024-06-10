@@ -1045,8 +1045,7 @@ def snpeff(sample, toml_config):
             cmd_extract,
             stdout=outfile,
         )
-
-    subprocess.run(["rm", path + "/" + sample + ".vcf"])
+    subprocess.run(["rm", path + "/" + sample + "_summary.csv"])
     subprocess.run(["rm", path + "/" + sample + "_snpeff.vcf"])
 
     if genome == "grch37" or genome == "grch38":
@@ -1428,7 +1427,8 @@ def snpeff(sample, toml_config):
             percentage,
             "%",
         )
-
+    subprocess.run(["rm", path + "/" + sample + "_annotated.txt"])
+    
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:
