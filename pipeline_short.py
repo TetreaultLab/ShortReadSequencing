@@ -276,6 +276,12 @@ def fastqc(sample, toml_config):
             Read1,
             Read2,
         ]
+        command_str = " ".join(command)
+        print(f">>> {command_str}\n")
+        subprocess.run(command)
+        
+        subprocess.run(["rm", output + "/" + sample + "_R1_fastqc.zip"])
+        subprocess.run(["rm", output + "/" + sample + "_R2_fastqc.zip"])
 
     else:
         Read = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
@@ -293,10 +299,13 @@ def fastqc(sample, toml_config):
             str(toml_config["fastqc"]["kmers"]),
             Read,
         ]
-    command_str = " ".join(command)
-    print(f">>> {command_str}\n")
-    subprocess.run(command)
-
+        
+        command_str = " ".join(command)
+        print(f">>> {command_str}\n")
+        subprocess.run(command)
+    
+        subprocess.run(["rm", output + "/" + sample + "_fastqc.zip"])
+        
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:
@@ -477,6 +486,7 @@ def star(sample, toml_config):
     subprocess.run(["rm", output + "/" + sample + "_Unmapped.out.mate1"])
     subprocess.run(["rm", output + "/" + sample + "_Unmapped.out.mate2"])
     subprocess.run(["rm", "-r", output + "/" + sample + "__STARpass1"])
+    subprocess.run(["mv", output + "/" + sample + "__STARgenome/sjdbList.out.tab", output + "/" + sample + "_sjdbList.out.tab"])
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -701,6 +711,8 @@ def bamqc(sample, toml_config):
     print(f">>> {command_str}\n")
     subprocess.run(command)
 
+    subprocess.run(["rm", output + "/" + sample + "_sortedCoordinate_fastqc.zip"])
+    
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:
@@ -878,6 +890,9 @@ def multiqc(sample, toml_config):
             output,
         ]
     )
+
+    subprocess.run(["rm", output + "my_file_list.txt"])
+    subprocess.run(["rm", "-r", output + "/" + sample + "_multiqc_report_data"])
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
