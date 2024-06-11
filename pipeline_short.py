@@ -55,8 +55,6 @@ def main():
         for line in f:
             done.append(line.strip())
 
-    print(done)
-
     # Get tools and versions
     function_queue = []
     print(">>> Parameters:")
@@ -140,7 +138,7 @@ def main():
             func(sample, toml_config)
         except:
             print("An error occured")
-            sys.exit(1)
+            exit(1)
 
     ## Get log and extract all >>> lines from it and save to file "steps_summary.txt"
     # TO-DO
@@ -278,7 +276,7 @@ def fastqc(sample, toml_config):
         ]
         command_str = " ".join(command)
         print(f">>> {command_str}\n")
-        subprocess.run(command)
+        subprocess.run(command, check=True)
         
         subprocess.run(["rm", output + "/" + sample + "_R1_fastqc.zip"])
         subprocess.run(["rm", output + "/" + sample + "_R2_fastqc.zip"])
@@ -302,7 +300,7 @@ def fastqc(sample, toml_config):
         
         command_str = " ".join(command)
         print(f">>> {command_str}\n")
-        subprocess.run(command)
+        subprocess.run(command, check=True)
     
         subprocess.run(["rm", output + "/" + sample + "_fastqc.zip"])
         
@@ -369,7 +367,7 @@ def bbduk(sample, toml_config):
         ]
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
-    subprocess.run(command)
+    subprocess.run(command, check=True)
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -383,7 +381,6 @@ def star(sample, toml_config):
     subprocess.run(["mkdir", "-p", output])
 
     temporary = toml_config["general"]["temporary"] + "/" + sample + "/star_tmp"
-    subprocess.run(["rm", "-r", temporary])
 
     ref = get_reference(toml_config["general"]["reference"], "star")["index"]
 
@@ -458,7 +455,7 @@ def star(sample, toml_config):
         ]
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
-    subprocess.run(command)
+    subprocess.run(command, check=True)
 
     # rename BAM file
     subprocess.run(
@@ -536,7 +533,7 @@ def bwa(sample, toml_config):
 
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
-    subprocess.run(command)
+    subprocess.run(command, check=True)
 
     # Change SAM to BAM format
     subprocess.run(
@@ -614,7 +611,7 @@ def salmon(sample, toml_config):
 
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
-    subprocess.run(command)
+    subprocess.run(command, check=True)
 
     subprocess.run(
         ["mv", output + "/logs/salmon_quant.log", output + "/" + sample + "_log.out"]
@@ -709,7 +706,7 @@ def bamqc(sample, toml_config):
 
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
-    subprocess.run(command)
+    subprocess.run(command, check=True)
 
     subprocess.run(["rm", output + "/" + sample + "_sortedCoordinate_fastqc.zip"])
     
@@ -752,7 +749,7 @@ def markduplicates(sample, toml_config):
 
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
-    subprocess.run(command)
+    subprocess.run(command, check=True)
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -828,7 +825,7 @@ def featurecounts(sample, toml_config):
 
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
-    subprocess.run(command)
+    subprocess.run(command, check=True)
 
     # Keep Geneid and counts
     with open(output + "/" + sample + "_0.counts", "w") as outfile:
@@ -943,11 +940,11 @@ def bcftools(sample, toml_config):
 
     command_1 = " ".join(mpileup)
     print(f">>> {command_1}\n")
-    subprocess.run(mpileup)
+    subprocess.run(mpileup, check=True)
 
     command_2 = " ".join(call)
     print(f">>> {command_2}\n")
-    subprocess.run(call)
+    subprocess.run(call, check=True)
 
     subprocess.run(["rm", output + sample + "_mpileup.vcf"])
 
@@ -1047,19 +1044,23 @@ def snpeff(sample, toml_config):
         subprocess.run(
             cmd_snpeff,
             stdout=outfile,
+            check=True,
         )
 
     with open(path + "/" + sample + "_annotated.vcf", "w") as outfile:
         subprocess.run(
             cmd_vartype,
             stdout=outfile,
+            check=True,
         )
 
     with open(path + "/" + sample + "_annotated.txt", "w") as outfile:
         subprocess.run(
             cmd_extract,
             stdout=outfile,
+            check=True,
         )
+    
     subprocess.run(["rm", path + "/" + sample + "_summary.csv"])
     subprocess.run(["rm", path + "/" + sample + "_snpeff.vcf"])
 
