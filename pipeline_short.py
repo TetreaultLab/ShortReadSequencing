@@ -930,6 +930,7 @@ def bcftools(sample, toml_config):
         "call",
         "--threads",
         str(toml_config["general"]["threads"]),
+        "--keep-alts",
         "--multiallelic-caller",
         "--variants-only",
         "-o",
@@ -945,7 +946,7 @@ def bcftools(sample, toml_config):
     print(f">>> {command_2}\n")
     subprocess.run(call, check=True)
 
-    subprocess.run(["rm", output + sample + "_mpileup.vcf"])
+    # subprocess.run(["rm", output + sample + "_mpileup.vcf"])
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
