@@ -137,7 +137,7 @@ def main():
         try:
             func(sample, toml_config)
         except:
-            print("An error occured during the ", func, " step.")
+            print("An error occured during the ", str(func), " step.")
             exit(1)
 
     ## Get log and extract all >>> lines from it and save to file "steps_summary.txt"
