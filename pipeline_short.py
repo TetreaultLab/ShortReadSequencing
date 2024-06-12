@@ -930,7 +930,6 @@ def bcftools(sample, toml_config):
         "call",
         "--threads",
         str(toml_config["general"]["threads"]),
-        "--keep-alts",
         "--multiallelic-caller",
         "--variants-only",
         "-o",
