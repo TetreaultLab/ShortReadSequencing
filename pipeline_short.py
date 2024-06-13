@@ -1154,8 +1154,9 @@ def snpeff(sample, toml_config):
                 "REF": "Ref",
                 "ALT": "Alt",
                 "QUAL": "Quality",
-                "HOM": "Zygosity",
-                "VARTYPE": "Variation",
+                "TYPE": "Variation",
+                "AF": "Zygosity",
+                "DP": "Read_depth",
                 "ANN[*].GENE": "Gene_name",
                 "ANN[*].GENEID": "Gene_id",
                 "ANN[*].FEATUREID": "Transcript",
@@ -1178,13 +1179,9 @@ def snpeff(sample, toml_config):
 
         final["Position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
         final["Quality"] = round(final["Quality"], 2)
-        final["Alt_reads"] = final["DP4"].str.split(",").str[2].astype(int) + final[
-            "DP4"
-        ].str.split(",").str[3].astype(int)
-        final["Total_reads"] = (
-            final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int)
-        )
-        final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
+        # final["Alt_reads"] = final["DP4"].str.split(",").str[2].astype(int) + final["DP4"].str.split(",").str[3].astype(int)
+        # final["Total_reads"] = (final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int))
+        final = final.replace({"Zygosity": {1: "Hom", 0.5: "Het"}})
 
         columns = [
             "Gene_name",
@@ -1246,8 +1243,7 @@ def snpeff(sample, toml_config):
                 "Ref",
                 "Alt",
                 "Quality",
-                "Alt_reads",
-                "Total_reads",
+                "Read_depth",
                 "Zygosity",
                 "rsID",
                 "Variation",
@@ -1292,8 +1288,7 @@ def snpeff(sample, toml_config):
 
         df_filtered = final[
             (final["Quality"] > 20)
-            & (final["Total_reads"] > 5)
-            & (final["Alt_reads"] > 3)
+            & (final["Read_depth"] > 5)
         ]
 
         df_filtered.to_csv(
