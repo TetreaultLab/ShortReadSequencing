@@ -119,10 +119,15 @@ def main():
     if "MutliQC" not in done:
         function_queue.append(multiqc)
 
-    # Variant Calling : BAM to VCF
-    print("\t>>> Variant Calling: BCFtools (v1.18)")
-    if "BCFtools" not in done:
-        function_queue.append(bcftools)
+    # Variant Calling : BAM to VCF (BCFtools - old)
+    # print("\t>>> Variant Calling: BCFtools (v1.18)")
+    # if "BCFtools" not in done:
+        # function_queue.append(bcftools)
+
+    # Variant Calling : BAM to VCF (FreeBayes - current/better)
+    print("\t>>> Variant Calling: FreeBayes (v1.37)")
+    if "FreeBayes" not in done:
+        function_queue.append(freebayes)
 
     # Variant Calling : SnpEff (annotation)
     if toml_config["general"]["variant"] == "snpeff":
@@ -954,6 +959,32 @@ def bcftools(sample, toml_config):
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:
         steps.write("BCFtools\n")
+
+def freebayes(sample, toml_config):
+    title("FreeBayes")
+    input = (
+        toml_config["general"]["output"]
+        + "/"
+        + sample
+        + "/Aligned/"
+        + sample
+        + "_sortedCoordinate.bam"
+    )
+    output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
+    subprocess.run(["mkdir", "-p", output])
+
+    ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
+
+    command = ["freebayes", "-f", ref, input, "--vcf", output + sample + ".vcf"]
+    
+    command_str = " ".join(command)
+    print(f">>> {command_str}\n")
+    subprocess.run(command, check=True)
+    
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("FreeBayes\n")
 
 
 def snpeff(sample, toml_config):
