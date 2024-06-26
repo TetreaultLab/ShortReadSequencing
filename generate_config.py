@@ -156,7 +156,7 @@ general = """# TOML config file for {0}
     variant = "{5}"
     threads = 8  # Number of threads.
     memory = 64 # Total memory needed.
-    time = "00-23:59" # DD-HH:MM. Default: 23h59
+    time = "02-23:59" # DD-HH:MM. Default: 2 days 23h59
     email = "" # You e-mail address to receive notification
     
 
