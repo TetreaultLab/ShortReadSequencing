@@ -975,7 +975,21 @@ def freebayes(sample, toml_config):
 
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
 
-    command = ["freebayes", "-f", ref, input, "--vcf", output + sample + ".vcf"]
+    command = ["freebayes", 
+               "-f", 
+               ref, 
+               "--ploidy", 
+               "2", 
+               "--min-repeat-entropy", 
+               "1", 
+               "--no-partial-observations", 
+               "--min-alternate-count", 
+               "2", 
+               "--min-alternate-fraction", 
+               "0.1",
+               input, 
+               "--vcf", 
+               output + sample + ".vcf"]
     
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
