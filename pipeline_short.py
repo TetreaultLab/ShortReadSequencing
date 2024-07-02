@@ -984,9 +984,9 @@ def freebayes(sample, toml_config):
                "1", 
                "--no-partial-observations", 
                "--min-alternate-count", 
-               "2", 
-               "--min-alternate-fraction", 
-               "0.1",
+               "2",
+               "--min-mapping-quality",
+               "1",
                input, 
                "--vcf", 
                output + sample + ".vcf"]
@@ -1168,6 +1168,7 @@ def snpeff(sample, toml_config):
             appended_data.append(m)
 
         final = pd.concat(appended_data)
+        final = final[final["AC"] != "0.0"]
         final.to_csv(
             path + "/" + sample + "_annotated_dbNSFP.txt", sep="\t", index=False
         )
@@ -1226,7 +1227,7 @@ def snpeff(sample, toml_config):
         final["Quality"] = round(final["Quality"], 2)
         # final["Alt_reads"] = final["DP4"].str.split(",").str[2].astype(int) + final["DP4"].str.split(",").str[3].astype(int)
         # final["Total_reads"] = (final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int))
-        final = final.replace({"Zygosity": {"1": "Hom", "0.5": "Het"}})
+        final = final.replace({"Zygosity": {"1.0": "Hom", "0.5": "Het"}})
 
         columns = [
             "Gene_name",
