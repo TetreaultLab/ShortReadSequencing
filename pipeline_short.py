@@ -1145,7 +1145,7 @@ def snpeff(sample, toml_config):
         var = pd.read_csv(
             path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
         )
-        var = var.astype({"CHROM": str, "POS": str})
+        var = var.astype({"CHROM": str, "POS": str, "AF": str})
         var = var[var["CHROM"].isin(chromosomes)]
 
         appended_data = []
@@ -1168,7 +1168,7 @@ def snpeff(sample, toml_config):
             appended_data.append(m)
 
         final = pd.concat(appended_data)
-        final = final[final["AC"] != "0.0"]
+        final = final[final["AF"] != "0.0"]
         final.to_csv(
             path + "/" + sample + "_annotated_dbNSFP.txt", sep="\t", index=False
         )
