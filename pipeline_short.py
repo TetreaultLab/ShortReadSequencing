@@ -998,11 +998,23 @@ def freebayes(sample, toml_config):
                # "1",
                input, 
                "--vcf", 
-               output + sample + ".vcf"]
+               output + sample + "_unfiltered.vcf"]
     
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
     subprocess.run(command, check=True)
+
+    command_filter = ["bcftools",
+                      "filter",
+                      "-i",
+                      "'QUAL>1 && INFO/DP>0 && AC>0'",
+                      "-o", 
+                      output + sample + ".vcf",
+                      output + sample + "_unfiltered.vcf"]
+
+    command_str_filter = " ".join(command_filter)
+    print(f">>> {command_str_filter}\n")
+    subprocess.run(command_filter, check=True)
     
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
