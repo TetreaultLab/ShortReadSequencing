@@ -842,7 +842,7 @@ def featurecounts(sample, toml_config):
             ["tail", "-n", "+2", output + "/" + sample + "_geneID.txt"], stdout=outfile
         )
 
-    with open(output + "/" + sample + ".counts", "w") as outfile:
+    with open(output + "/" + sample + "_counts.txt", "w") as outfile:
         subprocess.run(
             ["cut", "-f1,7", output + "/" + sample + "_0.counts"], stdout=outfile
         )
@@ -852,7 +852,7 @@ def featurecounts(sample, toml_config):
             "sed",
             "-i",
             "1s|.*|gene_id\t" + sample + "|",
-            output + "/" + sample + ".counts",
+            output + "/" + sample + "_counts.txt",
         ]
     )
 
@@ -1021,14 +1021,17 @@ def bcftools_filter(sample, toml_config):
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
     
-    command = ['bcftools',
-               'filter',
-               '-i "QUAL>1 && INFO/DP>0 && AC>0"',
-               '-o', 
-               output + sample + '.vcf',
-               output + sample + '_unfiltered.vcf']
+    # command = ['bcftools',
+    #            'filter',
+    #            '-i "QUAL>1 && INFO/DP>0 && AC>0"',
+    #            '-o', 
+    #            output + sample + '.vcf',
+    #            output + sample + '_unfiltered.vcf']
+    out = output + sample + ".vcf"
+    inp = output + sample + "_unfiltered.vcf"
+    command = "bcftools filter -i 'QUAL>1 && INFO/DP>0 && AC>0' -o " + out + " " + inp
 
-    # command = " ".join(command)
+    #command_str = " ".join(command)
     print(f">>> {command}\n")
     subprocess.run(command, check=True)
 
