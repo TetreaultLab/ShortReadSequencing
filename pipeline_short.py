@@ -1006,8 +1006,7 @@ def freebayes(sample, toml_config):
 
     command_filter = ["bcftools",
                       "filter",
-                      "-i",
-                      "\'QUAL>1 && INFO/DP>0 && AC>0\'",
+                      "--include='QUAL>1 && INFO/DP>0 && AC>0'",
                       "-o", 
                       output + sample + ".vcf",
                       output + sample + "_unfiltered.vcf"]
