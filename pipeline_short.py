@@ -129,7 +129,12 @@ def main():
     if "FreeBayes" not in done:
         function_queue.append(freebayes)
 
-    # Variant Calling : SnpEff (annotation)
+    # Variant filtering
+    print("\t>>> Variant Calling: BCFtools (v1.18))")
+    if "BCFtools filters" not in done:
+            function_queue.append(bcftools_filter)
+    
+    # Variant Annotation : SnpEff
     if toml_config["general"]["variant"] == "snpeff":
         print("\t>>> Variant Calling: SnpEff + SnpSift (v5.2a)")
         if "SnpEff" not in done:
@@ -1003,22 +1008,34 @@ def freebayes(sample, toml_config):
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
     subprocess.run(command, check=True)
-
-    command_filter = ["bcftools",
-                      "filter",
-                      "--include='QUAL>1 && INFO/DP>0 && AC>0'",
-                      "-o", 
-                      output + sample + ".vcf",
-                      output + sample + "_unfiltered.vcf"]
-
-    command_str_filter = " ".join(command_filter)
-    print(f">>> {command_str_filter}\n")
-    subprocess.run(command_filter, check=True)
     
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:
         steps.write("FreeBayes\n")
+
+
+def bcftools_filter(sample, toml_config):
+    title("BCFtools filters")
+
+    output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
+    subprocess.run(["mkdir", "-p", output])
+    
+    command = ["bcftools",
+               "filter",
+               "--include='QUAL>1 && INFO/DP>0 && AC>0'",
+               "-o", 
+               output + sample + ".vcf",
+               output + sample + "_unfiltered.vcf"]
+
+    command = " ".join(command)
+    print(f">>> {command}\n")
+    subprocess.run(command, check=True)
+
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("BCFtools filters\n")
 
 
 def snpeff(sample, toml_config):
