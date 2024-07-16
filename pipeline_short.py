@@ -1023,12 +1023,12 @@ def bcftools_filter(sample, toml_config):
     
     command = ["bcftools",
                "filter",
-               "--include='QUAL>1 && INFO/DP>0 && AC>0'",
+               "-i 'QUAL>1 && INFO/DP>0 && AC>0'",
                "-o", 
                output + sample + ".vcf",
                output + sample + "_unfiltered.vcf"]
 
-    command = " ".join(command)
+    # command = " ".join(command)
     print(f">>> {command}\n")
     subprocess.run(command, check=True)
 
