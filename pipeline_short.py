@@ -1021,18 +1021,16 @@ def bcftools_filter(sample, toml_config):
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
     
-    # command = ['bcftools',
-    #            'filter',
-    #            '-i "QUAL>1 && INFO/DP>0 && AC>0"',
-    #            '-o', 
-    #            output + sample + '.vcf',
-    #            output + sample + '_unfiltered.vcf']
-    out = output + sample + ".vcf"
-    inp = output + sample + "_unfiltered.vcf"
-    command = "bcftools filter -i 'QUAL>1 && INFO/DP>0 && AC>0' -o " + out + " " + inp
+    command = ["echo",
+               "filter",
+               "-i",
+               "QUAL>1 && INFO/DP>0 && AC>0",
+               "-o", 
+               output + sample + ".vcf",
+               output + sample + "_unfiltered.vcf"]
 
-    #command_str = " ".join(command)
-    print(f">>> {command}\n")
+    command_str = " ".join(command)
+    print(f">>> {command_str}\n")
     subprocess.run(command, check=True)
 
     with open(
