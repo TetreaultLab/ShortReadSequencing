@@ -1183,8 +1183,11 @@ def snpeff(sample, toml_config):
         var = pd.read_csv(
             path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
         )
-        var = var.astype({"CHROM": str, "POS": str, "AF": str})
-        var = var[var["CHROM"].isin(chromosomes)]
+		var = var.rename(
+            columns={
+                "CHROM": "CHROM_"+genome,
+                "POS": "POS_"+genome,
+        var = var.astype({"CHROM_"+genome: str, "POS_"+genome: str})
 
         appended_data = []
         ref = "/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/dbNSFP"
@@ -1195,18 +1198,15 @@ def snpeff(sample, toml_config):
                 sep="\t",
                 low_memory=False,
             )
-            db = db.rename(
-                columns={"chr": "CHROM", "pos": "POS", "ref": "REF", "alt": "ALT"}
-            )
-            db = db.astype({"CHROM": str, "POS": str})
+
+            db = db.astype({"CHROM_"+genome: str, "POS_"+genome: str})
 
             var_chr = var[var["CHROM"] == chromosome]
 
-            m = pd.merge(var_chr, db, how="left", on=["CHROM", "POS", "REF", "ALT"])
+            m = pd.merge(var_chr, db, how="left", on=["CHROM_"+genome, "POS_"+genome, "REF", "ALT"])
             appended_data.append(m)
 
         final = pd.concat(appended_data)
-        final = final[final["AF"] != "0.0"]
         final.to_csv(
             path + "/" + sample + "_annotated_dbNSFP.txt", sep="\t", index=False
         )
@@ -1249,19 +1249,10 @@ def snpeff(sample, toml_config):
                 "ANN[*].BIOTYPE": "Biotype",
                 "ANN[*].HGVS_C": "Codon_change",
                 "ANN[*].HGVS_P": "Protein_change",
-                "rs_dbSNP": "rsID",
-                "SIFT4G_score": "SIFT_score",
-                "Polyphen2_HDIV_score": "PolyPhen2_HDIV_score",
-                "CADD_phred": "CADD_phred_score",
-                "GERP++_RS": "GERP_score",
-                "phyloP100way_vertebrate": "phyloP_score",
-                "phastCons100way_vertebrate": "phastCons_score",
-                "1000Gp3_AF": "1000G_AF",
-                "clinvar_OMIM_id": "OMIM",
             }
         )
 
-        final["Position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
+        final["Position_"+genome] = final["CHROM_"+genome].astype(str) + ":" + final["POS_"+genome].astype(str)
         final["Quality"] = round(final["Quality"], 2)
         # final["Alt_reads"] = final["DP4"].str.split(",").str[2].astype(int) + final["DP4"].str.split(",").str[3].astype(int)
         # final["Total_reads"] = (final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int))
@@ -1307,23 +1298,9 @@ def snpeff(sample, toml_config):
                 final_str = "; ".join(infos[0])
                 final.loc[index, "Infos"] = final_str
 
-        filters = [
-            "SIFT_score",
-            "PolyPhen2_HDIV_score",
-            "MutationTaster_score",
-            "FATHMM_score",
-            "REVEL_score",
-            "AlphaMissense_score",
-        ]
-        for index in final.index:
-            for f in filters:
-                if ";" in str(final.loc[index, f]):
-                    str_split = str(final.loc[index, f]).split(";")
-                    final.loc[index, f] = str_split[0]
-
         final = final[
             [
-                "Position",
+                "Position_"+genome,
                 "Ref",
                 "Alt",
                 "Quality",
@@ -1331,6 +1308,12 @@ def snpeff(sample, toml_config):
                 "Zygosity",
                 "rsID",
                 "Variation",
+                "genename",
+                "Ensembl_geneid",
+                "Ensembl_transcriptid",
+                "Ensembl_proteinid",
+                "codon_change",
+                "protein_change",
                 "Gene_name",
                 "Gene_id",
                 "Transcript",
@@ -1381,7 +1364,6 @@ def snpeff(sample, toml_config):
 
         print(">>> Filters:")
         print("\t>>> Quality Phred > 20")
-        print("\t>>> Number of alt reads > 3")
         print("\t>>> Number of total reads > 5")
 
         all_var = len(final.index)
