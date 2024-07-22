@@ -1112,6 +1112,7 @@ def snpeff(sample, toml_config):
         "QUAL",
         "AF",
         "DP",
+	"GEN[0].AD"
         "TYPE",
         "ANN[*].GENE",
         "ANN[*].GENEID",
@@ -1242,6 +1243,7 @@ def snpeff(sample, toml_config):
                 "TYPE": "Variation",
                 "AF": "Zygosity",
                 "DP": "Read_depth",
+		"GEN[0].AD" : "Allele_depth"
                 "ANN[*].GENE": "Gene_name",
                 "ANN[*].GENEID": "Gene_id",
                 "ANN[*].FEATUREID": "Transcript",
@@ -1255,7 +1257,8 @@ def snpeff(sample, toml_config):
 
         final["Position_"+genome] = final["CHROM_"+genome].astype(str) + ":" + final["POS_"+genome].astype(str)
         final["Quality"] = round(final["Quality"], 2)
-        # final["Alt_reads"] = final["DP4"].str.split(",").str[2].astype(int) + final["DP4"].str.split(",").str[3].astype(int)
+	final["Ref_reads"] = final["Allele_depth"].str.split(":")[0]
+        final["Alt_reads"] = final["Allele_depth"].str.split(":")[1]
         # final["Total_reads"] = (final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int))
         final = final.replace({"Zygosity": {"1.0": "Hom", "0.5": "Het"}})
 
@@ -1304,8 +1307,10 @@ def snpeff(sample, toml_config):
                 "Position_"+genome,
                 "Ref",
                 "Alt",
-                "Quality",
-                "Read_depth",
+		"Quality",
+		"Read_depth",
+                "Ref_reads",
+		"Alt_reads",
                 "Zygosity",
                 "rsID",
                 "Variation",
@@ -1356,6 +1361,7 @@ def snpeff(sample, toml_config):
 
         df_filtered = final[
             (final["Quality"] > 20)
+	    & (final["Alt_depth"] > 3)
             & (final["Read_depth"] > 5)
         ]
 
@@ -1365,6 +1371,7 @@ def snpeff(sample, toml_config):
 
         print(">>> Filters:")
         print("\t>>> Quality Phred > 20")
+	print("\t>>> Number of alt reads > 3")
         print("\t>>> Number of total reads > 5")
 
         all_var = len(final.index)
