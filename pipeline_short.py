@@ -979,19 +979,20 @@ def freebayes(sample, toml_config):
     subprocess.run(["mkdir", "-p", output])
 
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
-
+	
+    # freebayes with legacy genotype calling and naive variant calling
     command = ["freebayes", 
                "-f", 
                ref, 
                "--legacy-gls",
-               # "--haplotype-length", 
-               # "0", 
-               # "--min-alternate-count", 
-               # "1", 
-               # "--min-alternate-fraction", 
-               # "0",
-               # "--pooled-continuous", 
-               # "--report-monomorphic",
+               "--haplotype-length", 
+               "0", 
+               "--min-alternate-count", 
+               "1", 
+               "--min-alternate-fraction", 
+               "0",
+               "--pooled-continuous", 
+               "--report-monomorphic",
                # "--ploidy", 
                # "2", 
                # "--min-repeat-entropy", 
