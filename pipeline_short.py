@@ -1372,7 +1372,7 @@ def snpeff(sample, toml_config):
 
         print(">>> Filters:")
         print("\t>>> Quality Phred > 20")
-	print("\t>>> Number of alt reads > 3")
+        print("\t>>> Number of alt reads > 3")
         print("\t>>> Number of total reads > 5")
 
         all_var = len(final.index)
@@ -1400,7 +1400,9 @@ def snpeff(sample, toml_config):
                 "REF": "Ref",
                 "ALT": "Alt",
                 "QUAL": "Quality",
-                "HOM": "Zygosity",
+                "TYPE": "Variation",
+                "AF": "Zygosity",
+                "DP": "Read_depth",
                 "VARTYPE": "Variation",
                 "ANN[*].GENE": "Gene_name",
                 "ANN[*].GENEID": "Gene_id",
@@ -1415,12 +1417,9 @@ def snpeff(sample, toml_config):
 
         final["Position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
         final["Quality"] = round(final["Quality"], 2)
-        final["Alt_reads"] = final["DP4"].str.split(",").str[2].astype(int) + final[
-            "DP4"
-        ].str.split(",").str[3].astype(int)
-        final["Total_reads"] = (
-            final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int)
-        )
+        final["Quality"] = round(final["Quality"], 2)
+        final["Ref_reads"] = final["Allele_depth"].str.split(":")[0]
+        final["Alt_reads"] = final["Allele_depth"].str.split(":")[1]
         final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
 
         columns = [
@@ -1465,12 +1464,13 @@ def snpeff(sample, toml_config):
 
         final = final[
             [
-                "Position",
+		"Position",
                 "Ref",
                 "Alt",
                 "Quality",
-                "Alt_reads",
-                "Total_reads",
+		"Read_depth",
+                "Ref_reads",
+		"Alt_reads",
                 "Zygosity",
                 "Variation",
                 "Gene_name",
