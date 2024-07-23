@@ -1244,7 +1244,7 @@ def snpeff(sample, toml_config):
                 "TYPE": "Variation",
                 "AF": "Zygosity",
                 "DP": "Read_depth",
-		"GEN[0].AD" : "Allele_depth"
+		"GEN[0].AD" : "Allele_depth",
                 "ANN[*].GENE": "Gene_name",
                 "ANN[*].GENEID": "Gene_id",
                 "ANN[*].FEATUREID": "Transcript",
