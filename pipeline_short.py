@@ -1188,7 +1188,8 @@ def snpeff(sample, toml_config):
         var = var.rename(
             columns={
                 "CHROM": "CHROM_"+genome,
-                "POS": "POS_"+genome,
+                "POS": "POS_"+genome})
+	
         var = var.astype({"CHROM_"+genome: str, "POS_"+genome: str})
 
         appended_data = []
