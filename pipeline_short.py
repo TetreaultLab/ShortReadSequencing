@@ -1258,7 +1258,7 @@ def snpeff(sample, toml_config):
 
         final["Position_"+genome] = final["CHROM_"+genome].astype(str) + ":" + final["POS_"+genome].astype(str)
         final["Quality"] = round(final["Quality"], 2)
-	final["Ref_reads"] = final["Allele_depth"].str.split(":")[0]
+        final["Ref_reads"] = final["Allele_depth"].str.split(":")[0]
         final["Alt_reads"] = final["Allele_depth"].str.split(":")[1]
         # final["Total_reads"] = (final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int))
         final = final.replace({"Zygosity": {"1.0": "Hom", "0.5": "Het"}})
