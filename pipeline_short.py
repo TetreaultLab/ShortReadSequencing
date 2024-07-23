@@ -1185,7 +1185,7 @@ def snpeff(sample, toml_config):
         var = pd.read_csv(
             path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
         )
-	var = var.rename(
+        var = var.rename(
             columns={
                 "CHROM": "CHROM_"+genome,
                 "POS": "POS_"+genome,
