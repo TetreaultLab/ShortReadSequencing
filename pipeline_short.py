@@ -985,7 +985,7 @@ def freebayes(sample, toml_config):
                "-f", 
                ref, 
                "--legacy-gls",
-	       "-–skip-coverage",
+	       "--skip-coverage",
 	       "200",
                "--haplotype-length", 
                "0", 
