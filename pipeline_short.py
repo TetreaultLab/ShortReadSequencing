@@ -59,6 +59,10 @@ def main():
     function_queue = []
     print(">>> Parameters:")
 
+	genome = get_reference(toml_config["general"]["reference"], "")["fasta"]
+	print(f"\t>>> Reference genome version: {genome}")
+
+
     # Quality control
     print("\t>>> Quality control: FastQC (v0.12.1)")
     if "FastQC" not in done:
