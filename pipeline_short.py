@@ -412,6 +412,8 @@ def star(sample, toml_config):
             ref,
             "--outFileNamePrefix",
             O_aligned,
+			"--outSAMattributes",
+			"NM",
             "--outTmpDir",
             temporary,
             "--outReadsUnmapped",
