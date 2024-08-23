@@ -70,7 +70,7 @@ python -u /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/S
     cores, memory, time, sample_name, project, email, path_config
 )
 
-print(slurm, file=open(work_dir + "/" + sample_name + ".slurm", "w"))
+print(slurm, file=open(work_dir + "/" + sample_name + "_" + project + ".slurm", "w"))
 
 if args.launch is True:
-    subprocess.run(["sbatch", work_dir + "/" + sample_name + ".slurm"])
+    subprocess.run(["sbatch", work_dir + "/" + sample_name + "_" + project + ".slurm"])
