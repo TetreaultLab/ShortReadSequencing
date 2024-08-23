@@ -59,8 +59,8 @@ def main():
     function_queue = []
     print(">>> Parameters:")
 
-	genome = get_reference(toml_config["general"]["reference"], "")["fasta"]
-	print(f"\t>>> Reference genome version: {genome}")
+    genome = get_reference(toml_config["general"]["reference"], "")["fasta"]
+    print(f"\t>>> Reference genome version: {genome}")
 
 
     # Quality control
@@ -411,13 +411,13 @@ def star(sample, toml_config):
             "--runThreadN",
             str(toml_config["general"]["threads"]),
             "--limitBAMsortRAM",
-            "34105090798",
+            "60000000000",
             "--genomeDir",
             ref,
             "--outFileNamePrefix",
             O_aligned,
-			"--outSAMattributes",
-			"NM",
+		    "--outSAMattributes",
+		    "NM",
             "--outTmpDir",
             temporary,
             "--outReadsUnmapped",
@@ -450,6 +450,8 @@ def star(sample, toml_config):
             "60000000000",
             "--genomeDir",
             ref,
+            "--outSAMattributes",
+		    "NM",
             "--outFileNamePrefix",
             O_aligned,
             "--outTmpDir",
