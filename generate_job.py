@@ -36,6 +36,7 @@ email = toml_config["general"]["email"]
 cores = toml_config["general"]["threads"]
 memory = toml_config["general"]["memory"]
 time = toml_config["general"]["time"]
+projet = toml_config["general"]["project"]
 
 f.close()
 
@@ -46,8 +47,8 @@ slurm = """#!/bin/sh
 #SBATCH --cpus-per-task {0} # number of cores
 #SBATCH --mem {1}G # memory pool for all cores
 #SBATCH -t {2} # time (DD-HH:MM)
-#SBATCH -o {3}.%N.%j.log
-#SBATCH -e {4}.%N.%j.log
+#SBATCH -o {3}_{4}.%N.%j.log
+#SBATCH -e {3}_{4}.%N.%j.log
 #SBATCH --mail-type=FAIL
 #SBATCH --account=rrg-tetreaum
 #SBATCH --mail-user={5}
@@ -63,10 +64,10 @@ source /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/bin/
 #
 # newgrp rrg-tetreaum
 #
-python -u /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/ShortReadSequencing/pipeline_short.py --sample {6} --config {7}
+python -u /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/ShortReadSequencing/pipeline_short.py --sample {3} --config {6}
 #
 """.format(
-    cores, memory, time, sample_name, sample_name, email, sample_name, path_config
+    cores, memory, time, sample_name, project, email, path_config
 )
 
 print(slurm, file=open(work_dir + "/" + sample_name + ".slurm", "w"))
