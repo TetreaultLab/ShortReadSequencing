@@ -36,7 +36,7 @@ email = toml_config["general"]["email"]
 cores = toml_config["general"]["threads"]
 memory = toml_config["general"]["memory"]
 time = toml_config["general"]["time"]
-projet = toml_config["general"]["project"]
+project = toml_config["general"]["project"]
 
 f.close()
 
