@@ -1035,10 +1035,11 @@ def bcftools_filter(sample, toml_config):
 
     command_merge = ["vcf-merge",
                      output + sample + "_bcftools.vcf.gz",
-                     output + sample + "_freebayes.vcf.gz"]
-
-   with open(output + sample + "_merged.vcf", "w") as outfile:
-       subprocess.run(command_merge, stdout=outfile)
+                     output + sample + "_freebayes.vcf.gz",
+                    ]
+    
+    with open(output + sample + "_merged.vcf", "w") as outfile:
+        subprocess.run(command_merge, stdout=outfile)
 	
     command = ["bcftools",
                "filter",
