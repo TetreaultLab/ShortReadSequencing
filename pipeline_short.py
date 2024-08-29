@@ -124,9 +124,9 @@ def main():
         function_queue.append(multiqc)
 
     # Variant Calling : BAM to VCF (BCFtools - old)
-    # print("\t>>> Variant Calling: BCFtools (v1.18)")
-    # if "BCFtools" not in done:
-        # function_queue.append(bcftools)
+    print("\t>>> Variant Calling: BCFtools (v1.18)")
+    if "BCFtools" not in done:
+        function_queue.append(bcftools)
 
     # Variant Calling : BAM to VCF (FreeBayes - current/better)
     print("\t>>> Variant Calling: FreeBayes (v1.37)")
@@ -134,7 +134,7 @@ def main():
         function_queue.append(freebayes)
 
     # Variant filtering
-    print("\t>>> Variant Calling: BCFtools (v1.18))")
+    print("\t>>> Variant Filtering: BCFtools (v1.18)")
     if "BCFtools filters" not in done:
             function_queue.append(bcftools_filter)
     
@@ -860,7 +860,6 @@ def featurecounts(sample, toml_config):
             output + "/" + sample + "_counts.txt",
         ]
     )
-
     subprocess.run(["rm", output + "/" + sample + "_0.counts"])
 
     # Steps done
@@ -951,7 +950,7 @@ def bcftools(sample, toml_config):
         "--multiallelic-caller",
         "--variants-only",
         "-o",
-        output + sample + ".vcf",
+        output + sample + "_bcftools.vcf",
         output + sample + "_mpileup.vcf",
     ]
 
@@ -963,7 +962,9 @@ def bcftools(sample, toml_config):
     print(f">>> {command_2}\n")
     subprocess.run(call, check=True)
 
-    # subprocess.run(["rm", output + sample + "_mpileup.vcf"])
+    subprocess.run(["rm", output + sample + "_mpileup.vcf"])
+    subprocess.run(["bgzip", output + sample + "_bcftools.vcf"], check=True)
+    subprocess.run(["tabix", "-p", "vcf", output + sample + "_bcftools.vcf.gz"], check=True)
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -989,17 +990,17 @@ def freebayes(sample, toml_config):
     command = ["freebayes", 
                "-f", 
                ref, 
-               "--legacy-gls",
-	       "--skip-coverage",
-	       "200",
-               "--haplotype-length", 
-               "0", 
-               "--min-alternate-count", 
-               "1", 
-               "--min-alternate-fraction", 
-               "0",
-               "--pooled-continuous", 
-               "--report-monomorphic",
+               #"--legacy-gls",
+	           #"--skip-coverage",
+	           #"200",
+               #"--haplotype-length", 
+               #"0", 
+               #"--min-alternate-count", 
+               #"1", 
+               #"--min-alternate-fraction", 
+               #"0",
+               #"--pooled-continuous", 
+               #"--report-monomorphic",
                # "--ploidy", 
                # "2", 
                # "--min-repeat-entropy", 
@@ -1011,11 +1012,14 @@ def freebayes(sample, toml_config):
                # "1",
                input, 
                "--vcf", 
-               output + sample + "_unfiltered.vcf"]
+               output + sample + "_freebayes.vcf"]
     
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
     subprocess.run(command, check=True)
+
+    subprocess.run(["bgzip", output + sample + "_freebayes.vcf"], check=True)
+    subprocess.run(["tabix", "-p", "vcf", output + sample + "_freebayes.vcf.gz"], check=True)
     
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -1028,14 +1032,22 @@ def bcftools_filter(sample, toml_config):
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
-    
+
+	command_merge = ["vcf-merge",
+                     output + sample + "_bcftools.vcf.gz",
+                     output + sample + "_freebayes.vcf.gz",]
+
+   with open(output + sample + "_merged.vcf", "w") as outfile:
+        subprocess.run(command_merge, stdout=outfile
+        )
+	
     command = ["bcftools",
                "filter",
                "-i",
                "QUAL>1 && INFO/DP>0 && AC>0",
                "-o", 
-               output + sample + ".vcf",
-               output + sample + "_unfiltered.vcf"]
+               output + sample + "_filtered.vcf",
+               output + sample + "_merged.vcf"]
 
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
@@ -1081,7 +1093,7 @@ def snpeff(sample, toml_config):
         path + "/" + sample + "_summary.html",
         "-csvStats",
         path + "/" + sample + "_summary.csv",
-        path + "/" + sample + ".vcf",
+        path + "/" + sample + "_filtered.vcf",
     ]
 
     command_str1 = " ".join(cmd_snpeff)
@@ -1119,7 +1131,7 @@ def snpeff(sample, toml_config):
         "QUAL",
         "AF",
         "DP",
-	"GEN[0].AD"
+	    "GEN[0].AD"
         "TYPE",
         "ANN[*].GENE",
         "ANN[*].GENEID",
@@ -1251,7 +1263,7 @@ def snpeff(sample, toml_config):
                 "TYPE": "Variation",
                 "AF": "Zygosity",
                 "DP": "Read_depth",
-		"GEN[0].AD" : "Allele_depth",
+		        "GEN[0].AD" : "Allele_depth",
                 "ANN[*].GENE": "Gene_name",
                 "ANN[*].GENEID": "Gene_id",
                 "ANN[*].FEATUREID": "Transcript",
