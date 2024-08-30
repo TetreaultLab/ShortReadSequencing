@@ -45,7 +45,7 @@ def main():
     subprocess.run(["mkdir", "-p", tmp])
     print(f"\n>>> Output saved to '{output}'\n")
 
-    with open(output + "/" + sample + "/sample.txt", "w") as sample_file:
+    with open(output + "/sample.txt", "w") as sample_file:
         subprocess.run(["echo", sample], stdout=sample_file)
     
     # Open file for steps done
@@ -127,22 +127,22 @@ def main():
         function_queue.append(multiqc)
 
     # Variant Calling : BAM to VCF (BCFtools - old)
-    print("\t>>> Variant Calling: BCFtools (v1.18)")
-    if "BCFtools" not in done:
-        function_queue.append(bcftools)
+    if toml_config["general"]["variant"] == "yes":
+        print("\t>>> Variant Calling: BCFtools (v1.18)")
+        if "BCFtools" not in done:
+            function_queue.append(bcftools)
 
-    # Variant Calling : BAM to VCF (FreeBayes - current/better)
-    print("\t>>> Variant Calling: FreeBayes (v1.37)")
-    if "FreeBayes" not in done:
-        function_queue.append(freebayes)
+        # Variant Calling : BAM to VCF (FreeBayes - current/better)
+        print("\t>>> Variant Calling: FreeBayes (v1.37)")
+        if "FreeBayes" not in done:
+            function_queue.append(freebayes)
 
-    # Variant filtering
-    print("\t>>> Variant Filtering: BCFtools (v1.18)")
-    if "BCFtools filters" not in done:
+        # Variant filtering
+        print("\t>>> Variant Filtering: BCFtools (v1.18)")
+        if "BCFtools filters" not in done:
             function_queue.append(bcftools_filter)
     
-    # Variant Annotation : SnpEff
-    if toml_config["general"]["variant"] == "snpeff":
+        # Variant Annotation : SnpEff
         print("\t>>> Variant Calling: SnpEff + SnpSift (v5.2a)")
         if "SnpEff" not in done:
             function_queue.append(snpeff)
