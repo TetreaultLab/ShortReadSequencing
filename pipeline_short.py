@@ -1033,7 +1033,7 @@ def freebayes(sample, toml_config):
                     "reheader", 
                     "--samples", 
                     toml_config["general"]["output"] + "/" + sample + "/sample.txt",
-                    "-o"
+                    "-o",
                     output + sample + "_freebayes_header.vcf",
                     output + sample + "_freebayes.vcf"], 
                    check=True)
