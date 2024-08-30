@@ -44,9 +44,6 @@ def main():
     subprocess.run(["mkdir", "-p", output])
     subprocess.run(["mkdir", "-p", tmp])
     print(f"\n>>> Output saved to '{output}'\n")
-
-    with open(output + "/sample.txt", "w") as sample_file:
-        subprocess.run(["echo", sample], stdout=sample_file)
     
     # Open file for steps done
     steps = open(output + "/steps_done.txt", "a")
@@ -925,6 +922,9 @@ def bcftools(sample, toml_config):
     subprocess.run(["mkdir", "-p", output])
 
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
+
+    with open(toml_config["general"]["output"] + "/" + sample + "/sample.txt", "w") as sample_file:
+        subprocess.run(["echo", sample], stdout=sample_file)
 
     mpileup = [
         "bcftools",
