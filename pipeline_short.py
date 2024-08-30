@@ -126,14 +126,12 @@ def main():
     if "MutliQC" not in done:
         function_queue.append(multiqc)
 
-    # Variant Calling : BAM to VCF (BCFtools - old)
+    # Variant Calling
     if toml_config["general"]["variant"] == "yes":
-        print("\t>>> Variant Calling: BCFtools (v1.18)")
+        print("\t>>> Variant Calling: BCFtools (v1.18) & FreeBayes (v1.37)")
         if "BCFtools" not in done:
             function_queue.append(bcftools)
-
-        # Variant Calling : BAM to VCF (FreeBayes - current/better)
-        print("\t>>> Variant Calling: FreeBayes (v1.37)")
+		
         if "FreeBayes" not in done:
             function_queue.append(freebayes)
 
@@ -143,7 +141,7 @@ def main():
             function_queue.append(bcftools_filter)
     
         # Variant Annotation : SnpEff
-        print("\t>>> Variant Calling: SnpEff + SnpSift (v5.2a)")
+        print("\t>>> Variant Annotation: SnpEff + SnpSift (v5.2a)")
         if "SnpEff" not in done:
             function_queue.append(snpeff)
     else:
