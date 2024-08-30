@@ -36,7 +36,7 @@ parser.add_argument(
     "--variant",
     type=str,
     required=True,
-    help='choose variant tool. Options: "none", "snpeff".',
+    help='choose variant tool. Options: "none", "yes".',
 )
 
 
@@ -131,7 +131,7 @@ else:
 # VARIANT CALLING
 if args.variant == "none":
     options += "# No variant calling\n"
-elif args.variant == "snpeff":
+elif args.variant == "yes":
     options += """# Variant calling
 [snpeff]
     \n
