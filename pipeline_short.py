@@ -45,6 +45,9 @@ def main():
     subprocess.run(["mkdir", "-p", tmp])
     print(f"\n>>> Output saved to '{output}'\n")
 
+    with open(output + "/" + sample + "/sample.txt", "w") as sample_file:
+        subprocess.run(["echo", sample], stdout=sample_file)
+    
     # Open file for steps done
     steps = open(output + "/steps_done.txt", "a")
     steps.write("\nLoading ENV\n")
@@ -963,8 +966,16 @@ def bcftools(sample, toml_config):
     subprocess.run(call, check=True)
 
     subprocess.run(["rm", output + sample + "_mpileup.vcf"])
-    subprocess.run(["bgzip", output + sample + "_bcftools.vcf"], check=True)
-    subprocess.run(["tabix", "-p", "vcf", output + sample + "_bcftools.vcf.gz"], check=True)
+    subprocess.run(["bcftools", 
+                    "reheader", 
+                    "--samples", 
+                    toml_config["general"]["output"] + "/" + sample + "/sample.txt",
+                    "-o",
+                    output + sample + "_bcftools_header.vcf"
+                    output + sample + "_bcftools.vcf"], 
+                   check=True)
+    subprocess.run(["bgzip", output + sample + "_bcftools_header.vcf"], check=True)
+    subprocess.run(["tabix", "-p", "vcf", output + sample + "_bcftools_header.vcf.gz"], check=True)
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -1018,8 +1029,17 @@ def freebayes(sample, toml_config):
     print(f">>> {command_str}\n")
     subprocess.run(command, check=True)
 
-    subprocess.run(["bgzip", output + sample + "_freebayes.vcf"], check=True)
-    subprocess.run(["tabix", "-p", "vcf", output + sample + "_freebayes.vcf.gz"], check=True)
+    subprocess.run(["bcftools", 
+                    "reheader", 
+                    "--samples", 
+                    toml_config["general"]["output"] + "/" + sample + "/sample.txt",
+                    "-o"
+                    output + sample + "_freebayes_header.vcf"
+                    output + sample + "_freebayes.vcf"], 
+                   check=True)
+    
+    subprocess.run(["bgzip", output + sample + "_freebayes_header.vcf"], check=True)
+    subprocess.run(["tabix", "-p", "vcf", output + sample + "_freebayes_header.vcf.gz"], check=True)
     
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -1033,25 +1053,46 @@ def bcftools_filter(sample, toml_config):
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
 
-    command_merge = ["vcf-merge",
-                     output + sample + "_bcftools.vcf.gz",
-                     output + sample + "_freebayes.vcf.gz",
-                    ]
-    
-    with open(output + sample + "_merged.vcf", "w") as outfile:
-        subprocess.run(command_merge, stdout=outfile)
-	
-    command = ["bcftools",
-               "filter",
-               "-i",
-               "QUAL>1 && INFO/DP>0 && AC>0",
-               "-o", 
-               output + sample + "_filtered.vcf",
-               output + sample + "_merged.vcf"]
+    ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
 
-    command_str = " ".join(command)
-    print(f">>> {command_str}\n")
-    subprocess.run(command, check=True)
+    command_concat = ["bcftools",
+                      "concat",
+                      output + sample + "_bcftools_header.vcf.gz",
+                      output + sample + "_freebayes_header.vcf.gz",
+                      "-o",
+                      output + sample + "_merged.vcf.gz"]
+    
+    command_concat_str = " ".join(command_concat)
+    print(f">>> {command_concat_str}\n")
+    subprocess.run(command_concat, check=True)
+	
+    command_filter = ["bcftools",
+                      "filter",
+                      "-i",
+                      "QUAL>1 && INFO/DP>0 && AC>0",
+                      "-o", 
+                      output + sample + "_filtered.vcf.gz",
+                      output + sample + "_merged.vcf.gz"]
+
+    command_filter_str = " ".join(command_filter)
+    print(f">>> {command_filter_str}\n")
+    subprocess.run(command_filter, check=True)
+
+    command_norm = ["bcftools",
+                    "norm",
+                    "--remove-duplicates",
+                    "-m-any",
+                    "-f",
+                    ref,
+                    "-o", 
+                    output + sample + "_normalized.vcf",
+                    output + sample + "_merged.vcf"]
+
+    command_norm_str = " ".join(command_norm)
+    print(f">>> {command_norm_str}\n")
+    subprocess.run(command_norm, check=True)
+
+    # remove filtered and merged vcfs
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -1093,7 +1134,7 @@ def snpeff(sample, toml_config):
         path + "/" + sample + "_summary.html",
         "-csvStats",
         path + "/" + sample + "_summary.csv",
-        path + "/" + sample + "_filtered.vcf",
+        path + "/" + sample + "_normalized.vcf",
     ]
 
     command_str1 = " ".join(cmd_snpeff)
