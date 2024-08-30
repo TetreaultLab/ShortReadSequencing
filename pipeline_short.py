@@ -971,7 +971,7 @@ def bcftools(sample, toml_config):
                     "--samples", 
                     toml_config["general"]["output"] + "/" + sample + "/sample.txt",
                     "-o",
-                    output + sample + "_bcftools_header.vcf"
+                    output + sample + "_bcftools_header.vcf",
                     output + sample + "_bcftools.vcf"], 
                    check=True)
     subprocess.run(["bgzip", output + sample + "_bcftools_header.vcf"], check=True)
@@ -1034,7 +1034,7 @@ def freebayes(sample, toml_config):
                     "--samples", 
                     toml_config["general"]["output"] + "/" + sample + "/sample.txt",
                     "-o"
-                    output + sample + "_freebayes_header.vcf"
+                    output + sample + "_freebayes_header.vcf",
                     output + sample + "_freebayes.vcf"], 
                    check=True)
     
