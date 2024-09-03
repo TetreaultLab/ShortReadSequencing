@@ -1081,8 +1081,8 @@ def bcftools_filter(sample, toml_config):
 
     command_norm = ["bcftools",
                     "norm",
-                    "--collapse",
-		    "none",
+                    "--rm-dup",
+		    "exact",
                     "-f",
                     ref,
                     "-o", 
