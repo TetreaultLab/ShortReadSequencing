@@ -1086,14 +1086,19 @@ def bcftools_filter(sample, toml_config):
                       "-i",
                       "QUAL>1 && INFO/DP>0 && AC>0",
                       "-o", 
-                      output + sample + "_filtered.vcf",
+                      output + sample + "_unannotated.vcf",
                       output + sample + "_normalized.vcf.gz"]
 
     command_filter_str = " ".join(command_filter)
     print(f">>> {command_filter_str}\n")
     subprocess.run(command_filter, check=True)
 
-    # remove filtered and merged vcfs
+    # remove intermediate vcf files
+    subprocess.run(["rm", output + sample + "_normalized.vcf.gz"])
+    subprocess.run(["rm", output + sample + "_merged.vcf.gz"])
+    subprocess.run(["rm", output + sample + "_freebayes.vcf"])
+    subprocess.run(["rm", output + sample + "_bcftools.vcf"])
+    
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -1135,7 +1140,7 @@ def snpeff(sample, toml_config):
         path + "/" + sample + "_summary.html",
         "-csvStats",
         path + "/" + sample + "_summary.csv",
-        path + "/" + sample + "_filtered.vcf",
+        path + "/" + sample + "_unannotated.vcf",
     ]
 
     command_str1 = " ".join(cmd_snpeff)
