@@ -1145,7 +1145,7 @@ def snpeff(sample, toml_config):
 
     command_str1 = " ".join(cmd_snpeff)
     print(f">>> {command_str1}\n")
-	with open(path + "/" + sample + "_snpeff.vcf", "w") as outfile:
+    with open(path + "/" + sample + "_snpeff.vcf", "w") as outfile:
         subprocess.run(
             cmd_snpeff,
             stdout=outfile,
