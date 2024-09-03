@@ -1055,6 +1055,9 @@ def bcftools_filter(sample, toml_config):
 
     command_concat = ["bcftools",
                       "concat",
+                      "--threads",
+                      str(toml_config["general"]["threads"]),
+                      "--allow-overlaps",
                       output + sample + "_bcftools_header.vcf.gz",
                       output + sample + "_freebayes_header.vcf.gz",
                       "-o",
