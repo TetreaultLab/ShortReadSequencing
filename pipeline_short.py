@@ -1145,6 +1145,12 @@ def snpeff(sample, toml_config):
 
     command_str1 = " ".join(cmd_snpeff)
     print(f">>> {command_str1}\n")
+	with open(path + "/" + sample + "_snpeff.vcf", "w") as outfile:
+        subprocess.run(
+            cmd_snpeff,
+            stdout=outfile,
+            check=True,
+        )
 
     cmd_vartype = [
         "java",
@@ -1158,6 +1164,12 @@ def snpeff(sample, toml_config):
 
     command_str2 = " ".join(cmd_vartype)
     print(f">>> {command_str2}\n")
+    with open(path + "/" + sample + "_annotated.vcf", "w") as outfile:
+        subprocess.run(
+            cmd_vartype,
+            stdout=outfile,
+            check=True,
+        )
 
     cmd_extract = [
         "java",
@@ -1176,7 +1188,7 @@ def snpeff(sample, toml_config):
         "REF",
         "ALT",
         "QUAL",
-        "AF",
+        "Homozigosity",
         "DP",
         "TYPE",
         "ANN[*].GENE",
@@ -1191,21 +1203,6 @@ def snpeff(sample, toml_config):
 
     command_str3 = " ".join(cmd_extract)
     print(f">>> {command_str3}\n")
-
-    with open(path + "/" + sample + "_snpeff.vcf", "w") as outfile:
-        subprocess.run(
-            cmd_snpeff,
-            stdout=outfile,
-            check=True,
-        )
-
-    with open(path + "/" + sample + "_annotated.vcf", "w") as outfile:
-        subprocess.run(
-            cmd_vartype,
-            stdout=outfile,
-            check=True,
-        )
-
     with open(path + "/" + sample + "_annotated.txt", "w") as outfile:
         subprocess.run(
             cmd_extract,
@@ -1307,7 +1304,8 @@ def snpeff(sample, toml_config):
                 "ALT": "Alt",
                 "QUAL": "Quality",
                 "TYPE": "Variation",
-                "AF": "Zygosity",
+                "Homozigosity": "Zygosity",
+                #"AF": "Zygosity",
                 "DP": "Read_depth",
 		        #"GEN[0].AD" : "Allele_depth",
                 "ANN[*].GENE": "Gene_name",
@@ -1326,7 +1324,7 @@ def snpeff(sample, toml_config):
         #final["Ref_reads"] = final["Allele_depth"].str.split(":")[0]
         #final["Alt_reads"] = final["Allele_depth"].str.split(":")[1]
         # final["Total_reads"] = (final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int))
-        final = final.replace({"Zygosity": {"1.0": "Hom", "0.5": "Het"}})
+        #final = final.replace({"Zygosity": {"1.0": "Hom", "0.5": "Het"}})
 
         columns = [
             "Gene_name",
