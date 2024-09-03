@@ -1081,7 +1081,7 @@ def bcftools_filter(sample, toml_config):
     print(f">>> {command_norm_str}\n")
     subprocess.run(command_norm, check=True)
 
-        command_filter = ["bcftools",
+    command_filter = ["bcftools",
                       "filter",
                       "-i",
                       "QUAL>1 && INFO/DP>0 && AC>0",
