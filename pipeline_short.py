@@ -1067,22 +1067,10 @@ def bcftools_filter(sample, toml_config):
     print(f">>> {command_concat_str}\n")
     subprocess.run(command_concat, check=True)
 	
-    command_filter = ["bcftools",
-                      "filter",
-                      "-i",
-                      "QUAL>1 && INFO/DP>0 && AC>0",
-                      "-o", 
-                      output + sample + "_filtered.vcf.gz",
-                      output + sample + "_merged.vcf.gz"]
-
-    command_filter_str = " ".join(command_filter)
-    print(f">>> {command_filter_str}\n")
-    subprocess.run(command_filter, check=True)
-
     command_norm = ["bcftools",
                     "norm",
                     "--rm-dup",
-		    "exact",
+                    "exact",
                     "-f",
                     ref,
                     "-o", 
@@ -1092,6 +1080,18 @@ def bcftools_filter(sample, toml_config):
     command_norm_str = " ".join(command_norm)
     print(f">>> {command_norm_str}\n")
     subprocess.run(command_norm, check=True)
+
+        command_filter = ["bcftools",
+                      "filter",
+                      "-i",
+                      "QUAL>1 && INFO/DP>0 && AC>0",
+                      "-o", 
+                      output + sample + "_filtered.vcf.gz",
+                      output + sample + "_normalized.vcf.gz"]
+
+    command_filter_str = " ".join(command_filter)
+    print(f">>> {command_filter_str}\n")
+    subprocess.run(command_filter, check=True)
 
     # remove filtered and merged vcfs
 
@@ -1135,7 +1135,7 @@ def snpeff(sample, toml_config):
         path + "/" + sample + "_summary.html",
         "-csvStats",
         path + "/" + sample + "_summary.csv",
-        path + "/" + sample + "_normalized.vcf",
+        path + "/" + sample + "_filtered.vcf",
     ]
 
     command_str1 = " ".join(cmd_snpeff)
@@ -1173,7 +1173,6 @@ def snpeff(sample, toml_config):
         "QUAL",
         "AF",
         "DP",
-	    "GEN[0].AD"
         "TYPE",
         "ANN[*].GENE",
         "ANN[*].GENEID",
@@ -1305,7 +1304,7 @@ def snpeff(sample, toml_config):
                 "TYPE": "Variation",
                 "AF": "Zygosity",
                 "DP": "Read_depth",
-		        "GEN[0].AD" : "Allele_depth",
+		        #"GEN[0].AD" : "Allele_depth",
                 "ANN[*].GENE": "Gene_name",
                 "ANN[*].GENEID": "Gene_id",
                 "ANN[*].FEATUREID": "Transcript",
@@ -1319,8 +1318,8 @@ def snpeff(sample, toml_config):
 
         final["Position_"+genome] = final["CHROM_"+genome].astype(str) + ":" + final["POS_"+genome].astype(str)
         final["Quality"] = round(final["Quality"], 2)
-        final["Ref_reads"] = final["Allele_depth"].str.split(":")[0]
-        final["Alt_reads"] = final["Allele_depth"].str.split(":")[1]
+        #final["Ref_reads"] = final["Allele_depth"].str.split(":")[0]
+        #final["Alt_reads"] = final["Allele_depth"].str.split(":")[1]
         # final["Total_reads"] = (final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int))
         final = final.replace({"Zygosity": {"1.0": "Hom", "0.5": "Het"}})
 
@@ -1365,52 +1364,51 @@ def snpeff(sample, toml_config):
                 final.loc[index, "Infos"] = final_str
 
         final = final[
-            [
-                "Position_"+genome,
-                "Ref",
-                "Alt",
-		"Quality",
-		"Read_depth",
-                "Ref_reads",
-		"Alt_reads",
-                "Zygosity",
-                "rsID",
-                "Variation",
-                "Gene_name",
-                "Gene_id",
-                "Transcript",
-                "Effect",
-                "Impact",
-                "Biotype",
-                "Codon_change",
-                "Protein_change",
-                "Infos",
-		"genename",
-                "Ensembl_geneid",
-                "Ensembl_transcriptid",
-                "Ensembl_proteinid",
-                "codon_change",
-                "protein_change",
-                "SIFT_score",
-                "PolyPhen2_HDIV_score",
-                "GERP_score",
-                "phyloP_score",
-                "phastCons_score",
-                "MutationTaster_score",
-                "FATHMM_score",
-                "REVEL_score",
-                "AlphaMissense_score",
-                "CADD_phred_score",
-                "1000G_AF",
-                "ExAC_AF",
-                "gnomAD_exomes_AF",
-                "gnomAD_exomes_NFE_AF",
-                "gnomAD_genomes_AF",
-                "gnomAD_genomes_NFE_AF",
-                "clinvar_id",
-                "clinvar_trait",
-                "clinvar_clnsig",
-                "OMIM",
+            ["Position_"+genome,
+             "Ref",
+             "Alt",
+             "Quality",
+             "Read_depth",
+             #"Ref_reads",
+             #"Alt_reads",
+             "Zygosity",
+             "rsID",
+             "Variation",
+             "Gene_name",
+             "Gene_id",
+             "Transcript",
+             "Effect",
+             "Impact",
+             "Biotype",
+             "Codon_change",
+             "Protein_change",
+             "Infos",
+             "genename",
+             "Ensembl_geneid",
+             "Ensembl_transcriptid",
+             "Ensembl_proteinid",
+             "codon_change",
+             "protein_change",
+             "SIFT_score",
+             "PolyPhen2_HDIV_score",
+             "GERP_score",
+             "phyloP_score",
+             "phastCons_score",
+             "MutationTaster_score",
+             "FATHMM_score",
+             "REVEL_score",
+             "AlphaMissense_score",
+             "CADD_phred_score",
+             "1000G_AF",
+             "ExAC_AF",
+             "gnomAD_exomes_AF",
+             "gnomAD_exomes_NFE_AF",
+             "gnomAD_genomes_AF",
+             "gnomAD_genomes_NFE_AF",
+             "clinvar_id",
+             "clinvar_trait",
+             "clinvar_clnsig",
+             "OMIM",
             ]
         ]
 
@@ -1423,8 +1421,8 @@ def snpeff(sample, toml_config):
 
         df_filtered = final[
             (final["Quality"] > 20)
-	    & (final["Alt_depth"] > 3)
-            & (final["Read_depth"] > 5)
+	    #& (final["Alt_depth"] > 3)
+        #& (final["Read_depth"] > 5)
         ]
 
         df_filtered.to_csv(
@@ -1433,8 +1431,8 @@ def snpeff(sample, toml_config):
 
         print(">>> Filters:")
         print("\t>>> Quality Phred > 20")
-        print("\t>>> Number of alt reads > 3")
-        print("\t>>> Number of total reads > 5")
+        #print("\t>>> Number of alt reads > 3")
+        #print("\t>>> Number of total reads > 5")
 
         all_var = len(final.index)
         filtered_var = len(df_filtered.index)
