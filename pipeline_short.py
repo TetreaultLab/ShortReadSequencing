@@ -1074,8 +1074,8 @@ def bcftools_filter(sample, toml_config):
                     "-f",
                     ref,
                     "-o", 
-                    output + sample + "_normalized.vcf",
-                    output + sample + "_merged.vcf"]
+                    output + sample + "_normalized.vcf.gz",
+                    output + sample + "_merged.vcf.gz"]
 
     command_norm_str = " ".join(command_norm)
     print(f">>> {command_norm_str}\n")
@@ -1086,7 +1086,7 @@ def bcftools_filter(sample, toml_config):
                       "-i",
                       "QUAL>1 && INFO/DP>0 && AC>0",
                       "-o", 
-                      output + sample + "_filtered.vcf.gz",
+                      output + sample + "_filtered.vcf",
                       output + sample + "_normalized.vcf.gz"]
 
     command_filter_str = " ".join(command_filter)
