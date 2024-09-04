@@ -1247,14 +1247,12 @@ def snpeff(sample, toml_config):
         var = pd.read_csv(
             path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
         )
-        print("loaded _annotated.txt")
         var = var.rename(
             columns={
                 "CHROM": "CHROM_"+genome,
                 "POS": "POS_"+genome})
 	
         var = var.astype({"CHROM_"+genome: str, "POS_"+genome: str})
-        print(var)
 
         appended_data = []
         ref = "/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/dbNSFP"
@@ -1275,7 +1273,6 @@ def snpeff(sample, toml_config):
 
             m = pd.merge(var_chr, db, how="left", on=["CHROM_"+genome, "POS_"+genome, "REF", "ALT"])
             appended_data.append(m)
-            print("merged")
 
         final = pd.concat(appended_data)
         print(final)
