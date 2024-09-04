@@ -1265,7 +1265,6 @@ def snpeff(sample, toml_config):
                 sep="\t",
                 low_memory=False,
             )
-            print("loaded db")
 
             db = db.astype({"CHROM_"+genome: str, "POS_"+genome: str})
 
@@ -1275,7 +1274,6 @@ def snpeff(sample, toml_config):
             appended_data.append(m)
 
         final = pd.concat(appended_data)
-        print(final)
         final.to_csv(
             path + "/" + sample + "_annotated_dbNSFP.txt", sep="\t", index=False
         )
