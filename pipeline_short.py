@@ -1254,10 +1254,11 @@ def snpeff(sample, toml_config):
                 "POS": "POS_"+genome})
 	
         var = var.astype({"CHROM_"+genome: str, "POS_"+genome: str})
+        print(var)
 
         appended_data = []
         ref = "/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/dbNSFP"
-        print("starting loop")
+
         for chromosome in chromosomes:
             print(chromosome)
             db = pd.read_csv(
@@ -1266,13 +1267,15 @@ def snpeff(sample, toml_config):
                 sep="\t",
                 low_memory=False,
             )
+            print("loaded db")
 
             db = db.astype({"CHROM_"+genome: str, "POS_"+genome: str})
 
-            var_chr = var[var["CHROM"] == chromosome]
+            var_chr = var[var["CHROM_"+genome] == chromosome]
 
             m = pd.merge(var_chr, db, how="left", on=["CHROM_"+genome, "POS_"+genome, "REF", "ALT"])
             appended_data.append(m)
+            print("merged")
 
         final = pd.concat(appended_data)
         print(final)
