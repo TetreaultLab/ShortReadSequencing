@@ -1247,6 +1247,7 @@ def snpeff(sample, toml_config):
         var = pd.read_csv(
             path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
         )
+        print("loaded _annotated.txt")
         var = var.rename(
             columns={
                 "CHROM": "CHROM_"+genome,
@@ -1256,7 +1257,9 @@ def snpeff(sample, toml_config):
 
         appended_data = []
         ref = "/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/dbNSFP"
+        print("starting loop")
         for chromosome in chromosomes:
+            print(chromosome)
             db = pd.read_csv(
                 ref + "/dbNSFP4.7a_variant.chr" + chromosome + "_small.txt",
                 header=0,
@@ -1272,6 +1275,7 @@ def snpeff(sample, toml_config):
             appended_data.append(m)
 
         final = pd.concat(appended_data)
+        print(final)
         final.to_csv(
             path + "/" + sample + "_annotated_dbNSFP.txt", sep="\t", index=False
         )
