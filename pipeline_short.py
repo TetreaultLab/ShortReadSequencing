@@ -1279,7 +1279,7 @@ def snpeff(sample, toml_config):
         )
 
         n_rows = len(final.index)
-        rows_ann = final["rs_dbSNP"].count()
+        rows_ann = final["rsID"].count()
         percentage = round(rows_ann / n_rows * 100, 2)
 
         print(
