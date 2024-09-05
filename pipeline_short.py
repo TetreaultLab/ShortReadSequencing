@@ -1094,8 +1094,8 @@ def bcftools_filter(sample, toml_config):
     subprocess.run(command_filter, check=True)
 
     # remove intermediate vcf files
-    subprocess.run(["rm", output + sample + "_normalized.vcf.gz"])
-    subprocess.run(["rm", output + sample + "_merged.vcf.gz"])
+    #subprocess.run(["rm", output + sample + "_normalized.vcf.gz"])
+    #subprocess.run(["rm", output + sample + "_merged.vcf.gz"])
     subprocess.run(["rm", output + sample + "_freebayes.vcf"])
     subprocess.run(["rm", output + sample + "_bcftools.vcf"])
     
