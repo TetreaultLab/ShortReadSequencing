@@ -775,7 +775,8 @@ def featurecounts(sample, toml_config):
     temporary = toml_config["general"]["temporary"] + "/" + sample
     output = toml_config["general"]["output"] + "/" + sample + "/FeatureCounts"
     subprocess.run(["mkdir", "-p", output])
-
+    
+    '''
     input = (
         toml_config["general"]["output"]
         + "/"
@@ -784,6 +785,8 @@ def featurecounts(sample, toml_config):
         + sample
         + "_sortedCoordinate.bam"
     )
+    '''
+    input = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/" + sample + "_duplicates.bam"
 
     gtf = get_reference(toml_config["general"]["reference"], "")["gtf"]
     print(gtf)
@@ -910,6 +913,7 @@ def multiqc(sample, toml_config):
 
 def bcftools(sample, toml_config):
     title("BCFtools")
+    '''
     input = (
         toml_config["general"]["output"]
         + "/"
@@ -918,6 +922,8 @@ def bcftools(sample, toml_config):
         + sample
         + "_sortedCoordinate.bam"
     )
+    '''
+    input = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/" + sample + "_duplicates.bam"
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
 
@@ -982,6 +988,7 @@ def bcftools(sample, toml_config):
 
 def freebayes(sample, toml_config):
     title("FreeBayes")
+    '''
     input = (
         toml_config["general"]["output"]
         + "/"
@@ -990,6 +997,8 @@ def freebayes(sample, toml_config):
         + sample
         + "_sortedCoordinate.bam"
     )
+    '''
+    input = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/" + sample + "_duplicates.bam"
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
 
@@ -1000,25 +1009,13 @@ def freebayes(sample, toml_config):
                "-f", 
                ref, 
                #"--legacy-gls",
-	           #"--skip-coverage",
-	           #"200",
-               #"--haplotype-length", 
-               #"0", 
-               #"--min-alternate-count", 
-               #"1", 
                #"--min-alternate-fraction", 
-               #"0",
-               #"--pooled-continuous", 
-               #"--report-monomorphic",
-               # "--ploidy", 
-               # "2", 
-               # "--min-repeat-entropy", 
-               # "1", 
-               # "--no-partial-observations", 
-               # "--min-alternate-count", 
-               # "2",
-               # "--min-mapping-quality",
-               # "1",
+               #"0.01",
+               #"--ploidy", 
+               #"50", 
+               #"--min-repeat-entropy", 
+               #"1", 
+               #"--no-partial-observations",
                input, 
                "--vcf", 
                output + sample + "_freebayes.vcf"]
@@ -1066,20 +1063,6 @@ def bcftools_filter(sample, toml_config):
     command_concat_str = " ".join(command_concat)
     print(f">>> {command_concat_str}\n")
     subprocess.run(command_concat, check=True)
-	
-    command_norm = ["bcftools",
-                    "norm",
-                    "--rm-dup",
-                    "exact",
-                    "-f",
-                    ref,
-                    "-o", 
-                    output + sample + "_normalized.vcf.gz",
-                    output + sample + "_merged.vcf.gz"]
-
-    command_norm_str = " ".join(command_norm)
-    print(f">>> {command_norm_str}\n")
-    subprocess.run(command_norm, check=True)
 
     command_filter = ["bcftools",
                       "filter",
@@ -1087,14 +1070,14 @@ def bcftools_filter(sample, toml_config):
                       "QUAL>1 && INFO/DP>0 && AC>0",
                       "-o", 
                       output + sample + "_unannotated.vcf",
-                      output + sample + "_normalized.vcf.gz"]
+                      output + sample + "_merged.vcf.gz"]
 
     command_filter_str = " ".join(command_filter)
     print(f">>> {command_filter_str}\n")
     subprocess.run(command_filter, check=True)
 
     # remove intermediate vcf files
-    #subprocess.run(["rm", output + sample + "_normalized.vcf.gz"])
+    #subprocess.run(["rm", output + sample + "_unannotated.vcf"])
     #subprocess.run(["rm", output + sample + "_merged.vcf.gz"])
     subprocess.run(["rm", output + sample + "_freebayes.vcf"])
     subprocess.run(["rm", output + sample + "_bcftools.vcf"])
