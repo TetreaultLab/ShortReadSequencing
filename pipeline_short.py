@@ -980,8 +980,20 @@ def bcftools(sample, toml_config):
                     output + sample + "_bcftools_header.vcf",
                     output + sample + "_bcftools.vcf"], 
                    check=True)
-    subprocess.run(["bgzip", output + sample + "_bcftools_header.vcf"], check=True)
-    subprocess.run(["tabix", "-p", "vcf", output + sample + "_bcftools_header.vcf.gz"], check=True)
+
+    command_norm = ["bcftools",
+                    "norm",
+                    "-m-any",
+                    "-o",
+                    output + sample + "_bcftools_norm.vcf",
+                    output + sample + "_bcftools_header.vcf"]
+    
+    command_norm_str = " ".join(command_norm)
+    print(f">>> {command_norm_str}\n")
+    subprocess.run(command_norm, check=True)
+    
+    subprocess.run(["bgzip", output + sample + "_bcftools_norm.vcf"], check=True)
+    subprocess.run(["tabix", "-p", "vcf", output + sample + "_bcftools_norm.vcf.gz"], check=True)
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -1034,9 +1046,20 @@ def freebayes(sample, toml_config):
                     output + sample + "_freebayes_header.vcf",
                     output + sample + "_freebayes.vcf"], 
                    check=True)
+
+    command_norm = ["bcftools",
+                    "norm",
+                    "-m-any",
+                    "-o",
+                    output + sample + "_freebayes_norm.vcf",
+                    output + sample + "_freebayes_header.vcf"]
     
-    subprocess.run(["bgzip", output + sample + "_freebayes_header.vcf"], check=True)
-    subprocess.run(["tabix", "-p", "vcf", output + sample + "_freebayes_header.vcf.gz"], check=True)
+    command_norm_str = " ".join(command_norm)
+    print(f">>> {command_norm_str}\n")
+    subprocess.run(command_norm, check=True)
+    
+    subprocess.run(["bgzip", output + sample + "_freebayes_norm.vcf"], check=True)
+    subprocess.run(["tabix", "-p", "vcf", output + sample + "_freebayes_norm.vcf.gz"], check=True)
     
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -1057,8 +1080,10 @@ def bcftools_filter(sample, toml_config):
                       "--threads",
                       str(toml_config["general"]["threads"]),
                       "--allow-overlaps",
-                      output + sample + "_bcftools_header.vcf.gz",
-                      output + sample + "_freebayes_header.vcf.gz",
+                      "--rm-dups", 
+                      "exact",
+                      output + sample + "_bcftools_norm.vcf.gz",
+                      output + sample + "_freebayes_norm.vcf.gz",
                       "-o",
                       output + sample + "_merged.vcf.gz"]
     
