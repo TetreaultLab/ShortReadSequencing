@@ -542,7 +542,7 @@ def bwa(sample, toml_config):
             "-t",
             str(toml_config["general"]["threads"]),
             "-v",
-            "2"
+            "2",
             ref,
             I_toAlign,
         ]
