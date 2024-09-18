@@ -527,6 +527,8 @@ def bwa(sample, toml_config):
             output + "/" + sample + ".sam",
             "-t",
             str(toml_config["general"]["threads"]),
+            "-v",
+            "2",
             ref,
             I1_toAlign,
             I2_toAlign,
@@ -539,6 +541,8 @@ def bwa(sample, toml_config):
             output + "/" + sample + ".sam",
             "-t",
             str(toml_config["general"]["threads"]),
+            "-v",
+            "2"
             ref,
             I_toAlign,
         ]
