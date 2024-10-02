@@ -141,8 +141,21 @@ def main():
         print("\t>>> Variant Annotation: SnpEff + SnpSift (v5.2a)")
         if "SnpEff" not in done:
             function_queue.append(snpeff)
+
+        # Variant formatting
+        if toml_config["general"]["reference"] == "grch37" or toml_config["general"]["reference"] == "grch38":
+            if "dbNSFP" not in done:
+                function_queue.append(dbNSFP)
+            if "formatting" not in done:
+                function_queue.append(formatting)
+        else: 
+            if "formatting" not in done:
+                function_queue.append(formatting)
     else:
         print("\t>>> Variant Calling: none")
+
+        
+            
 
     # Calling each steps
     for func in function_queue:
@@ -1227,86 +1240,104 @@ def snpeff(sample, toml_config):
     subprocess.run(["rm", path + "/" + sample + "_summary.csv"])
     subprocess.run(["rm", path + "/" + sample + "_snpeff.vcf"])
 
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("SnpEff\n")
+
+def dbNSFP(sample, toml_config):
+    title("Add dbNSFP to snpEff output")
+    
+    genome = toml_config["general"]["reference"]
+    
+    chromosomes = [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "X",
+        "Y",
+        "MT",
+    ]
+
+    var = pd.read_csv(
+        path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
+    )
+    var = var.rename(
+        columns={
+            "CHROM": "CHROM_"+genome,
+            "POS": "POS_"+genome})
+
+    var = var.astype({"CHROM_"+genome: str, "POS_"+genome: str})
+
+    appended_data = []
+    ref = "/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/dbNSFP"
+
+    for chromosome in chromosomes:
+        print(chromosome)
+        db = pd.read_csv(
+            ref + "/dbNSFP4.7a_variant.chr" + chromosome + "_small.txt",
+            header=0,
+            sep="\t",
+            low_memory=False,
+        )
+
+        db = db.astype({"CHROM_"+genome: str, "POS_"+genome: str})
+
+        var_chr = var[var["CHROM_"+genome] == chromosome]
+
+        m = pd.merge(var_chr, db, how="left", on=["CHROM_"+genome, "POS_"+genome, "REF", "ALT"])
+        appended_data.append(m)
+
+    final = pd.concat(appended_data)
+    final.to_csv(
+        path + "/" + sample + "_annotated_dbNSFP.txt", sep="\t", index=False
+    )
+
+    n_rows = len(final.index)
+    rows_ann = final["rsID"].count()
+    percentage = round(rows_ann / n_rows * 100, 2)
+
+    print(
+        "\nFinal\nannotated variants: ",
+        rows_ann,
+        "\ntotal variants:",
+        n_rows,
+        "\npercentage dbNSFP annotation: ",
+        percentage,
+        "%",
+    )
+
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("dbNSFP\n")
+
+
+def formatting(sample, toml_config):
+    title("Format variants output")
+
+    genome = toml_config["general"]["reference"]
+    
     if genome == "grch37" or genome == "grch38":
-        title("Add dbNSFP to snpEff output")
-
-        chromosomes = [
-            "1",
-            "2",
-            "3",
-            "4",
-            "5",
-            "6",
-            "7",
-            "8",
-            "9",
-            "10",
-            "11",
-            "12",
-            "13",
-            "14",
-            "15",
-            "16",
-            "17",
-            "18",
-            "19",
-            "20",
-            "21",
-            "22",
-            "X",
-            "Y",
-            "MT",
-        ]
-
-        var = pd.read_csv(
-            path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
-        )
-        var = var.rename(
-            columns={
-                "CHROM": "CHROM_"+genome,
-                "POS": "POS_"+genome})
-	
-        var = var.astype({"CHROM_"+genome: str, "POS_"+genome: str})
-
-        appended_data = []
-        ref = "/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/dbNSFP"
-
-        for chromosome in chromosomes:
-            print(chromosome)
-            db = pd.read_csv(
-                ref + "/dbNSFP4.7a_variant.chr" + chromosome + "_small.txt",
-                header=0,
-                sep="\t",
-                low_memory=False,
-            )
-
-            db = db.astype({"CHROM_"+genome: str, "POS_"+genome: str})
-
-            var_chr = var[var["CHROM_"+genome] == chromosome]
-
-            m = pd.merge(var_chr, db, how="left", on=["CHROM_"+genome, "POS_"+genome, "REF", "ALT"])
-            appended_data.append(m)
-
-        final = pd.concat(appended_data)
-        final.to_csv(
-            path + "/" + sample + "_annotated_dbNSFP.txt", sep="\t", index=False
-        )
-
-        n_rows = len(final.index)
-        rows_ann = final["rsID"].count()
-        percentage = round(rows_ann / n_rows * 100, 2)
-
-        print(
-            "\nFinal\nannotated variants: ",
-            rows_ann,
-            "\ntotal variants:",
-            n_rows,
-            "\npercentage dbNSFP annotation: ",
-            percentage,
-            "%",
-        )
-
-        title("Format variants output")
         final = pd.read_csv(
             path + "/" + sample + "_annotated_dbNSFP.txt",
             sep="\t",
@@ -1342,45 +1373,67 @@ def snpeff(sample, toml_config):
         # final["Total_reads"] = (final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int))
         #final = final.replace({"Zygosity": {"1.0": "Hom", "0.5": "Het"}})
 
-        columns = [
-            "Gene_name",
-            "Gene_id",
-            "Transcript",
-            "Effect",
-            "Impact",
-            "Biotype",
-            "Codon_change",
-            "Protein_change",
-        ]
+        columns = ["Gene_name", "Gene_id", "Transcript", "Effect", "Impact", "Biotype", "Codon_change", "Protein_change"]
 
-        for index in final.index:
+        for index, row in final.iterrows():
             infos = []
+    
             for c in columns:
-                n = (str(final.loc[index, c]).count("|")) + 1
-                if n != 1:
-                    str_split = str(final.loc[index, c]).split("|")
-                    str_split = [sub.replace('"', "") for sub in str_split]
+                cell_value = str(row[c])
+                str_split = [sub.replace('"', "") for sub in cell_value.split("|")]
 
-                    final.loc[index, c] = str_split[0]
-                    if str_split.count(str_split[0]) != n:
-                        infos.append(str_split)
+                # Append to infos, or take the first split value if there's only one
+                infos.append(str_split if len(str_split) > 1 else [cell_value])
+
+                # Update the final DataFrame with the first part of split value
+                final.at[index, c] = str_split[0]
+    
+                # Transpose and concatenate corresponding elements from each list
+                if len(infos) > 1:
+                    info_concat = ["|".join([info[i] for info in infos]) for i in range(len(infos[0]))]
+                    final.at[index, "Infos"] = "; ".join(info_concat)
                 else:
-                    # Need the double [] to make a list of list so the len() == 1
-                    infos.append([final.loc[index, c]])
+                    final.at[index, "Infos"] = "; ".join(infos[0])
+        
+        # columns = [
+        #     "Gene_name",
+        #     "Gene_id",
+        #     "Transcript",
+        #     "Effect",
+        #     "Impact",
+        #     "Biotype",
+        #     "Codon_change",
+        #     "Protein_change",
+        # ]
 
-            info_concat = []
-            if len(infos) > 1:
-                for r in range(len(infos[0])):
-                    li = []
-                    for s in range(len(infos)):
-                        concat = infos[s][r]
-                        li.append(concat)
-                    info_concat.append("|".join(li))
-                final_str = "; ".join(info_concat)
-                final.loc[index, "Infos"] = final_str
-            elif len(infos) == 1:
-                final_str = "; ".join(infos[0])
-                final.loc[index, "Infos"] = final_str
+        # for index in final.index:
+        #     infos = []
+        #     for c in columns:
+        #         n = (str(final.loc[index, c]).count("|")) + 1
+        #         if n != 1:
+        #             str_split = str(final.loc[index, c]).split("|")
+        #             str_split = [sub.replace('"', "") for sub in str_split]
+
+        #             final.loc[index, c] = str_split[0]
+        #             if str_split.count(str_split[0]) != n:
+        #                 infos.append(str_split)
+        #         else:
+        #             # Need the double [] to make a list of list so the len() == 1
+        #             infos.append([final.loc[index, c]])
+
+        #     info_concat = []
+        #     if len(infos) > 1:
+        #         for r in range(len(infos[0])):
+        #             li = []
+        #             for s in range(len(infos)):
+        #                 concat = infos[s][r]
+        #                 li.append(concat)
+        #             info_concat.append("|".join(li))
+        #         final_str = "; ".join(info_concat)
+        #         final.loc[index, "Infos"] = final_str
+        #     elif len(infos) == 1:
+        #         final_str = "; ".join(infos[0])
+        #         final.loc[index, "Infos"] = final_str
 
         final = final[
             ["Position_"+genome,
@@ -1468,7 +1521,6 @@ def snpeff(sample, toml_config):
         )
 
     else:
-        title("Format variants output")
         final = pd.read_csv(
             path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
         )
@@ -1542,13 +1594,13 @@ def snpeff(sample, toml_config):
 
         final = final[
             [
-		"Position",
+		        "Position",
                 "Ref",
                 "Alt",
                 "Quality",
-		"Read_depth",
+		        "Read_depth",
                 "Ref_reads",
-		"Alt_reads",
+		        "Alt_reads",
                 "Zygosity",
                 "Variation",
                 "Gene_name",
@@ -1598,7 +1650,7 @@ def snpeff(sample, toml_config):
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:
-        steps.write("SnpEff\n")
+        steps.write("formatting\n")
 
 
 if __name__ == "__main__":
