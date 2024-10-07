@@ -1249,7 +1249,7 @@ def dbNSFP(sample, toml_config):
     title("Add dbNSFP to snpEff output")
     
     genome = toml_config["general"]["reference"]
-	path = toml_config["general"]["output"] + "/" + sample + "/Variants"
+    path = toml_config["general"]["output"] + "/" + sample + "/Variants"
     
     chromosomes = [
         "1",
@@ -1288,7 +1288,7 @@ def dbNSFP(sample, toml_config):
             "POS": "POS_"+genome})
 
     var = var.astype({"CHROM_"+genome: str, "POS_"+genome: str})
-    print(var)
+
     appended_data = []
     ref = "/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/dbNSFP"
 
