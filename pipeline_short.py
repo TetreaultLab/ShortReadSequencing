@@ -1277,7 +1277,7 @@ def dbNSFP(sample, toml_config):
         "Y",
         "MT",
     ]
-    print(chromosomes)
+    
     var = pd.read_csv(
         path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
     )
@@ -1287,7 +1287,7 @@ def dbNSFP(sample, toml_config):
             "POS": "POS_"+genome})
 
     var = var.astype({"CHROM_"+genome: str, "POS_"+genome: str})
-
+    print(var)
     appended_data = []
     ref = "/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/dbNSFP"
 
