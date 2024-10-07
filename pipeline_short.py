@@ -1249,6 +1249,7 @@ def dbNSFP(sample, toml_config):
     title("Add dbNSFP to snpEff output")
     
     genome = toml_config["general"]["reference"]
+	path = toml_config["general"]["output"] + "/" + sample + "/Variants"
     
     chromosomes = [
         "1",
@@ -1336,6 +1337,7 @@ def formatting(sample, toml_config):
     title("Format variants output")
 
     genome = toml_config["general"]["reference"]
+    path = toml_config["general"]["output"] + "/" + sample + "/Variants"
     
     if genome == "grch37" or genome == "grch38":
         final = pd.read_csv(
