@@ -1277,7 +1277,7 @@ def dbNSFP(sample, toml_config):
         "Y",
         "MT",
     ]
-
+    print(chromosomes)
     var = pd.read_csv(
         path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
     )
