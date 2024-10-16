@@ -1151,9 +1151,9 @@ def snpeff(sample, toml_config):
         ref = "GRCm39.105"
     if genome == "wbcel235":
         ref == "WBcel235.105"
-
+    print(ref)
     path = toml_config["general"]["output"] + "/" + sample + "/Variants"
-
+    print(path)
     cmd_snpeff = [
         "java",
         "-Xmx8g",
