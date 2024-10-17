@@ -1139,8 +1139,9 @@ def snpeff(sample, toml_config):
     snpeff = (
         "/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/snpEff"
     )
-
+    print(snpeff)
     genome = toml_config["general"]["reference"]
+    print(genome)
     if genome == "grch37":
         ref = "GRCh37.87"
     if genome == "grch38":
