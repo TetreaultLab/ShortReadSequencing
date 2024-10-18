@@ -1487,6 +1487,15 @@ def formatting(sample, toml_config):
             ]
         ]
 
+        # count "Het" for each gene
+        final['het_count'] = final.groupby('Gene_name')['Zygosity'].transform(lambda x: (x == 'Het').sum())
+
+        # Remplace "Het" for "Multiple-het" if het_count > 1
+        final.loc[(final['het_count'] > 1) & (final['Zygosity'] == 'Het'), 'Zygosity'] = 'Multiple-het'
+        
+        # Remove het_count
+        final = final.drop(columns=['het_count'])
+
         final = final.replace(".", np.nan)
         final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
 
@@ -1593,14 +1602,12 @@ def formatting(sample, toml_config):
                 "Infos",
             ]
         ]
-        print(final)
+        
         # count "Het" for each gene
         final['het_count'] = final.groupby('Gene_name')['Zygosity'].transform(lambda x: (x == 'Het').sum())
-        print(final[["Position", "Gene_name", "Zygosity", "het_count"]])
 
         # Remplace "Het" for "Multiple-het" if het_count > 1
         final.loc[(final['het_count'] > 1) & (final['Zygosity'] == 'Het'), 'Zygosity'] = 'Multiple-het'
-        print(final[["Position", "Gene_name", "Zygosity", "het_count"]])
         
         # Remove het_count
         final = final.drop(columns=['het_count'])
