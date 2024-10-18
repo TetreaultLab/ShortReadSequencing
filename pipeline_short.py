@@ -1572,14 +1572,14 @@ def formatting(sample, toml_config):
                     final.at[index, "Infos"] = "; ".join(info_concat)
                 else:
                     final.at[index, "Infos"] = "; ".join(infos[0])
-
+        print(final)
         final = final[
             [
-		        "Position",
+                "Position",
                 "Ref",
                 "Alt",
                 "Quality",
-		        "Read_depth",
+                "Read_depth",
                 "Zygosity",
                 "Variation",
                 "Gene_name",
