@@ -1593,15 +1593,20 @@ def formatting(sample, toml_config):
                 "Infos",
             ]
         ]
-
+        print(final)
         # count "Het" for each gene
         final['het_count'] = final.groupby('Gene_name')['Zygosity'].transform(lambda x: (x == 'Het').sum())
+        print(final)
 
         # Remplace "Het" for "Multiple-het" if het_count > 1
         final.loc[(final['het_count'] > 1) & (final['Zygosity'] == 'Het'), 'Zygosity'] = 'Multiple-het'
-
+        print(final)
+        
         # Remove het_count
         final = final.drop(columns=['het_count'])
+
+        final = final.replace(".", np.nan)
+        print(final)
         
         final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
 
