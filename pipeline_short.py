@@ -1536,7 +1536,6 @@ def formatting(sample, toml_config):
                 "TYPE": "Variation",
                 "AF": "Zygosity",
                 "DP": "Read_depth",
-                "VARTYPE": "Variation",
                 "ANN[*].GENE": "Gene_name",
                 "ANN[*].GENEID": "Gene_id",
                 "ANN[*].FEATUREID": "Transcript",
@@ -1550,9 +1549,6 @@ def formatting(sample, toml_config):
 
         final["Position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
         final["Quality"] = round(final["Quality"], 2)
-        final["Quality"] = round(final["Quality"], 2)
-        final["Ref_reads"] = final["Allele_depth"].str.split(":")[0]
-        final["Alt_reads"] = final["Allele_depth"].str.split(":")[1]
         final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
 
         columns = [
@@ -1602,8 +1598,6 @@ def formatting(sample, toml_config):
                 "Alt",
                 "Quality",
 		        "Read_depth",
-                "Ref_reads",
-		        "Alt_reads",
                 "Zygosity",
                 "Variation",
                 "Gene_name",
@@ -1622,8 +1616,7 @@ def formatting(sample, toml_config):
 
         df_filtered = final[
             (final["Quality"] > 20)
-            & (final["Total_reads"] > 5)
-            & (final["Alt_reads"] > 3)
+            & (final["Read_depth"] > 5)
         ]
 
         df_filtered.to_csv(
@@ -1632,7 +1625,6 @@ def formatting(sample, toml_config):
 
         print(">>> Filters:")
         print("\t>>> Quality Phred > 20")
-        print("\t>>> Number of alt reads > 3")
         print("\t>>> Number of total reads > 5")
 
         all_var = len(final.index)
