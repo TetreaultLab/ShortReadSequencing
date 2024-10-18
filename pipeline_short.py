@@ -1549,7 +1549,7 @@ def formatting(sample, toml_config):
         
         final["Position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
         final["Quality"] = round(final["Quality"], 2)
-        final = final.replace({"Zygosity": {"True": "Hom", "False": "Het"}})
+        final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
         
         columns = ["Gene_name", "Gene_id", "Transcript", "Effect", "Impact", "Biotype", "Codon_change", "Protein_change"]
 
