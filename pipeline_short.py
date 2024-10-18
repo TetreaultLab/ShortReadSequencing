@@ -1573,8 +1573,6 @@ def formatting(sample, toml_config):
                 else:
                     final.at[index, "Infos"] = "; ".join(infos[0])
 
-        print(final)
-
         final = final[
             [
 		        "Position",
@@ -1595,14 +1593,14 @@ def formatting(sample, toml_config):
                 "Infos",
             ]
         ]
-
+        print(final)
         final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
 
         df_filtered = final[
             (final["Quality"] > 20)
             & (final["Read_depth"] > 5)
         ]
-
+        print(df_filtered)
         df_filtered.to_csv(
             path + "/" + sample + "_variants_filtered.txt", sep="\t", index=False
         )
@@ -1624,7 +1622,6 @@ def formatting(sample, toml_config):
             percentage,
             "%",
         )
-    subprocess.run(["rm", path + "/" + sample + "_annotated.txt"])
     
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
