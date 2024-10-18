@@ -1530,27 +1530,28 @@ def formatting(sample, toml_config):
 
         final = final.rename(
             columns={
-                "REF": "Ref",
-                "ALT": "Alt",
-                "QUAL": "Quality",
-                "TYPE": "Variation",
-                "AF": "Zygosity",
-                "DP": "Read_depth",
-                "ANN[*].GENE": "Gene_name",
-                "ANN[*].GENEID": "Gene_id",
-                "ANN[*].FEATUREID": "Transcript",
-                "ANN[*].EFFECT": "Effect",
-                "ANN[*].IMPACT": "Impact",
-                "ANN[*].BIOTYPE": "Biotype",
-                "ANN[*].HGVS_C": "Codon_change",
-                "ANN[*].HGVS_P": "Protein_change",
+            "REF": "Ref",
+            "ALT": "Alt",
+            "QUAL": "Quality",
+            "TYPE": "Variation",
+            "AF": "Zygosity",
+            "DP": "Read_depth",
+            "ANN[*].GENE": "Gene_name",
+            "ANN[*].GENEID": "Gene_id",
+            "ANN[*].FEATUREID": "Transcript",
+            "ANN[*].EFFECT": "Effect",
+            "ANN[*].IMPACT": "Impact",
+            "ANN[*].BIOTYPE": "Biotype",
+            "ANN[*].HGVS_C": "Codon_change",
+            "ANN[*].HGVS_P": "Protein_change",
             }
         )
-	    print(final)
+        
+        print(final)
         final["Position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
         final["Quality"] = round(final["Quality"], 2)
         final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
-	    print(final)
+        print(final)
         columns = ["Gene_name", "Gene_id", "Transcript", "Effect", "Impact", "Biotype", "Codon_change", "Protein_change"]
 
         for index, row in final.iterrows():
