@@ -1546,50 +1546,32 @@ def formatting(sample, toml_config):
                 "ANN[*].HGVS_P": "Protein_change",
             }
         )
-
+	    print(final)
         final["Position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
         final["Quality"] = round(final["Quality"], 2)
         final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
+	    print(final)
+        columns = ["Gene_name", "Gene_id", "Transcript", "Effect", "Impact", "Biotype", "Codon_change", "Protein_change"]
 
-        columns = [
-            "Gene_name",
-            "Gene_id",
-            "Transcript",
-            "Effect",
-            "Impact",
-            "Biotype",
-            "Codon_change",
-            "Protein_change",
-        ]
-
-        for index in final.index:
+        for index, row in final.iterrows():
             infos = []
+    
             for c in columns:
-                n = (str(final.loc[index, c]).count("|")) + 1
-                if n != 1:
-                    str_split = str(final.loc[index, c]).split("|")
-                    str_split = [sub.replace('"', "") for sub in str_split]
+                cell_value = str(row[c])
+                str_split = [sub.replace('"', "") for sub in cell_value.split("|")]
 
-                    final.loc[index, c] = str_split[0]
-                    if str_split.count(str_split[0]) != n:
-                        infos.append(str_split)
+                # Append to infos, or take the first split value if there's only one
+                infos.append(str_split if len(str_split) > 1 else [cell_value])
+
+                # Update the final DataFrame with the first part of split value
+                final.at[index, c] = str_split[0]
+    
+                # Transpose and concatenate corresponding elements from each list
+                if len(infos) > 1:
+                    info_concat = ["|".join([info[i] for info in infos]) for i in range(len(infos[0]))]
+                    final.at[index, "Infos"] = "; ".join(info_concat)
                 else:
-                    # Need the double [] to make a list of list so the len() == 1
-                    infos.append([final.loc[index, c]])
-
-            info_concat = []
-            if len(infos) > 1:
-                for r in range(len(infos[0])):
-                    li = []
-                    for s in range(len(infos)):
-                        concat = infos[s][r]
-                        li.append(concat)
-                    info_concat.append("|".join(li))
-                final_str = "; ".join(info_concat)
-                final.loc[index, "Infos"] = final_str
-            elif len(infos) == 1:
-                final_str = "; ".join(infos[0])
-                final.loc[index, "Infos"] = final_str
+                    final.at[index, "Infos"] = "; ".join(infos[0])
 
         final = final[
             [
