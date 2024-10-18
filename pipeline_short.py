@@ -1572,7 +1572,7 @@ def formatting(sample, toml_config):
                     final.at[index, "Infos"] = "; ".join(info_concat)
                 else:
                     final.at[index, "Infos"] = "; ".join(infos[0])
-        print(final)
+
         final = final[
             [
                 "Position",
@@ -1593,14 +1593,22 @@ def formatting(sample, toml_config):
                 "Infos",
             ]
         ]
-        print(final)
+
+        # count "Het" for each gene
+        final['het_count'] = final.groupby('Gene_name')['Zygosity'].transform(lambda x: (x == 'Het').sum())
+
+        # Remplace "Het" for "Multiple-het" if het_count > 1
+        final.loc[(final['het_count'] > 1) & (final['Zygosity'] == 'Het'), 'Zygosity'] = 'Multiple-het'
+
+        # Remove het_count
+        final = final.drop(columns=['het_count'])
+        
         final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
 
         df_filtered = final[
             (final["Quality"] > 20)
             & (final["Read_depth"] > 5)
         ]
-        print(df_filtered)
         df_filtered.to_csv(
             path + "/" + sample + "_variants_filtered.txt", sep="\t", index=False
         )
