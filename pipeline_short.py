@@ -1009,7 +1009,7 @@ def bcftools(sample, toml_config):
     print(f">>> {command_norm_str}\n")
     subprocess.run(command_norm, check=True)
     
-    subprocess.run(["bgzip", output + sample + "_bcftools_norm.vcf"], check=True)
+    subprocess.run(["bgzip", "-f", output + sample + "_bcftools_norm.vcf"], check=True)
     subprocess.run(["tabix", "-p", "vcf", output + sample + "_bcftools_norm.vcf.gz"], check=True)
 
     with open(
@@ -1075,7 +1075,7 @@ def freebayes(sample, toml_config):
     print(f">>> {command_norm_str}\n")
     subprocess.run(command_norm, check=True)
     
-    subprocess.run(["bgzip", output + sample + "_freebayes_norm.vcf"], check=True)
+    subprocess.run(["bgzip", "-f", output + sample + "_freebayes_norm.vcf"], check=True)
     subprocess.run(["tabix", "-p", "vcf", output + sample + "_freebayes_norm.vcf.gz"], check=True)
     
     with open(
