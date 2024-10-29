@@ -767,7 +767,7 @@ def markduplicates(sample, toml_config):
         "--METRICS_FILE",
         metrics,
         "--REMOVE_DUPLICATES",
-        "true", 
+        "true",
         "--TMP_DIR",
         temporary,
         "--OUTPUT",
@@ -795,7 +795,6 @@ def featurecounts(sample, toml_config):
     output = toml_config["general"]["output"] + "/" + sample + "/FeatureCounts"
     subprocess.run(["mkdir", "-p", output])
     
-    '''
     input = (
         toml_config["general"]["output"]
         + "/"
@@ -804,8 +803,7 @@ def featurecounts(sample, toml_config):
         + sample
         + "_sortedCoordinate.bam"
     )
-    '''
-    input = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/" + sample + "_removedDuplicates.bam"
+    
 
     gtf = get_reference(toml_config["general"]["reference"], "")["gtf"]
     print(gtf)
@@ -932,7 +930,7 @@ def multiqc(sample, toml_config):
 
 def bcftools(sample, toml_config):
     title("BCFtools")
-    '''
+    
     input = (
         toml_config["general"]["output"]
         + "/"
@@ -941,8 +939,6 @@ def bcftools(sample, toml_config):
         + sample
         + "_sortedCoordinate.bam"
     )
-    '''
-    input = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/" + sample + "_removedDuplicates.bam"
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
 
@@ -1019,7 +1015,7 @@ def bcftools(sample, toml_config):
 
 def freebayes(sample, toml_config):
     title("FreeBayes")
-    '''
+    
     input = (
         toml_config["general"]["output"]
         + "/"
@@ -1028,8 +1024,6 @@ def freebayes(sample, toml_config):
         + sample
         + "_sortedCoordinate.bam"
     )
-    '''
-    input = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/" + sample + "_removedDuplicates.bam"
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
 
