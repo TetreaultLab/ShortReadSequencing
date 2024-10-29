@@ -1355,9 +1355,7 @@ def formatting(sample, toml_config):
                 "QUAL": "Quality",
                 "TYPE": "Variation",
                 "HOM": "Zygosity",
-                #"AF": "Zygosity",
                 "DP": "Read_depth",
-		        #"GEN[0].AD" : "Allele_depth",
                 "ANN[*].GENE": "Gene_name",
                 "ANN[*].GENEID": "Gene_id",
                 "ANN[*].FEATUREID": "Transcript",
@@ -1371,10 +1369,7 @@ def formatting(sample, toml_config):
 
         final["Position_"+genome] = final["CHROM_"+genome].astype(str) + ":" + final["POS_"+genome].astype(str)
         final["Quality"] = round(final["Quality"], 2)
-        #final["Ref_reads"] = final["Allele_depth"].str.split(":")[0]
-        #final["Alt_reads"] = final["Allele_depth"].str.split(":")[1]
-        # final["Total_reads"] = (final["DP4"].apply(lambda x: sum(map(float, x.split(",")))).astype(int))
-        #final = final.replace({"Zygosity": {"1.0": "Hom", "0.5": "Het"}})
+        final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
 
         columns = ["Gene_name", "Gene_id", "Transcript", "Effect", "Impact", "Biotype", "Codon_change", "Protein_change"]
 
@@ -1398,54 +1393,12 @@ def formatting(sample, toml_config):
                 else:
                     final.at[index, "Infos"] = "; ".join(infos[0])
         
-        # columns = [
-        #     "Gene_name",
-        #     "Gene_id",
-        #     "Transcript",
-        #     "Effect",
-        #     "Impact",
-        #     "Biotype",
-        #     "Codon_change",
-        #     "Protein_change",
-        # ]
-
-        # for index in final.index:
-        #     infos = []
-        #     for c in columns:
-        #         n = (str(final.loc[index, c]).count("|")) + 1
-        #         if n != 1:
-        #             str_split = str(final.loc[index, c]).split("|")
-        #             str_split = [sub.replace('"', "") for sub in str_split]
-
-        #             final.loc[index, c] = str_split[0]
-        #             if str_split.count(str_split[0]) != n:
-        #                 infos.append(str_split)
-        #         else:
-        #             # Need the double [] to make a list of list so the len() == 1
-        #             infos.append([final.loc[index, c]])
-
-        #     info_concat = []
-        #     if len(infos) > 1:
-        #         for r in range(len(infos[0])):
-        #             li = []
-        #             for s in range(len(infos)):
-        #                 concat = infos[s][r]
-        #                 li.append(concat)
-        #             info_concat.append("|".join(li))
-        #         final_str = "; ".join(info_concat)
-        #         final.loc[index, "Infos"] = final_str
-        #     elif len(infos) == 1:
-        #         final_str = "; ".join(infos[0])
-        #         final.loc[index, "Infos"] = final_str
-
         final = final[
             ["Position_"+genome,
              "Ref",
              "Alt",
              "Quality",
              "Read_depth",
-             #"Ref_reads",
-             #"Alt_reads",
              "Zygosity",
              "rsID",
              "Variation",
@@ -1504,9 +1457,7 @@ def formatting(sample, toml_config):
         # https://jp.support.illumina.com/content/dam/illumina-support/help/Illumina_DRAGEN_Bio_IT_Platform_v3_7_1000000141465/Content/SW/Informatics/Dragen/QUAL_QD_GQ_Formulation_fDG.htm
 
         df_filtered = final[
-            (final["Quality"] > 20)
-	    #& (final["Alt_depth"] > 3)
-        #& (final["Read_depth"] > 5)
+            (final["Quality"] > 20) & (final["Read_depth"] > 5)
         ]
 
         df_filtered.to_csv(
@@ -1515,8 +1466,7 @@ def formatting(sample, toml_config):
 
         print(">>> Filters:")
         print("\t>>> Quality Phred > 20")
-        #print("\t>>> Number of alt reads > 3")
-        #print("\t>>> Number of total reads > 5")
+        print("\t>>> Number of total reads > 5")
 
         all_var = len(final.index)
         filtered_var = len(df_filtered.index)
@@ -1618,8 +1568,7 @@ def formatting(sample, toml_config):
         final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
 
         df_filtered = final[
-            (final["Quality"] > 20)
-            & (final["Read_depth"] > 5)
+            (final["Quality"] > 20) & (final["Read_depth"] > 5)
         ]
         df_filtered.to_csv(
             path + "/" + sample + "_variants_filtered.txt", sep="\t", index=False
