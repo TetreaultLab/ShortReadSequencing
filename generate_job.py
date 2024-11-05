@@ -33,8 +33,6 @@ with open(toml_file, "r") as f:
     toml_config = toml.load(f)
 
 email = toml_config["general"]["email"]
-cores = toml_config["general"]["threads"]
-memory = toml_config["general"]["memory"]
 time = toml_config["general"]["time"]
 project = toml_config["general"]["project"]
 
