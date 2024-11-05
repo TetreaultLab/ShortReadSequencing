@@ -44,14 +44,14 @@ path_config = work_dir + "/" + toml_file
 
 slurm = """#!/bin/sh
 #SBATCH -N 1 #Number of nodes
-#SBATCH --cpus-per-task {0} # number of cores
-#SBATCH --mem 8G # memory pool for all cores
-#SBATCH -t {2} # time (DD-HH:MM)
-#SBATCH -o {3}_{4}.%N.%j.log
-#SBATCH -e {3}_{4}.%N.%j.log
+#SBATCH --cpus-per-task 8 # number of cores
+#SBATCH --mem 64G # memory pool for all cores
+#SBATCH -t {1} # time (DD-HH:MM)
+#SBATCH -o {2}_{3}.%N.%j.log
+#SBATCH -e {2}_{3}.%N.%j.log
 #SBATCH --mail-type=FAIL
 #SBATCH --account=rrg-tetreaum
-#SBATCH --mail-user={5}
+#SBATCH --mail-user={4}
 #
 ### Load environnment
 #
@@ -64,10 +64,10 @@ source /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/bin/
 #
 # newgrp rrg-tetreaum
 #
-python -u /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/ShortReadSequencing/pipeline_short.py --sample {3} --config {6}
+python -u /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/ShortReadSequencing/pipeline_short.py --sample {2} --config {5}
 #
 """.format(
-    cores, memory, time, sample_name, project, email, path_config
+    time, sample_name, project, email, path_config
 )
 
 print(slurm, file=open(work_dir + "/" + sample_name + "_" + project + ".slurm", "w"))
