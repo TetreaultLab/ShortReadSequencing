@@ -45,7 +45,7 @@ path_config = work_dir + "/" + toml_file
 slurm = """#!/bin/sh
 #SBATCH -N 1 #Number of nodes
 #SBATCH --cpus-per-task {0} # number of cores
-#SBATCH --mem 8G # memory pool for all cores
+#SBATCH --mem {1}G # memory pool for all cores
 #SBATCH -t {2} # time (DD-HH:MM)
 #SBATCH -o {3}_{4}.%N.%j.log
 #SBATCH -e {3}_{4}.%N.%j.log
