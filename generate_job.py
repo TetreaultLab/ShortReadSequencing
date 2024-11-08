@@ -44,12 +44,12 @@ slurm = """#!/bin/sh
 #SBATCH -N 1 #Number of nodes
 #SBATCH --cpus-per-task 8 # number of cores
 #SBATCH --mem 64G # memory pool for all cores
-#SBATCH -t {0} # time (DD-HH:MM)
-#SBATCH -o {1}_{2}.%N.%j.log
-#SBATCH -e {1}_{2}.%N.%j.log
+#SBATCH -t {1} # time (DD-HH:MM)
+#SBATCH -o {2}_{3}.%N.%j.log
+#SBATCH -e {2}_{3}.%N.%j.log
 #SBATCH --mail-type=FAIL
 #SBATCH --account=rrg-tetreaum
-#SBATCH --mail-user={3}
+#SBATCH --mail-user={4}
 #
 ### Load environnment
 #
@@ -62,7 +62,7 @@ source /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/bin/
 #
 # newgrp rrg-tetreaum
 #
-python -u /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/ShortReadSequencing/pipeline_short.py --sample {1} --config {4}
+python -u /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/ShortReadSequencing/pipeline_short.py --sample {2} --config {5}
 #
 """.format(
     time, sample_name, project, email, path_config
