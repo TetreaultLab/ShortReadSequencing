@@ -289,7 +289,8 @@ def fastqc(sample, toml_config):
             "-o",
             output,
             "--noextract",
-            "--threads 8",
+            "--threads",
+            "6",
             "--dir",
             temporary,
             "--kmers",
@@ -312,7 +313,8 @@ def fastqc(sample, toml_config):
             "-o",
             output,
             "--noextract",
-            "--threads 8",
+            "--threads",
+            "6",
             "--dir",
             temporary,
             "--kmers",
@@ -351,6 +353,7 @@ def bbduk(sample, toml_config):
             "out=" + O1duk,
             "out2=" + O2duk,
             "stats=" + output + "/contaminants_stats.txt",
+            "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
             "ref=/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/adapters.fa",
             "k=" + str(toml_config["bbduk"]["kmers"]),
@@ -372,6 +375,7 @@ def bbduk(sample, toml_config):
             "in=" + Iduk,
             "out=" + Oduk,
             "stats=" + output + "/contaminants_stats.txt",
+            "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
             "ref=/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/adapters.fa",
             "k=" + str(toml_config["bbduk"]["kmers"]),
@@ -415,7 +419,8 @@ def star(sample, toml_config):
             "STAR",
             "--runMode",
             "alignReads",
-            "--runThreadN 8",
+            "--runThreadN",
+            str(toml_config["general"]["threads"]),
             "--limitBAMsortRAM",
             "60000000000",
             "--genomeDir",
@@ -450,7 +455,8 @@ def star(sample, toml_config):
             "STAR",
             "--runMode",
             "alignReads",
-            "--runThreadN 8",
+            "--runThreadN",
+            str(toml_config["general"]["threads"]),
             "--limitBAMsortRAM",
             "60000000000",
             "--genomeDir",
@@ -532,7 +538,8 @@ def bwa(sample, toml_config):
             "mem",
             "-o",
             output + "/" + sample + ".sam",
-            "-t 8",
+            "-t",
+            str(toml_config["general"]["threads"]),
             "-v",
             "2",
             ref,
@@ -545,7 +552,8 @@ def bwa(sample, toml_config):
             "mem",
             "-o",
             output + "/" + sample + ".sam",
-            "-t 8",
+            "-t",
+            str(toml_config["general"]["threads"]),
             "-v",
             "2",
             ref,
@@ -597,7 +605,8 @@ def salmon(sample, toml_config):
             "--validateMappings",
             "--index",
             ref,
-            "--threads 8",
+            "--threads",
+            str(toml_config["general"]["threads"]),
             "--auxDir",
             "salmon_tmp",
             "--minScoreFraction",
@@ -617,7 +626,8 @@ def salmon(sample, toml_config):
             "A",
             "--index",
             ref,
-            "--threads 8",
+            "--threads",
+            str(toml_config["general"]["threads"]),
             "--auxDir",
             "salmon_tmp",
             "--minScoreFraction",
@@ -660,10 +670,10 @@ def samtools(sample, toml_config):
     stats = in_out + "/" + sample + "_stats.txt"
 
     # Sort by coordinate
-    subprocess.run(["samtools", "sort", "-@ 8", inBAM, "-o", bamCoord])
+    subprocess.run(["samtools", "sort", inBAM, "-o", bamCoord])
 
     # Index bam sorted by coordinates
-    subprocess.run(["samtools", "index", "-@ 8", "-b", bamCoord, "-o", bamCoord + ".bai"])
+    subprocess.run(["samtools", "index", "-b", bamCoord, "-o", bamCoord + ".bai"])
 
     # alignment stats
     with open(stats1, "w") as outfile1:
@@ -714,7 +724,8 @@ def bamqc(sample, toml_config):
         "-o",
         output,
         "--noextract",
-        "--threads 8",
+        "--threads",
+        "2",
         "--dir",
         temporary,
         "--kmers",
@@ -811,7 +822,8 @@ def featurecounts(sample, toml_config):
             "--minOverlap",
             str(toml_config["featurecounts"]["overlap"]),
             "-p",
-            "-T 8",
+            "-T",
+            str(toml_config["general"]["threads"]),
             "--tmpDir",
             temporary,
             "-a",
@@ -832,7 +844,8 @@ def featurecounts(sample, toml_config):
             toml_config["featurecounts"]["attribute"],
             "--minOverlap",
             str(toml_config["featurecounts"]["overlap"]),
-            "-T 8",
+            "-T",
+            str(toml_config["general"]["threads"]),
             "--tmpDir",
             temporary,
             "-a",
@@ -937,7 +950,8 @@ def bcftools(sample, toml_config):
     mpileup = [
         "bcftools",
         "mpileup",
-        "--threads 8",
+        "--threads",
+        str(toml_config["general"]["threads"]),
         "-d",
         "1000000",
         "--max-idepth", 
@@ -953,7 +967,8 @@ def bcftools(sample, toml_config):
     call = [
         "bcftools",
         "call",
-        "--threads 8",
+        "--threads",
+        str(toml_config["general"]["threads"]),
         "--multiallelic-caller",
         "--variants-only",
         "-o",
@@ -1035,8 +1050,7 @@ def freebayes(sample, toml_config):
     subprocess.run(command, check=True)
 
     subprocess.run(["bcftools", 
-                    "reheader",
-                    "--threads 8",
+                    "reheader", 
                     "--samples", 
                     toml_config["general"]["output"] + "/" + sample + "/sample.txt",
                     "-o",
@@ -1047,7 +1061,6 @@ def freebayes(sample, toml_config):
     command_norm = ["bcftools",
                     "norm",
                     "-m-any",
-                    "--threads 8",
                     "-o",
                     output + sample + "_freebayes_norm.vcf",
                     output + sample + "_freebayes_header.vcf"]
@@ -1075,7 +1088,8 @@ def bcftools_filter(sample, toml_config):
 
     command_concat = ["bcftools",
                       "concat",
-                      "--threads 8",
+                      "--threads",
+                      str(toml_config["general"]["threads"]),
                       "--allow-overlaps",
                       "--rm-dups", 
                       "exact",
@@ -1090,7 +1104,6 @@ def bcftools_filter(sample, toml_config):
 
     command_filter = ["bcftools",
                       "filter",
-                      "--threads 8",
                       "-i",
                       "QUAL>1 && INFO/DP>0 && AC>0",
                       "-o", 
@@ -1102,9 +1115,10 @@ def bcftools_filter(sample, toml_config):
     subprocess.run(command_filter, check=True)
 
     # remove intermediate vcf files
-    subprocess.run(["rm", output + sample + "_unannotated.vcf"])
-    subprocess.run(["rm", output + sample + "_freebayes_header.vcf"])
-    subprocess.run(["rm", output + sample + "_bcftools_header.vcf"])
+    #subprocess.run(["rm", output + sample + "_unannotated.vcf"])
+    #subprocess.run(["rm", output + sample + "_merged.vcf.gz"])
+    subprocess.run(["rm", output + sample + "_freebayes.vcf"])
+    subprocess.run(["rm", output + sample + "_bcftools.vcf"])
     
 
     with open(
