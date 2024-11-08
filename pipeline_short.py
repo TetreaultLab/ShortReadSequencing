@@ -933,6 +933,7 @@ def bcftools(sample, toml_config):
     mpileup = [
         "bcftools",
         "mpileup",
+        "--threads 8",
         "-d",
         "1000000",
         "--max-idepth", 
@@ -948,6 +949,7 @@ def bcftools(sample, toml_config):
     call = [
         "bcftools",
         "call",
+        "--threads 8",
         "--multiallelic-caller",
         "--variants-only",
         "-o",
@@ -1030,6 +1032,7 @@ def freebayes(sample, toml_config):
 
     subprocess.run(["bcftools", 
                     "reheader",
+                    "--threads 8",
                     "--samples", 
                     toml_config["general"]["output"] + "/" + sample + "/sample.txt",
                     "-o",
@@ -1040,6 +1043,7 @@ def freebayes(sample, toml_config):
     command_norm = ["bcftools",
                     "norm",
                     "-m-any",
+                    "--threads 8",
                     "-o",
                     output + sample + "_freebayes_norm.vcf",
                     output + sample + "_freebayes_header.vcf"]
@@ -1067,6 +1071,7 @@ def bcftools_filter(sample, toml_config):
 
     command_concat = ["bcftools",
                       "concat",
+                      "--threads 8",
                       "--allow-overlaps",
                       "--rm-dups", 
                       "exact",
@@ -1081,6 +1086,7 @@ def bcftools_filter(sample, toml_config):
 
     command_filter = ["bcftools",
                       "filter",
+                      "--threads 8",
                       "-i",
                       "QUAL>1 && INFO/DP>0 && AC>0",
                       "-o", 
