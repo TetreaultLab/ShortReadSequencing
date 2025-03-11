@@ -574,8 +574,12 @@ def bwa(sample, toml_config):
             output + "/" + sample + ".sam",
             "-o",
             output + "/" + sample + ".bam",
-        ]
+        ],
+	check=True
     )
+	# Remove the SAM file using subprocess
+    sam_file = output + "/" + sample + ".sam"
+    subprocess.run(["rm", sam_file], check=True)
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
