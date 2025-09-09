@@ -58,13 +58,13 @@ slurm = """#!/bin/sh
 module load StdEnv/2023
 module load python/3.11.5
 module load fastqc/0.12.1 bbmap/39.06 star/2.7.11a bwa-mem2/2.2.1 gcc/12.3 openmpi/4.1.5 salmon/1.10.2 samtools/1.18 gatk/4.4.0.0 subread/2.0.6 bcftools/1.18 freebayes/1.3.7
-source /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/bin/activate
+source /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate
 #
 ### Launch script
 #
 # newgrp rrg-tetreaum
 #
-python -u /lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/ShortReadSequencing/pipeline_short.py --sample {3} --config {6}
+python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/ShortReadSequencing/pipeline_short.py --sample {3} --config {6}
 #
 """.format(
     cores, memory, time, sample_name, project, email, path_config
