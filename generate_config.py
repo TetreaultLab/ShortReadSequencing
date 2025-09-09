@@ -143,9 +143,9 @@ general = """# TOML config file for {0}
 # Required information
 [general]
     project = "{0}"   # Choose a project name. Should not start with a number.
-    fastq = "" # Path to raw fastq.gz files. Ex: /lustre03/project/6019267/shared/data/<project>.
-    output = "/lustre04/scratch/<USER>/{0}/output" # # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/output/.
-    temporary = "/lustre04/scratch/<USER>/{0}/tmp" # The directory will be created. Exemple: /lustre04/scratch/<user>/<project>/tmp/. 
+    fastq = "" # Path to raw fastq.gz files. Ex: /lustre09/project/6019267/shared/data/<project>.
+    output = "/lustre10/scratch/<USER>/{0}/output" # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/output/.
+    temporary = "/lustre10/scratch/<USER>/{0}/tmp" # The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/tmp/. 
     sequencing = "" # Type of sequencing. Short read RNA or DNA. Possible values: ["RNA", "Exome", "Genome"].
     reads = "" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].
     reference = "" # Possible values: Human: ["grch37", "grch38"]. Mouse: ["grcm39"]. Worm: ["wbcel235"]. Zebrafish: ["grcz11"].
