@@ -155,7 +155,6 @@ def main():
         print("\t>>> Variant Calling: none")
 
         
-            
 
     # Calling each steps
     for func in function_queue:
@@ -227,46 +226,46 @@ def get_file_trimmed(toml_config, output, sample):
 
 
 def get_reference(ref, tool):
-    path = "/lustre03/project/6019267/shared/tools/PIPELINES/References/"
+    path = "/lustre09/project/6019267/shared/tools/references/ensembl_release114/"
     reference: {}  # type: ignore
     match ref:
         case "grch37":
             reference = {
-                "fasta": path + "Homo_sapiens.GRCh37.87.dna.primary_assembly.fa",
+                "fasta": path + "GRCh37/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz",
                 "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "Homo_sapiens.GRCh37.87.gtf",
-                "gff3": path + "Homo_sapiens.GRCh37.87.gff3.gz",
+                "gtf": path + "GRCh37/Homo_sapiens.GRCh37.87.gtf.gz",
+                "gff3": path + "GRCh37/Homo_sapiens.GRCh37.87.gff3.gz",
             }
         case "grch38":
             reference = {
-                "fasta": path + "Homo_sapiens.GRCh38.105.dna.primary_assembly.fa",
+                "fasta": path + "GRCh38_p14/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz",
                 "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "Homo_sapiens.GRCh38.105.gtf",
-                "gff3": path + "Homo_sapiens.GRCh38.105.gff3.gz",
+                "gtf": path + "Homo_sapiens.GRCh38.114.gtf",
+                "gff3": path + "Homo_sapiens.GRCh38.114.gff3.gz",
             }
 
         case "grcm39":
             reference = {
-                "fasta": path + "Mus_musculus.GRCm39.105.dna.primary_assembly.fa",
+                "fasta": path + "GRCm39/Mus_musculus.GRCm39.dna.primary_assembly.fa.gz",
                 "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "Mus_musculus.GRCm39.105.gtf",
-                "gff3": path + "Mus_musculus.GRCm39.105.gff3.gz",
+                "gtf": path + "GRCm39/Mus_musculus.GRCm39.114.gtf",
+                "gff3": path + "GRCm39/Mus_musculus.GRCm39.114.gff3.gz",
             }
 
         case "wbcel235":
             reference = {
-                "fasta": path + "Caenorhabditis_elegans.WBcel235.105.dna.toplevel.fa",
+                "fasta": path + "WBcel235/Caenorhabditis_elegans.WBcel235.dna.toplevel.fa.gz",
                 "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "Caenorhabditis_elegans.WBcel235.105.gtf",
-                "gff3": path + "Caenorhabditis_elegans.WBcel235.105.gff3.gz",
+                "gtf": path + "WBcel235/Caenorhabditis_elegans.WBcel235.114.gtf.gz",
+                "gff3": path + "WBcel235/Caenorhabditis_elegans.WBcel235.114.gff3.gz",
             }
 
         case "grcz11":
             reference = {
-                "fasta": path + "Danio_rerio.GRCz11.105.dna.primary_assembly.fa",
+                "fasta": path + "GRCz11/Danio_rerio.GRCz11.dna.primary_assembly.fa.gz",
                 "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "Danio_rerio.GRCz11.105.gtf",
-                "gff3": path + "Danio_rerio.GRCz11.105.gff3.gz",
+                "gtf": path + "GRCz11/Danio_rerio.GRCz11.114.gtf.gz",
+                "gff3": path + "GRCz11/Danio_rerio.GRCz11.114.gff3.gz",
             }
     return reference
 
@@ -355,7 +354,7 @@ def bbduk(sample, toml_config):
             "stats=" + output + "/contaminants_stats.txt",
             "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
-            "ref=/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/adapters.fa",
+            "ref=/lustre09/project/6019267/shared/tools/main_pipelines/short-read/adapters.fa",
             "k=" + str(toml_config["bbduk"]["kmers"]),
             "mink=" + str(toml_config["bbduk"]["mink"]),
             "ktrim=" + str(toml_config["bbduk"]["ktrim"]),
@@ -377,7 +376,7 @@ def bbduk(sample, toml_config):
             "stats=" + output + "/contaminants_stats.txt",
             "threads=" + str(toml_config["general"]["threads"]),
             "ordered=" + toml_config["bbduk"]["ordered"],
-            "ref=/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/adapters.fa",
+            "ref=/lustre09/project/6019267/shared/tools/main_pipelines/short-read/adapters.fa",
             "k=" + str(toml_config["bbduk"]["kmers"]),
             "mink=" + str(toml_config["bbduk"]["mink"]),
             "ktrim=" + str(toml_config["bbduk"]["ktrim"]),
@@ -1135,7 +1134,7 @@ def snpeff(sample, toml_config):
     title("SnpEff")
 
     snpeff = (
-        "/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/snpEff"
+        "/lustre09/project/6019267/shared/tools/main_pipelines/short-read/snpEff"
     )
 
     genome = toml_config["general"]["reference"]
