@@ -81,6 +81,7 @@ elif args.alignment == "star":
     outSAMtype1 = "BAM"   # type of SAM/BAM output
     outSAMtype2 = "SortedByCoordinate"
     twopassMode = "Basic"    # 2-pass mapping mode. None or Basic
+    attributes = "NH HI NM MD AS nM jM jI XS"
     outSJtype = "Standard"  # type of splice junction output
     quantMode  = "GeneCounts"   # types of quantification requested. -, TranscriptomeSAM and/or GeneCounts
     \n

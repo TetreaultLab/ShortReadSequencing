@@ -231,38 +231,38 @@ def get_reference(ref, tool):
     match ref:
         case "grch37":
             reference = {
-                "fasta": path + "GRCh37/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz",
+                "fasta": path + "GRCh37/Homo_sapiens.GRCh37.dna.primary_assembly.fa",
                 "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "GRCh37/Homo_sapiens.GRCh37.87.gtf.gz",
+                "gtf": path + "GRCh37/Homo_sapiens.GRCh37.87.gtf",
                 "gff3": path + "GRCh37/Homo_sapiens.GRCh37.87.gff3.gz",
             }
         case "grch38":
             reference = {
-                "fasta": path + "GRCh38_p14/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz",
+                "fasta": path + "GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa",
                 "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "Homo_sapiens.GRCh38.114.gtf",
-                "gff3": path + "Homo_sapiens.GRCh38.114.gff3.gz",
+                "gtf": path + "GRCh38/Homo_sapiens.GRCh38.114.gtf",
+                "gff3": path + "GRCh38/Homo_sapiens.GRCh38.114.gff3",
             }
 
         case "grcm39":
             reference = {
-                "fasta": path + "GRCm39/Mus_musculus.GRCm39.dna.primary_assembly.fa.gz",
+                "fasta": path + "GRCm39/Mus_musculus.GRCm39.dna.primary_assembly.fa",
                 "index": path + "index_" + tool + "/" + ref,
                 "gtf": path + "GRCm39/Mus_musculus.GRCm39.114.gtf",
-                "gff3": path + "GRCm39/Mus_musculus.GRCm39.114.gff3.gz",
+                "gff3": path + "GRCm39/Mus_musculus.GRCm39.114.gff3",
             }
 
         case "wbcel235":
             reference = {
-                "fasta": path + "WBcel235/Caenorhabditis_elegans.WBcel235.dna.toplevel.fa.gz",
+                "fasta": path + "WBcel235/Caenorhabditis_elegans.WBcel235.dna.toplevel.fa",
                 "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "WBcel235/Caenorhabditis_elegans.WBcel235.114.gtf.gz",
-                "gff3": path + "WBcel235/Caenorhabditis_elegans.WBcel235.114.gff3.gz",
+                "gtf": path + "WBcel235/Caenorhabditis_elegans.WBcel235.114.gtf",
+                "gff3": path + "WBcel235/Caenorhabditis_elegans.WBcel235.114.gff3",
             }
 
         case "grcz11":
             reference = {
-                "fasta": path + "GRCz11/Danio_rerio.GRCz11.dna.primary_assembly.fa.gz",
+                "fasta": path + "GRCz11/Danio_rerio.GRCz11.dna.primary_assembly.fa",
                 "index": path + "index_" + tool + "/" + ref,
                 "gtf": path + "GRCz11/Danio_rerio.GRCz11.114.gtf.gz",
                 "gff3": path + "GRCz11/Danio_rerio.GRCz11.114.gff3.gz",
@@ -427,7 +427,7 @@ def star(sample, toml_config):
             "--outFileNamePrefix",
             O_aligned,
 		    "--outSAMattributes",
-		    "NM",
+		    toml_config["star"]["attributes"],
             "--outTmpDir",
             temporary,
             "--outReadsUnmapped",
