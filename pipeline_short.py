@@ -232,41 +232,39 @@ def get_reference(ref, tool):
         case "grch37":
             reference = {
                 "fasta": path + "GRCh37/Homo_sapiens.GRCh37.dna.primary_assembly.fa",
-                "index": path + "index_" + tool + "/" + ref,
+                "index": path + "index_" + tool + "/GRCh37",
                 "gtf": path + "GRCh37/Homo_sapiens.GRCh37.87.gtf",
                 "gff3": path + "GRCh37/Homo_sapiens.GRCh37.87.gff3.gz",
             }
         case "grch38":
             reference = {
                 "fasta": path + "GRCh38/Homo_sapiens.GRCh38.dna.primary_assembly.fa",
-                "index": path + "index_" + tool + "/" + ref,
+                "index": path + "index_" + tool + "/GRCh38",
                 "gtf": path + "GRCh38/Homo_sapiens.GRCh38.114.gtf",
                 "gff3": path + "GRCh38/Homo_sapiens.GRCh38.114.gff3",
             }
-
         case "grcm39":
             reference = {
                 "fasta": path + "GRCm39/Mus_musculus.GRCm39.dna.primary_assembly.fa",
-                "index": path + "index_" + tool + "/" + ref,
+                "index": path + "index_" + tool + "/GRCm39",
                 "gtf": path + "GRCm39/Mus_musculus.GRCm39.114.gtf",
                 "gff3": path + "GRCm39/Mus_musculus.GRCm39.114.gff3",
             }
-
+        case "grcz11":
+            reference = {
+                "fasta": path + "GRCz11/Danio_rerio.GRCz11.dna.primary_assembly.fa",
+                "index": path + "index_" + tool + "/GRCz11",
+                "gtf": path + "GRCz11/Danio_rerio.GRCz11.114.gtf",
+                "gff3": path + "GRCz11/Danio_rerio.GRCz11.114.gff3",
+            }
         case "wbcel235":
             reference = {
                 "fasta": path + "WBcel235/Caenorhabditis_elegans.WBcel235.dna.toplevel.fa",
-                "index": path + "index_" + tool + "/" + ref,
+                "index": path + "index_" + tool + "/WBcel235",
                 "gtf": path + "WBcel235/Caenorhabditis_elegans.WBcel235.114.gtf",
                 "gff3": path + "WBcel235/Caenorhabditis_elegans.WBcel235.114.gff3",
             }
 
-        case "grcz11":
-            reference = {
-                "fasta": path + "GRCz11/Danio_rerio.GRCz11.dna.primary_assembly.fa",
-                "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "GRCz11/Danio_rerio.GRCz11.114.gtf",
-                "gff3": path + "GRCz11/Danio_rerio.GRCz11.114.gff3",
-            }
     return reference
 
 
