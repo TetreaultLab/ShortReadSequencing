@@ -264,8 +264,8 @@ def get_reference(ref, tool):
             reference = {
                 "fasta": path + "GRCz11/Danio_rerio.GRCz11.dna.primary_assembly.fa",
                 "index": path + "index_" + tool + "/" + ref,
-                "gtf": path + "GRCz11/Danio_rerio.GRCz11.114.gtf.gz",
-                "gff3": path + "GRCz11/Danio_rerio.GRCz11.114.gff3.gz",
+                "gtf": path + "GRCz11/Danio_rerio.GRCz11.114.gtf",
+                "gff3": path + "GRCz11/Danio_rerio.GRCz11.114.gff3",
             }
     return reference
 
