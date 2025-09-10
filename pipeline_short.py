@@ -461,7 +461,7 @@ def star(sample, toml_config):
             "--genomeDir",
             ref,
             "--outSAMattributes",
-		    "NM",
+		    toml_config["star"]["attributes"],
             "--outFileNamePrefix",
             O_aligned,
             "--outTmpDir",
