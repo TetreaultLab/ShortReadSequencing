@@ -1288,7 +1288,7 @@ def dbNSFP(sample, toml_config):
     var = var.astype({"CHROM_"+genome: str, "POS_"+genome: str})
 
     appended_data = []
-    ref = "/lustre03/project/6019267/shared/tools/PIPELINES/ShortReadSequencing/dbNSFP"
+    ref = "/lustre09/project/6019267/shared/tools/main_pipelines/short-read/dbNSFP"
 
     for chromosome in chromosomes:
         print(chromosome)
