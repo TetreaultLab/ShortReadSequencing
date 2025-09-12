@@ -403,8 +403,8 @@ def star(sample, toml_config):
     subprocess.run(["mkdir", "-p", output])
 
     temporary = toml_config["general"]["temporary"] + "/" + sample + "/star_tmp"
-    print(temporary)
-    
+    subprocess.run(["mkdir", "-p", temporary])
+
     ref = get_reference(toml_config["general"]["reference"], "star")["index"] + "/"
 
     files = get_file_trimmed(toml_config, output, sample)
@@ -412,8 +412,6 @@ def star(sample, toml_config):
     I2_toAlign = files["I2_toAlign"]
     I_toAlign = files["I_toAlign"]
     O_aligned = files["O_aligned"]
-
-    print(I1_toAlign)
 
     if toml_config["general"]["reads"] == "PE":
         command = [
