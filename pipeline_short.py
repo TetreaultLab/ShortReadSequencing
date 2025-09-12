@@ -412,6 +412,8 @@ def star(sample, toml_config):
     I_toAlign = files["I_toAlign"]
     O_aligned = files["O_aligned"]
 
+    print(I1_toAlign)
+
     if toml_config["general"]["reads"] == "PE":
         command = [
             "STAR",
