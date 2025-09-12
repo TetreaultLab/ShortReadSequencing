@@ -361,8 +361,8 @@ def bbduk(sample, toml_config):
             "minlength=" + str(toml_config["bbduk"]["minlength"]),
             "mlf=" + str(toml_config["bbduk"]["mlf"]),
             "minavgquality=" + str(toml_config["bbduk"]["minavgquality"]),
-            "tbo",
-            "tpe",
+            "tbo=t",
+            "tpe=t",
         ]
     else:
         Iduk = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
