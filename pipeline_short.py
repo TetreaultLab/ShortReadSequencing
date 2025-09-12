@@ -403,6 +403,7 @@ def star(sample, toml_config):
     subprocess.run(["mkdir", "-p", output])
 
     temporary = toml_config["general"]["temporary"] + "/" + sample + "/star_tmp"
+    subprocess.run(["rm", "-r", temporary])
 
     ref = get_reference(toml_config["general"]["reference"], "star")["index"] + "/"
 
