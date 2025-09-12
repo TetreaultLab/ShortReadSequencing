@@ -403,7 +403,8 @@ def star(sample, toml_config):
     subprocess.run(["mkdir", "-p", output])
 
     temporary = toml_config["general"]["temporary"] + "/" + sample + "/star_tmp"
-
+    print(temporary)
+    
     ref = get_reference(toml_config["general"]["reference"], "star")["index"] + "/"
 
     files = get_file_trimmed(toml_config, output, sample)
