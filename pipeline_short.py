@@ -343,8 +343,6 @@ def bbduk(sample, toml_config):
         O1duk = output + "/" + sample + "_trimmed_R1.fastq.gz"
         O2duk = output + "/" + sample + "_trimmed_R2.fastq.gz"
 
-        print(O2duk)
-
         command = [
             "bbduk.sh",
             "in=" + I1duk,
@@ -385,10 +383,10 @@ def bbduk(sample, toml_config):
             "minlength=" + str(toml_config["bbduk"]["minlength"]),
             "mlf=" + str(toml_config["bbduk"]["mlf"]),
             "minavgquality=" + str(toml_config["bbduk"]["minavgquality"]),
-            "tbo",
-            "tpe",
+            "tbo=t",
+            "tpe=t",
         ]
-    print(command)
+    
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
     subprocess.run(command, check=True)
@@ -407,6 +405,7 @@ def star(sample, toml_config):
     temporary = toml_config["general"]["temporary"] + "/" + sample + "/star_tmp"
 
     ref = get_reference(toml_config["general"]["reference"], "star")["index"]
+    print(ref)
 
     files = get_file_trimmed(toml_config, output, sample)
     I1_toAlign = files["I1_toAlign"]
@@ -414,6 +413,8 @@ def star(sample, toml_config):
     I_toAlign = files["I_toAlign"]
     O_aligned = files["O_aligned"]
 
+    print(O_aligned)
+    
     if toml_config["general"]["reads"] == "PE":
         command = [
             "STAR",
