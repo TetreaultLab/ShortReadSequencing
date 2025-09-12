@@ -479,6 +479,7 @@ def star(sample, toml_config):
             "--quantMode",
             toml_config["star"]["quantMode"],
         ]
+    print(command)
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
     subprocess.run(command, check=True)
