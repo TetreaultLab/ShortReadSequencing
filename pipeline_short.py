@@ -343,6 +343,8 @@ def bbduk(sample, toml_config):
         O1duk = output + "/" + sample + "_trimmed_R1.fastq.gz"
         O2duk = output + "/" + sample + "_trimmed_R2.fastq.gz"
 
+        print(O2duk)
+        
         command = [
             "bbduk.sh",
             "in=" + I1duk,
