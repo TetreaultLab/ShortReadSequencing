@@ -344,7 +344,7 @@ def bbduk(sample, toml_config):
         O2duk = output + "/" + sample + "_trimmed_R2.fastq.gz"
 
         print(O2duk)
-        
+
         command = [
             "bbduk.sh",
             "in=" + I1duk,
@@ -388,6 +388,7 @@ def bbduk(sample, toml_config):
             "tbo",
             "tpe",
         ]
+    print(command)
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
     subprocess.run(command, check=True)
