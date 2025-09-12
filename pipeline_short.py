@@ -404,8 +404,7 @@ def star(sample, toml_config):
 
     temporary = toml_config["general"]["temporary"] + "/" + sample + "/star_tmp"
 
-    ref = get_reference(toml_config["general"]["reference"], "star")["index"]
-    print(ref)
+    ref = get_reference(toml_config["general"]["reference"], "star")["index"] + "/"
 
     files = get_file_trimmed(toml_config, output, sample)
     I1_toAlign = files["I1_toAlign"]
@@ -413,8 +412,6 @@ def star(sample, toml_config):
     I_toAlign = files["I_toAlign"]
     O_aligned = files["O_aligned"]
 
-    print(O_aligned)
-    
     if toml_config["general"]["reads"] == "PE":
         command = [
             "STAR",
