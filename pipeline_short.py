@@ -465,7 +465,7 @@ def star(sample, toml_config):
             "--outSAMattributes",
 		    "All",
             "--outSAMattrRGline",
-            "ID:"+sample+" SM:"+sample+" LB:lib1 PL:plat1 PU:unit1",
+            "ID:"+sample+"\nSM:"+sample+"\nLB:lib1\nPL:plat1\nPU:unit1",
             "--outFileNamePrefix",
             O_aligned,
             "--outTmpDir",
