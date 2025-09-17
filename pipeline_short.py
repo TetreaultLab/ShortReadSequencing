@@ -12,7 +12,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         prog="PipelineShort",
-        description="ShortReadSequencing pipeline for RNA, Exome and Genome data.",
+        description="ShortReadSequencing pipeline for RNA or DNA data.",
     )
 
     parser.add_argument("--sample", type=str, required=True, help="Sample name.")

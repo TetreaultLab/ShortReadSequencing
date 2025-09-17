@@ -18,7 +18,7 @@ parser.add_argument(
     "--alignment",
     type=str,
     required=True,
-    help='choose alignment tool. Options: "none", "star", "bwa".',
+    help='choose alignment tool. Options: "none", "star" (for RNA-seq), "bwa" (for DNA-seq; WES or WGS).',
 )
 parser.add_argument(
     "--pseudo",
@@ -76,6 +76,7 @@ else:
 if args.alignment == "none":
     options += "# No alignment\n"
 elif args.alignment == "star":
+    sequencing = "RNA"
     options += """# Alignment
 [star]
     outSAMtype1 = "BAM"   # type of SAM/BAM output
@@ -86,6 +87,7 @@ elif args.alignment == "star":
     \n
 """
 elif args.alignment == "bwa":
+    sequencing = "DNA"
     options += """# Alignment
 [bwa-mem]
 \n
@@ -146,14 +148,14 @@ general = """# TOML config file for {0}
     fastq = "" # Path to raw fastq.gz files. Ex: /lustre09/project/6019267/shared/data/<project>.
     output = "/lustre10/scratch/<USER>/{0}/output" # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/output/.
     temporary = "/lustre10/scratch/<USER>/{0}/tmp" # The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/tmp/. 
-    sequencing = "" # Type of sequencing. Short read RNA or DNA. Possible values: ["RNA", "Exome", "Genome"].
+    sequencing = "{1}" # Type of sequencing. Short read RNA or DNA. Possible values: ["RNA", "Exome", "Genome"].
     reads = "" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].
     reference = "" # Possible values: Human: ["grch37", "grch38"]. Mouse: ["grcm39"]. Worm: ["wbcel235"]. Zebrafish: ["grcz11"].
-    trimming = "{1}"
-    alignment = "{2}"
-    pseudo = "{3}"
-    quantification = "{4}"
-    variant = "{5}"
+    trimming = "{2}"
+    alignment = "{3}"
+    pseudo = "{4}"
+    quantification = "{5}"
+    variant = "{6}"
     threads = 8  # Number of threads.
     memory = 64 # Total memory needed.
     time = "02-23:59" # DD-HH:MM. Default: 2 days 23h59
@@ -176,6 +178,7 @@ general = """# TOML config file for {0}
 \n
 """.format(
     project_name,
+    sequencing
     args.trimming,
     args.alignment,
     args.pseudo,
