@@ -9,17 +9,18 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument("--project", type=str, required=True, help="Project name")
 parser.add_argument(
+    "--sequencing",
+    type=str,
+    required=True,
+    help='choose sequencing category. Options: "RNA", "DNA".',
+)
+parser.add_argument(
     "--trimming",
     type=str,
     required=True,
     help='choose trimming tool. Options: "none", "bbduk".',
 )
-parser.add_argument(
-    "--alignment",
-    type=str,
-    required=True,
-    help='choose alignment tool. Options: "none", "star" (for RNA-seq), "bwa" (for DNA-seq; WES or WGS).',
-)
+
 parser.add_argument(
     "--pseudo",
     type=str,
@@ -73,10 +74,8 @@ else:
     exit()
 
 # ALIGNMENT
-if args.alignment == "none":
-    options += "# No alignment\n"
-elif args.alignment == "star":
-    sequencing = "RNA"
+if args.sequencing == "RNA":
+    alignment = "star"
     options += """# Alignment
 [star]
     outSAMtype1 = "BAM"   # type of SAM/BAM output
@@ -86,8 +85,8 @@ elif args.alignment == "star":
     quantMode  = "GeneCounts"   # types of quantification requested. -, TranscriptomeSAM and/or GeneCounts
     \n
 """
-elif args.alignment == "bwa":
-    sequencing = "DNA"
+elif args.sequencing == "DNA":
+    alignment = "DNA"
     options += """# Alignment
 [bwa-mem]
 \n
@@ -144,21 +143,22 @@ general = """# TOML config file for {0}
 
 # Required information
 [general]
+    threads = 8  # Number of threads.
+    memory = 64 # Total memory needed.
+    time = "02-23:59" # DD-HH:MM. Default: 2 days 23h59
     project = "{0}"   # Choose a project name. Should not start with a number.
-    fastq = "" # Path to raw fastq.gz files. Ex: /lustre09/project/6019267/shared/data/<project>.
-    output = "/lustre10/scratch/<USER>/{0}/output" # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/output/.
-    temporary = "/lustre10/scratch/<USER>/{0}/tmp" # The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/tmp/. 
+    output = "/lustre10/scratch/$USER/{0}/output" # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/output/.
+    temporary = "/lustre10/scratch/$USER/{0}/tmp" # The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/tmp/. 
     sequencing = "{1}" # Type of sequencing. Short read RNA or DNA. Possible values: ["RNA", "Exome", "Genome"].
-    reads = "" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].
-    reference = "" # Possible values: Human: ["grch37", "grch38"]. Mouse: ["grcm39"]. Worm: ["wbcel235"]. Zebrafish: ["grcz11"].
     trimming = "{2}"
     alignment = "{3}"
     pseudo = "{4}"
     quantification = "{5}"
     variant = "{6}"
-    threads = 8  # Number of threads.
-    memory = 64 # Total memory needed.
-    time = "02-23:59" # DD-HH:MM. Default: 2 days 23h59
+    # To fill
+    fastq = "" # Path to raw fastq.gz files. Ex: /lustre09/project/6019267/shared/data/<project>.
+    reads = "" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].
+    reference = "" # Possible values: Human: ["grch37", "grch38"]. Mouse: ["grcm39"]. Worm: ["wbcel235"]. Zebrafish: ["grcz11"].
     email = "" # You e-mail address to receive notification
     
 
@@ -178,9 +178,9 @@ general = """# TOML config file for {0}
 \n
 """.format(
     project_name,
-    sequencing
+    args.sequencing
     args.trimming,
-    args.alignment,
+    alignment,
     args.pseudo,
     args.quantification,
     args.variant,
