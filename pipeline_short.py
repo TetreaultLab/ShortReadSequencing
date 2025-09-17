@@ -106,7 +106,7 @@ def main():
         function_queue.append(bamqc)
 
     # MarkDuplicates
-    print("\t>>> MarkDuplicates: GATK (4.4.0.0) & Picard (v3.0.0)")
+    print("\t>>> MarkDuplicates: GATK (4.6.1.0) & Picard (v3.0.0)")
     if "MarkDuplicates" not in done:
         function_queue.append(markduplicates)
 
@@ -125,7 +125,7 @@ def main():
 
     # Variant Calling
     if toml_config["general"]["variant"] == "yes":
-        print("\t>>> Variant Calling: BCFtools (v1.18) & FreeBayes (v1.37)")
+        print("\t>>> Variant Calling: BCFtools (v1.22) & FreeBayes (v1.37)")
         if "BCFtools" not in done:
             function_queue.append(bcftools)
 		
