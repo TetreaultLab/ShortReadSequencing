@@ -427,7 +427,7 @@ def star(sample, toml_config):
             "--outFileNamePrefix",
             O_aligned,
 		    "--outSAMattributes",
-		    "All",
+		    "NH HI AS nM MD jM jI MC",
             "--outSAMattrRGline",
             "ID:"+sample+" SM:"+sample+" LB:lib1 PL:plat1 PU:unit1",
             "--outTmpDir",
