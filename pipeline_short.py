@@ -429,7 +429,7 @@ def star(sample, toml_config):
 		    "--outSAMattributes",
 		    "Standard",
             "--outSAMattrRGline",
-            "ID:"+sample",
+            "ID:"+sample,
             "--outTmpDir",
             temporary,
             "--outReadsUnmapped",
