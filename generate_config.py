@@ -143,19 +143,23 @@ general = """# TOML config file for {0}
     project = "{0}"   # Choose a project name. Should not start with a number.
     output = "/lustre10/scratch/{1}/{0}/output" # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/output/.
     temporary = "/lustre10/scratch/{1}/{0}/tmp" # The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/tmp/. 
-    sequencing = "{2}" # Type of sequencing. Short read RNA or DNA.
+    sequencing = "{2}" # Type of sequencing. rna, exome or genome.
     trimming = "{3}"
     alignment = "{4}"
     pseudo = "{5}"
     quantification = "{6}"
     variants = "{7}"
-    # To fill
+    #
+    ### To fill
+    #
     fastq = "" # Path to raw fastq.gz files. Ex: /lustre09/project/6019267/shared/data/<project>.
     reads = "" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].
     reference = "" # Possible values: Human: ["grch37", "grch38"]. Mouse: ["grcm39"]. Worm: ["wbcel235"]. Zebrafish: ["grcz11"].
     email = "" # You e-mail address to receive notification
-    
 
+#    
+### To change if you want
+#
 # Quality control
 [fastqc]
     kmers = 7   # Specifies the length of Kmer to look for in the Kmer content module. Specified Kmer length must be between 2 and 10.
