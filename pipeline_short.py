@@ -102,6 +102,7 @@ def main():
         function_queue.append(samtools)
 
     # Alignment QC
+    print("\t>>> Quality control: FastQC (v0.12.1)")
     if "FastQC for bam" not in done:
         function_queue.append(bamqc)
 

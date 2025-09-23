@@ -13,10 +13,10 @@ parser.add_argument(
     "--config", type=str, required=True, help="Project config file, including path."
 )
 parser.add_argument(
-    "--launch",
+    "--test",
     action="store_true",
     required=False,
-    help="Decide if it launches the job for sample or not. True will automatically launch the slurm file. False will only create the file",
+    help="Will not launch, only create the script.",
 )
 
 args = parser.parse_args()
@@ -72,5 +72,8 @@ python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/Short
 
 print(slurm, file=open(work_dir + "/" + sample_name + "_" + project + ".slurm", "w"))
 
-if args.launch is True:
+
+if args.test:
+    print("\n\nTesting mode! The pipeline will not be launched!\n\n")
+else :
     subprocess.run(["sbatch", work_dir + "/" + sample_name + "_" + project + ".slurm"])
