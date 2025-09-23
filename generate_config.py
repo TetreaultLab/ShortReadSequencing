@@ -49,7 +49,7 @@ if not any([args.trimming, args.pseudo, args.quantification, args.variants]):
 work_dir = os.getcwd()
 
 # Get $USER
-cmd = ["echo", "$USER"]
+cmd = ["echo", '\"$USER\"']
 result = subprocess.run(cmd, capture_output=True, text=True)
 username = str(result.stdout.split()[0])
 print(username)
