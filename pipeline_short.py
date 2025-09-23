@@ -106,9 +106,9 @@ def main():
         function_queue.append(bamqc)
 
     # MarkDuplicates
-    print("\t>>> MarkDuplicates: GATK (4.6.1.0) & Picard (v3.0.0)")
-    if "MarkDuplicates" not in done:
-        function_queue.append(markduplicates)
+    # print("\t>>> MarkDuplicates: GATK (4.6.1.0) & Picard (v3.0.0)")
+    # if "MarkDuplicates" not in done:
+    #     function_queue.append(markduplicates)
 
     # Quantification
     if toml_config["general"]["quantification"] == "featurecounts":
