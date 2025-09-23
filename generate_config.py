@@ -50,7 +50,8 @@ work_dir = os.getcwd()
 
 # Get $USER
 cmd = ["echo", "$USER"]
-username = subprocess.run(cmd, capture_output=True, text=True)
+result = subprocess.run(cmd, capture_output=True, text=True)
+username = str(result.stdout)
 
 # Project NAME
 project_name = args.project
