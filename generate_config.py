@@ -37,13 +37,13 @@ parser.add_argument(
     help='Enable variant calling.',
 )
 
+args = parser.parse_args()
+
 # if nothing is passed, defaults to trim, quantification and variant calling
 if not any([args.trimming, args.pseudo, args.quantification, args.variants]):
     args.trim = True
     args.quant = True
     args.variants = True
-
-args = parser.parse_args()
 
 work_dir = os.getcwd()
 
