@@ -142,7 +142,7 @@ general = """# TOML config file for {0}
     alignment = "{3}"
     pseudo = "{4}"
     quantification = "{5}"
-    variant = "{6}"
+    variants = "{6}"
     # To fill
     fastq = "" # Path to raw fastq.gz files. Ex: /lustre09/project/6019267/shared/data/<project>.
     reads = "" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].
@@ -172,7 +172,7 @@ general = """# TOML config file for {0}
     alignment,
     args.pseudo,
     args.quantification,
-    args.variant,
+    args.variants,
 )  # noqa: F524
 
 toml_config = general + options
