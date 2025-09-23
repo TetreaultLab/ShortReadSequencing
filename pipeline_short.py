@@ -43,7 +43,7 @@ def main():
     tmp = toml_config["general"]["temporary"] + "/" + sample
     subprocess.run(["mkdir", "-p", output])
     subprocess.run(["mkdir", "-p", tmp])
-    print(f"\n>>> Output saved to '{output}'\n")
+    print(f"\n>>> Output saved to {output}\n")
     
     # Open file for steps done
     steps = open(output + "/steps_done.txt", "a")
@@ -125,7 +125,7 @@ def main():
         function_queue.append(multiqc)
 
     # Variant Calling
-    if toml_config["general"]["variant"]:
+    if toml_config["general"]["variants"]:
         print("\t>>> Variant Calling: BCFtools (v1.22) & FreeBayes (v1.37)")
         if "BCFtools" not in done:
             function_queue.append(bcftools)

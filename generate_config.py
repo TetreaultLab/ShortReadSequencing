@@ -1,5 +1,6 @@
 import argparse
 import os
+import subprocess
 
 # Arguments
 parser = argparse.ArgumentParser(
@@ -46,6 +47,10 @@ if not any([args.trimming, args.pseudo, args.quantification, args.variants]):
     args.variants = True
 
 work_dir = os.getcwd()
+
+# Get $USER
+cmd = ["echo", "$USER"]
+username = subprocess.run(cmd, capture_output=True, text=True)
 
 # Project NAME
 project_name = args.project
@@ -135,14 +140,14 @@ general = """# TOML config file for {0}
     memory = 64 # Total memory needed.
     time = "02-23:59" # DD-HH:MM. Default: 2 days 23h59
     project = "{0}"   # Choose a project name. Should not start with a number.
-    output = "/lustre10/scratch/$USER/{0}/output" # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/output/.
-    temporary = "/lustre10/scratch/$USER/{0}/tmp" # The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/tmp/. 
-    sequencing = "{1}" # Type of sequencing. Short read RNA or DNA.
-    trimming = "{2}"
-    alignment = "{3}"
-    pseudo = "{4}"
-    quantification = "{5}"
-    variants = "{6}"
+    output = "/lustre10/scratch/{1}/{0}/output" # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/output/.
+    temporary = "/lustre10/scratch/{1}/{0}/tmp" # The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/tmp/. 
+    sequencing = "{2}" # Type of sequencing. Short read RNA or DNA.
+    trimming = "{3}"
+    alignment = "{4}"
+    pseudo = "{5}"
+    quantification = "{6}"
+    variants = "{7}"
     # To fill
     fastq = "" # Path to raw fastq.gz files. Ex: /lustre09/project/6019267/shared/data/<project>.
     reads = "" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].
@@ -167,6 +172,7 @@ general = """# TOML config file for {0}
 \n
 """.format(
     project_name,
+    username,
     sequencing,
     args.trimming,
     alignment,
