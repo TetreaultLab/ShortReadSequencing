@@ -8,38 +8,40 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument("--project", type=str, required=True, help="Project name")
-parser.add_argument(
-    "--sequencing",
-    type=str,
-    required=True,
-    help='choose sequencing category. Options: "RNA", "DNA".',
-)
-parser.add_argument(
-    "--trimming",
-    type=str,
-    required=True,
-    help='choose trimming tool. Options: "none", "bbduk".',
-)
+
+# Choose only rna, exome or genome (will help determine the time needed)
+group = parser.add_mutually_exclusive_group(required=True)
+
+group.add_argument("--rna", action="store_true", help="Run RNA-seq analysis")
+group.add_argument("--exome", action="store_true", help="Run Exome-seq analysis")
+group.add_argument("--genome", action="store_true", help="Run WGS analysis")
 
 parser.add_argument(
+    "--trimming",
+    action='store_true',
+    help='Enable trimming with bbduk.',
+)
+parser.add_argument(
     "--pseudo",
-    type=str,
-    required=True,
-    help='choose pseudoalignment tool. Options: "none", "salmon".',
+    action='store_true',
+    help='Enable pseudoalignment with salmon.',
 )
 parser.add_argument(
     "--quantification",
-    type=str,
-    required=True,
-    help='choose quantification tool. Options: "none", "featurecounts".',
+    action='store_true',
+    help='Enable gene quantification with featurecounts.',
 )
 parser.add_argument(
-    "--variant",
-    type=str,
-    required=True,
-    help='choose variant tool. Options: "none", "yes".',
+    "--variants",
+    action='store_true',
+    help='Enable variant calling.',
 )
 
+# if nothing is passed, defaults to trim, quantification and variant calling
+if not any([args.trimming, args.pseudo, args.quantification, args.variants]):
+    args.trim = True
+    args.quant = True
+    args.variants = True
 
 args = parser.parse_args()
 
@@ -49,10 +51,9 @@ work_dir = os.getcwd()
 project_name = args.project
 
 options = ""
+
 # TRIMMING
-if args.trimming == "none":
-    options += "# No trimming\n"
-elif args.trimming == "bbduk":
+if args.trimming:
     options += """# Trimming
 [bbduk]
     ordered = "f"   # Set to true to output reads in same order as input.
@@ -66,15 +67,12 @@ elif args.trimming == "bbduk":
     minavgquality = 0   # (maq) Reads with average quality (after trimming) below this will be discarded.
     \n
 """
-
 else:
-    print(
-        f"'{args.trimming}' is not a valid trimming option. Check generate_config.py --help for options."
-    )
-    exit()
+    options += "# No trimming\n"
 
 # ALIGNMENT
-if args.sequencing == "RNA":
+if args.rna:
+    sequencing = "rna"
     alignment = "star"
     options += """# Alignment
 [star]
@@ -85,37 +83,29 @@ if args.sequencing == "RNA":
     quantMode  = "GeneCounts"   # types of quantification requested. -, TranscriptomeSAM and/or GeneCounts
     \n
 """
-elif args.sequencing == "DNA":
-    alignment = "DNA"
+else 
+    if args.exome:
+        sequencing = "exome"
+    elif args.genome:
+        sequencing = "genome"
+    
+    alignment = "bwa"
     options += """# Alignment
 [bwa-mem]
 \n
 """
-else:
-    print(
-        f"'{args.alignment}' is not a valid alignment option. Check generate_config.py --help for options."
-    )
-    exit()
 
 # PSEUDOALIGNMENT
-if args.pseudo == "none":
-    options += "# No pseudoalignment\n"
-elif args.pseudo == "salmon":
+if args.pseudo:
     options += """# Pseudoalignment
 [salmon]
     minScoreFraction = 0.65	# The fraction of the optimal possible alignment score that a mapping must achieve in order to be considered "valid" --- should be in [0,1]. Salmon Default 0.65 and Alevin Default 0.87.
     \n
 """
 else:
-    print(
-        f"'{args.pseudo}' is not a valid pseudoalignment option. Check generate_config.py --help for options."
-    )
-    exit()
-
+    options += "# No pseudoalignment\n"
 # QUANTIFICATION
-if args.quantification == "none":
-    options += "# No quantification\n"
-elif args.quantification == "featurecounts":
+if args.quantification:
     options += """# Quantification
 [featurecounts]
     features = "gene"   # Specify feature type(s) in a GTF annotation. If multiple types are provided, they should be separated by ',' with no space in between. 'exon' by default. Rows in the annotation with a matched feature will be extracted and used for read mapping.
@@ -124,19 +114,17 @@ elif args.quantification == "featurecounts":
     \n
 """
 else:
-    print(
-        f"'{args.quantification}' is not a valid quantification option. Check generate_config.py --help for options."
-    )
-    exit()
+    options += "# No quantification\n"
 
 # VARIANT CALLING
-if args.variant == "none":
-    options += "# No variant calling\n"
-elif args.variant == "yes":
+if args.variants: 
     options += """# Variant calling
 [snpeff]
     \n
 """
+    
+else: options += "# No variant calling\n"
+    
 
 # Create config file
 general = """# TOML config file for {0}
@@ -179,7 +167,7 @@ general = """# TOML config file for {0}
 \n
 """.format(
     project_name,
-    args.sequencing
+    sequencing
     args.trimming,
     alignment,
     args.pseudo,
