@@ -121,7 +121,7 @@ def main():
 
     # MultiQC
     print("\t>>> Quality control report: MultiQC (v1.18)")
-    if "MutliQC" not in done:
+    if "MultiQC" not in done:
         function_queue.append(multiqc)
 
     # Variant Calling
@@ -897,18 +897,18 @@ def featurecounts(sample, toml_config):
 
 
 def multiqc(sample, toml_config):
-    title("MutliQC")
+    title("MultiQC")
     input = toml_config["general"]["output"] + "/" + sample + "/"
     output = toml_config["general"]["output"] + "/" + sample + "/QC/multiQC/"
     subprocess.run(["mkdir", "-p", output])
 
     with open(output + "/my_file_list.txt", "w") as f:
         f.write(input + "QC/fastQC/\n")
-        if toml_config["general"]["trimming"] != "none":
+        if toml_config["general"]["trimming"] != "False":
             f.write(input + "Trimmed/\n")
-        if toml_config["general"]["pseudo"] != "none":
+        if toml_config["general"]["pseudo"] != "False":
             f.write(input + "Salmon/\n")
-        if toml_config["general"]["quantification"] != "none":
+        if toml_config["general"]["quantification"] != "False":
             f.write(input + "FeatureCounts/\n")
         f.write(input + "Aligned/\n")
         f.write(input + "Samtools/\n")
