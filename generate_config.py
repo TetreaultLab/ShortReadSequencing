@@ -83,7 +83,7 @@ if args.rna:
     quantMode  = "GeneCounts"   # types of quantification requested. -, TranscriptomeSAM and/or GeneCounts
     \n
 """
-else 
+else: 
     if args.exome:
         sequencing = "exome"
     elif args.genome:
