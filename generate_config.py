@@ -167,7 +167,7 @@ general = """# TOML config file for {0}
 \n
 """.format(
     project_name,
-    sequencing
+    sequencing,
     args.trimming,
     alignment,
     args.pseudo,
