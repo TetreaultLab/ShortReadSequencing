@@ -69,7 +69,7 @@ def main():
         function_queue.append(fastqc)
 
     # Trimming
-    if toml_config["general"]["trimming"]:
+    if toml_config["general"]["trimming"] == "True":
         print("\t>>> Trimming: BBDuk (v39.06)")
         if "BBDuk" not in done:
             function_queue.append(bbduk)
@@ -89,9 +89,7 @@ def main():
         print("\t>>> Alignment: none")
 
     # Pseudo alignedment
-    print(repr(toml_config["general"]["pseudo"]))
-    print(type(toml_config["general"]["pseudo"]))
-    if toml_config["general"]["pseudo"]:
+    if toml_config["general"]["pseudo"] == "True":
         print("\t>>> Pseudoalignment: Salmon (v1.10.2)")
         if "Salmon" not in done:
             function_queue.append(salmon)
@@ -114,7 +112,7 @@ def main():
     #     function_queue.append(markduplicates)
 
     # Quantification
-    if toml_config["general"]["quantification"]:
+    if toml_config["general"]["quantification"] == "True":
         print("\t>>> Quantification: featureCounts (v2.0.6)")
         if "FeatureCounts" not in done:
             function_queue.append(featurecounts)
@@ -127,7 +125,7 @@ def main():
         function_queue.append(multiqc)
 
     # Variant Calling
-    if toml_config["general"]["variants"]:
+    if toml_config["general"]["variants"] == "True":
         print("\t>>> Variant Calling: BCFtools (v1.22) & FreeBayes (v1.37)")
         if "BCFtools" not in done:
             function_queue.append(bcftools)
