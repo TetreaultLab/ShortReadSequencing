@@ -89,7 +89,8 @@ def main():
         print("\t>>> Alignment: none")
 
     # Pseudo alignedment
-    print(toml_config["general"]["pseudo"])
+    print(repr(toml_config["general"]["pseudo"]))
+    print(type(toml_config["general"]["pseudo"]))
     if toml_config["general"]["pseudo"]:
         print("\t>>> Pseudoalignment: Salmon (v1.10.2)")
         if "Salmon" not in done:
