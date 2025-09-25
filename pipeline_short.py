@@ -118,7 +118,8 @@ def main():
             function_queue.append(featurecounts)
     else:
         print("\t>>> Quantification: none")
-
+        
+    # MultiQC
     print("\t>>> Quality control report: MultiQC (v1.18)")
     if "MultiQC" not in done:
         function_queue.append(multiqc)
