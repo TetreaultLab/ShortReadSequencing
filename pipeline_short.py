@@ -414,6 +414,8 @@ def star(sample, toml_config):
     I_toAlign = files["I_toAlign"]
     O_aligned = files["O_aligned"]
 
+    att = "ID:" + sample +" SM:" + sample + " LB:lib1 PL:illumina PU:unit1"
+
     if toml_config["general"]["reads"] == "PE":
         command = [
             "STAR",
@@ -430,7 +432,7 @@ def star(sample, toml_config):
 		    "--outSAMattributes",
 		    "Standard",
             "--outSAMattrRGline",
-            "ID:"+sample,
+            att,
             "--outTmpDir",
             temporary,
             "--outReadsUnmapped",
@@ -466,7 +468,7 @@ def star(sample, toml_config):
             "--outSAMattributes",
 		    "Standard",
             "--outSAMattrRGline",
-            "ID:"+sample,
+            att,
             "--outFileNamePrefix",
             O_aligned,
             "--outTmpDir",
@@ -537,6 +539,8 @@ def bwa(sample, toml_config):
     I2_toAlign = files["I2_toAlign"]
     I_toAlign = files["I_toAlign"]
 
+    att = "@RG\tID:" + sample + "\tSM:" + sample + "\tLB:lib1\tPL:illumina\tPU:unit1"
+
     if toml_config["general"]["reads"] == "PE":
         command = [
             "bwa-mem2",
@@ -545,6 +549,8 @@ def bwa(sample, toml_config):
             output + "/" + sample + ".sam",
             "-t",
             str(toml_config["general"]["threads"]),
+            "-R",
+            att,
             "-v",
             "2",
             ref,
@@ -559,6 +565,8 @@ def bwa(sample, toml_config):
             output + "/" + sample + ".sam",
             "-t",
             str(toml_config["general"]["threads"]),
+            "-R",
+            att,
             "-v",
             "2",
             ref,
