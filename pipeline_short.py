@@ -925,6 +925,9 @@ def multiqc(sample, toml_config):
         
     subprocess.run(
         [
+            "apptainer", 
+            "run", 
+            "/lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif",
             "multiqc",
             "--file-list",
             output + "my_file_list.txt",
