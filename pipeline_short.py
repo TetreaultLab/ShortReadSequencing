@@ -119,10 +119,10 @@ def main():
     else:
         print("\t>>> Quantification: none")
 
-    # MultiQC
-    # print("\t>>> Quality control report: MultiQC (v1.18)")
-    # if "MultiQC" not in done:
-    #     function_queue.append(multiqc)
+    MultiQC
+    print("\t>>> Quality control report: MultiQC (v1.18)")
+    if "MultiQC" not in done:
+        function_queue.append(multiqc)
 
     # Variant Calling
     if toml_config["general"]["variants"] == "True":
