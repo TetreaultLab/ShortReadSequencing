@@ -941,7 +941,7 @@ def multiqc(sample, toml_config):
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:
-        steps.write("MutliQC\n")
+        steps.write("MultiQC\n")
 
 
 def bcftools(sample, toml_config):
