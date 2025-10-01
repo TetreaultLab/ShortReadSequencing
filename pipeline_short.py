@@ -164,8 +164,16 @@ def main():
         except:
             exit(1)
 
-    ## Get log and extract all >>> lines from it and save to file "steps_summary.txt"
+    # Get log and extract all >>> lines from it and save to file "steps_summary.txt"
     # TO-DO
+
+    # Move results to projects directory
+    current_directory = os.getcwd()
+    results = Path(str(current_directory).replace("/work", "/results")) / sample
+    output = Path(toml_config["general"]["output"] + "/" + sample)
+    results.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(output), str(results))
+
 
     end = get_time()
     total_time = end - start
@@ -173,6 +181,7 @@ def main():
         toml_config["general"]["sequencing"], sample, total_time
     )
     print("=" * len(end_str) + "\n" + end_str + "\n" + "=" * len(end_str))
+    print(f">>> Results found in {results}")
 
 
 def get_time():
