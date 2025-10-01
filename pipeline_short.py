@@ -536,7 +536,7 @@ def bwa(sample, toml_config):
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     subprocess.run(["mkdir", "-p", output])
 
-    ref = get_reference(toml_config["general"]["reference"], "bwa-mem2")["index"] + "/" + toml_config["general"]["reference"]
+    ref = get_reference(toml_config["general"]["reference"], "bwa-mem2")["index"]
 
     files = get_file_trimmed(toml_config, output, sample)
     I1_toAlign = files["I1_toAlign"]
