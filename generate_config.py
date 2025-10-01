@@ -51,7 +51,6 @@ work_dir = os.getcwd()
 # Get $USER
 result = subprocess.run(["whoami"], capture_output=True, text=True)
 username = str(result.stdout.split()[0])
-print(username)
 
 # Project NAME
 project_name = args.project
