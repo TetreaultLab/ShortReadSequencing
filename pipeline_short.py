@@ -278,6 +278,25 @@ def get_reference(ref, tool):
     return reference
 
 
+def check_fastqc_report(zip_path: Path):
+    with zipfile.ZipFile(zip_path, 'r') as z:
+        try:
+            with z.open('summary.txt') as f:
+                content = f.read().decode('utf-8')
+        except KeyError:
+            print(f"No summary.txt found in {zip_path}")
+            return False
+        
+        # Search for WARN or FAIL
+        if re.search(r'\b(WARN|FAIL)\b', content):
+            print(f"FastQC warnings or failures detected in {zip_path}, please check fastQC report (and adjust for trimming or not) before resubmitting")
+            print(content)
+            return False
+        else:
+            print(f"FastQC passed with no warnings or failures in {zip_path}")
+            return True
+
+
 def fastqc(sample, toml_config):
     title("FastQC")
 
@@ -308,9 +327,6 @@ def fastqc(sample, toml_config):
         command_str = " ".join(command)
         print(f">>> {command_str}\n")
         subprocess.run(command, check=True)
-        
-        subprocess.run(["rm", output + "/" + sample + "_R1_fastqc.zip"])
-        subprocess.run(["rm", output + "/" + sample + "_R2_fastqc.zip"])
 
     else:
         Read = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
@@ -332,13 +348,24 @@ def fastqc(sample, toml_config):
         command_str = " ".join(command)
         print(f">>> {command_str}\n")
         subprocess.run(command, check=True)
-    
-        subprocess.run(["rm", output + "/" + sample + "_fastqc.zip"])
-        
+
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:
         steps.write("FastQC\n")
+
+    # Check if any failures in FastQC report
+    fastqc_reports = list(Path(output + "/" + sample).glob('*_fastqc.zip'))
+    
+    all_passed = True
+    for report in fastqc_reports:
+        if not check_fastqc_report(report):
+            all_passed = False
+    
+    if not all_passed:
+        sys.exit(1)  # stop pipeline if any fail
+    else:
+        sys.exit(0)
 
 
 def bbduk(sample, toml_config):
