@@ -1,10 +1,15 @@
 import argparse
+import re
+import shutil
+import zipfile
 import toml
 from datetime import datetime
 import subprocess
 import sys
 import pandas as pd
 import numpy as np
+import os
+from pathlib import Path
 
 
 def main():
@@ -44,7 +49,7 @@ def main():
     subprocess.run(["mkdir", "-p", output])
     subprocess.run(["mkdir", "-p", tmp])
     print(f"\n>>> Output saved to {output}\n")
-    
+
     # Open file for steps done
     steps = open(output + "/steps_done.txt", "a")
     steps.write("\nLoading ENV\n")
@@ -61,7 +66,6 @@ def main():
 
     genome = get_reference(toml_config["general"]["reference"], "")["fasta"]
     print(f"\t>>> Reference genome version: {genome}")
-
 
     # Quality control
     print("\t>>> Quality control: FastQC (v0.12.1)")
@@ -129,7 +133,7 @@ def main():
         print("\t>>> Variant Calling: BCFtools (v1.22) & FreeBayes (v1.37)")
         if "BCFtools" not in done:
             function_queue.append(bcftools)
-		
+
         if "FreeBayes" not in done:
             function_queue.append(freebayes)
 
@@ -137,25 +141,26 @@ def main():
         print("\t>>> Variant Filtering: BCFtools (v1.18)")
         if "BCFtools filters" not in done:
             function_queue.append(bcftools_filter)
-    
+
         # Variant Annotation : SnpEff
         print("\t>>> Variant Annotation: SnpEff + SnpSift (v5.2a)")
         if "SnpEff" not in done:
             function_queue.append(snpeff)
 
         # Variant formatting
-        if toml_config["general"]["reference"] == "grch37" or toml_config["general"]["reference"] == "grch38":
+        if (
+            toml_config["general"]["reference"] == "grch37"
+            or toml_config["general"]["reference"] == "grch38"
+        ):
             if "dbNSFP" not in done:
                 function_queue.append(dbNSFP)
             if "formatting" not in done:
                 function_queue.append(formatting)
-        else: 
+        else:
             if "formatting" not in done:
                 function_queue.append(formatting)
     else:
         print("\t>>> Variant Calling: none")
-
-        
 
     # Calling each steps
     for func in function_queue:
@@ -173,7 +178,6 @@ def main():
     output = Path(toml_config["general"]["output"] + "/" + sample)
     results.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(str(output), str(results))
-
 
     end = get_time()
     total_time = end - start
@@ -269,7 +273,8 @@ def get_reference(ref, tool):
             }
         case "wbcel235":
             reference = {
-                "fasta": path + "WBcel235/Caenorhabditis_elegans.WBcel235.dna.toplevel.fa",
+                "fasta": path
+                + "WBcel235/Caenorhabditis_elegans.WBcel235.dna.toplevel.fa",
                 "index": path + "index_" + tool + "/WBcel235",
                 "gtf": path + "WBcel235/Caenorhabditis_elegans.WBcel235.114.gtf",
                 "gff3": path + "WBcel235/Caenorhabditis_elegans.WBcel235.114.gff3",
@@ -279,17 +284,19 @@ def get_reference(ref, tool):
 
 
 def check_fastqc_report(zip_path: Path):
-    with zipfile.ZipFile(zip_path, 'r') as z:
+    with zipfile.ZipFile(zip_path, "r") as z:
         try:
-            with z.open('summary.txt') as f:
-                content = f.read().decode('utf-8')
+            with z.open("summary.txt") as f:
+                content = f.read().decode("utf-8")
         except KeyError:
             print(f"No summary.txt found in {zip_path}")
             return False
-        
+
         # Search for WARN or FAIL
-        if re.search(r'\b(WARN|FAIL)\b', content):
-            print(f"FastQC warnings or failures detected in {zip_path}, please check fastQC report (and adjust for trimming or not) before resubmitting")
+        if re.search(r"\b(WARN|FAIL)\b", content):
+            print(
+                f"FastQC warnings or failures detected in {zip_path}, please check fastQC report (and adjust for trimming or not) before resubmitting"
+            )
             print(content)
             return False
         else:
@@ -344,7 +351,7 @@ def fastqc(sample, toml_config):
             str(toml_config["fastqc"]["kmers"]),
             Read,
         ]
-        
+
         command_str = " ".join(command)
         print(f">>> {command_str}\n")
         subprocess.run(command, check=True)
@@ -355,13 +362,13 @@ def fastqc(sample, toml_config):
         steps.write("FastQC\n")
 
     # Check if any failures in FastQC report
-    fastqc_reports = list(Path(output + "/" + sample).glob('*_fastqc.zip'))
-    
+    fastqc_reports = list(Path(output + "/" + sample).glob("*_fastqc.zip"))
+
     all_passed = True
     for report in fastqc_reports:
         if not check_fastqc_report(report):
             all_passed = False
-    
+
     if not all_passed:
         sys.exit(1)  # stop pipeline if any fail
     else:
@@ -423,7 +430,7 @@ def bbduk(sample, toml_config):
             "tbo=t",
             "tpe=t",
         ]
-    
+
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
     subprocess.run(command, check=True)
@@ -450,7 +457,7 @@ def star(sample, toml_config):
     I_toAlign = files["I_toAlign"]
     O_aligned = files["O_aligned"]
 
-    att = "ID:" + sample +" SM:" + sample + " LB:lib1 PL:illumina PU:unit1"
+    att = "ID:" + sample + " SM:" + sample + " LB:lib1 PL:illumina PU:unit1"
 
     if toml_config["general"]["reads"] == "PE":
         command = [
@@ -465,8 +472,8 @@ def star(sample, toml_config):
             ref,
             "--outFileNamePrefix",
             O_aligned,
-		    "--outSAMattributes",
-		    "Standard",
+            "--outSAMattributes",
+            "Standard",
             "--outTmpDir",
             temporary,
             "--outReadsUnmapped",
@@ -500,7 +507,7 @@ def star(sample, toml_config):
             "--genomeDir",
             ref,
             "--outSAMattributes",
-		    "Standard",
+            "Standard",
             "--outFileNamePrefix",
             O_aligned,
             "--outTmpDir",
@@ -549,7 +556,13 @@ def star(sample, toml_config):
     subprocess.run(["rm", output + "/" + sample + "_Unmapped.out.mate1"])
     subprocess.run(["rm", output + "/" + sample + "_Unmapped.out.mate2"])
     subprocess.run(["rm", "-r", output + "/" + sample + "__STARpass1"])
-    subprocess.run(["mv", output + "/" + sample + "__STARgenome/sjdbList.out.tab", output + "/" + sample + "_sjdbList.out.tab"])
+    subprocess.run(
+        [
+            "mv",
+            output + "/" + sample + "__STARgenome/sjdbList.out.tab",
+            output + "/" + sample + "_sjdbList.out.tab",
+        ]
+    )
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -619,7 +632,7 @@ def bwa(sample, toml_config):
             "-o",
             output + "/" + sample + ".bam",
         ],
-	check=True
+        check=True,
     )
     # Remove the SAM file using subprocess
     sam_file = output + "/" + sample + ".sam"
@@ -786,7 +799,7 @@ def bamqc(sample, toml_config):
     subprocess.run(command, check=True)
 
     subprocess.run(["rm", output + "/" + sample + "_sortedCoordinate_fastqc.zip"])
-    
+
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:
@@ -842,7 +855,7 @@ def featurecounts(sample, toml_config):
     temporary = toml_config["general"]["temporary"] + "/" + sample
     output = toml_config["general"]["output"] + "/" + sample + "/FeatureCounts"
     subprocess.run(["mkdir", "-p", output])
-    
+
     input = (
         toml_config["general"]["output"]
         + "/"
@@ -851,7 +864,6 @@ def featurecounts(sample, toml_config):
         + sample
         + "_sortedCoordinate.bam"
     )
-    
 
     gtf = get_reference(toml_config["general"]["reference"], "")["gtf"]
 
@@ -952,11 +964,11 @@ def multiqc(sample, toml_config):
         f.write(input + "Samtools/\n")
         f.write(input + "MarkDuplicates/\n")
     f.close()
-        
+
     subprocess.run(
         [
-            "apptainer", 
-            "run", 
+            "apptainer",
+            "run",
             "/lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif",
             "multiqc",
             "--file-list",
@@ -968,7 +980,7 @@ def multiqc(sample, toml_config):
             output,
         ]
     )
-    
+
     subprocess.run(["rm", output + "my_file_list.txt"])
     subprocess.run(["rm", "-r", output + "/" + sample + "_multiqc_report_data"])
 
@@ -980,7 +992,7 @@ def multiqc(sample, toml_config):
 
 def bcftools(sample, toml_config):
     title("BCFtools")
-    
+
     input = (
         toml_config["general"]["output"]
         + "/"
@@ -994,7 +1006,9 @@ def bcftools(sample, toml_config):
 
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
 
-    with open(toml_config["general"]["output"] + "/" + sample + "/sample.txt", "w") as sample_file:
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/sample.txt", "w"
+    ) as sample_file:
         subprocess.run(["echo", sample], stdout=sample_file)
 
     mpileup = [
@@ -1004,7 +1018,7 @@ def bcftools(sample, toml_config):
         str(toml_config["general"]["threads"]),
         "-d",
         "1000000",
-        "--max-idepth", 
+        "--max-idepth",
         "1000000",
         "--count-orphans",
         "-o",
@@ -1035,37 +1049,46 @@ def bcftools(sample, toml_config):
     subprocess.run(call, check=True)
 
     subprocess.run(["rm", output + sample + "_mpileup.vcf"])
-    subprocess.run(["bcftools", 
-                    "reheader", 
-                    "--samples", 
-                    toml_config["general"]["output"] + "/" + sample + "/sample.txt",
-                    "-o",
-                    output + sample + "_bcftools_header.vcf",
-                    output + sample + "_bcftools.vcf"], 
-                   check=True)
+    subprocess.run(
+        [
+            "bcftools",
+            "reheader",
+            "--samples",
+            toml_config["general"]["output"] + "/" + sample + "/sample.txt",
+            "-o",
+            output + sample + "_bcftools_header.vcf",
+            output + sample + "_bcftools.vcf",
+        ],
+        check=True,
+    )
 
-    command_norm = ["bcftools",
-                    "norm",
-                    "-m-any",
-                    "-o",
-                    output + sample + "_bcftools_norm.vcf",
-                    output + sample + "_bcftools_header.vcf"]
-    
+    command_norm = [
+        "bcftools",
+        "norm",
+        "-m-any",
+        "-o",
+        output + sample + "_bcftools_norm.vcf",
+        output + sample + "_bcftools_header.vcf",
+    ]
+
     command_norm_str = " ".join(command_norm)
     print(f">>> {command_norm_str}\n")
     subprocess.run(command_norm, check=True)
-    
+
     subprocess.run(["bgzip", "-f", output + sample + "_bcftools_norm.vcf"], check=True)
-    subprocess.run(["tabix", "-p", "vcf", output + sample + "_bcftools_norm.vcf.gz"], check=True)
+    subprocess.run(
+        ["tabix", "-p", "vcf", output + sample + "_bcftools_norm.vcf.gz"], check=True
+    )
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:
         steps.write("BCFtools\n")
 
+
 def freebayes(sample, toml_config):
     title("FreeBayes")
-    
+
     input = (
         toml_config["general"]["output"]
         + "/"
@@ -1078,50 +1101,60 @@ def freebayes(sample, toml_config):
     subprocess.run(["mkdir", "-p", output])
 
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
-	
+
     # freebayes with legacy genotype calling and naive variant calling
-    command = ["freebayes", 
-               "-f", 
-               ref, 
-               #"--legacy-gls",
-               #"--min-alternate-fraction", 
-               #"0.01",
-               #"--ploidy", 
-               #"50", 
-               #"--min-repeat-entropy", 
-               #"1", 
-               #"--no-partial-observations",
-               input, 
-               "--vcf", 
-               output + sample + "_freebayes.vcf"]
-    
+    command = [
+        "freebayes",
+        "-f",
+        ref,
+        # "--legacy-gls",
+        # "--min-alternate-fraction",
+        # "0.01",
+        # "--ploidy",
+        # "50",
+        # "--min-repeat-entropy",
+        # "1",
+        # "--no-partial-observations",
+        input,
+        "--vcf",
+        output + sample + "_freebayes.vcf",
+    ]
+
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
     subprocess.run(command, check=True)
 
-    subprocess.run(["bcftools", 
-                    "reheader", 
-                    "--samples", 
-                    toml_config["general"]["output"] + "/" + sample + "/sample.txt",
-                    "-o",
-                    output + sample + "_freebayes_header.vcf",
-                    output + sample + "_freebayes.vcf"], 
-                   check=True)
+    subprocess.run(
+        [
+            "bcftools",
+            "reheader",
+            "--samples",
+            toml_config["general"]["output"] + "/" + sample + "/sample.txt",
+            "-o",
+            output + sample + "_freebayes_header.vcf",
+            output + sample + "_freebayes.vcf",
+        ],
+        check=True,
+    )
 
-    command_norm = ["bcftools",
-                    "norm",
-                    "-m-any",
-                    "-o",
-                    output + sample + "_freebayes_norm.vcf",
-                    output + sample + "_freebayes_header.vcf"]
-    
+    command_norm = [
+        "bcftools",
+        "norm",
+        "-m-any",
+        "-o",
+        output + sample + "_freebayes_norm.vcf",
+        output + sample + "_freebayes_header.vcf",
+    ]
+
     command_norm_str = " ".join(command_norm)
     print(f">>> {command_norm_str}\n")
     subprocess.run(command_norm, check=True)
-    
+
     subprocess.run(["bgzip", "-f", output + sample + "_freebayes_norm.vcf"], check=True)
-    subprocess.run(["tabix", "-p", "vcf", output + sample + "_freebayes_norm.vcf.gz"], check=True)
-    
+    subprocess.run(
+        ["tabix", "-p", "vcf", output + sample + "_freebayes_norm.vcf.gz"], check=True
+    )
+
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:
@@ -1136,40 +1169,43 @@ def bcftools_filter(sample, toml_config):
 
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
 
-    command_concat = ["bcftools",
-                      "concat",
-                      "--threads",
-                      str(toml_config["general"]["threads"]),
-                      "--allow-overlaps",
-                      "--rm-dups", 
-                      "exact",
-                      output + sample + "_bcftools_norm.vcf.gz",
-                      output + sample + "_freebayes_norm.vcf.gz",
-                      "-o",
-                      output + sample + "_merged.vcf.gz"]
-    
+    command_concat = [
+        "bcftools",
+        "concat",
+        "--threads",
+        str(toml_config["general"]["threads"]),
+        "--allow-overlaps",
+        "--rm-dups",
+        "exact",
+        output + sample + "_bcftools_norm.vcf.gz",
+        output + sample + "_freebayes_norm.vcf.gz",
+        "-o",
+        output + sample + "_merged.vcf.gz",
+    ]
+
     command_concat_str = " ".join(command_concat)
     print(f">>> {command_concat_str}\n")
     subprocess.run(command_concat, check=True)
 
-    command_filter = ["bcftools",
-                      "filter",
-                      "-i",
-                      "QUAL>1 && INFO/DP>0 && AC>0",
-                      "-o", 
-                      output + sample + "_unannotated.vcf",
-                      output + sample + "_merged.vcf.gz"]
+    command_filter = [
+        "bcftools",
+        "filter",
+        "-i",
+        "QUAL>1 && INFO/DP>0 && AC>0",
+        "-o",
+        output + sample + "_unannotated.vcf",
+        output + sample + "_merged.vcf.gz",
+    ]
 
     command_filter_str = " ".join(command_filter)
     print(f">>> {command_filter_str}\n")
     subprocess.run(command_filter, check=True)
 
     # remove intermediate vcf files
-    #subprocess.run(["rm", output + sample + "_unannotated.vcf"])
-    #subprocess.run(["rm", output + sample + "_merged.vcf.gz"])
-    #subprocess.run(["rm", output + sample + "_freebayes.vcf"])
-    #subprocess.run(["rm", output + sample + "_bcftools.vcf"])
-    
+    # subprocess.run(["rm", output + sample + "_unannotated.vcf"])
+    # subprocess.run(["rm", output + sample + "_merged.vcf.gz"])
+    # subprocess.run(["rm", output + sample + "_freebayes.vcf"])
+    # subprocess.run(["rm", output + sample + "_bcftools.vcf"])
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
@@ -1180,9 +1216,7 @@ def bcftools_filter(sample, toml_config):
 def snpeff(sample, toml_config):
     title("SnpEff")
 
-    snpeff = (
-        "/lustre09/project/6019267/shared/tools/main_pipelines/short-read/snpEff"
-    )
+    snpeff = "/lustre09/project/6019267/shared/tools/main_pipelines/short-read/snpEff"
 
     genome = toml_config["general"]["reference"]
 
@@ -1281,21 +1315,22 @@ def snpeff(sample, toml_config):
             stdout=outfile,
             check=True,
         )
-    
-    #subprocess.run(["rm", path + "/" + sample + "_summary.csv"])
-    #subprocess.run(["rm", path + "/" + sample + "_snpeff.vcf"])
+
+    # subprocess.run(["rm", path + "/" + sample + "_summary.csv"])
+    # subprocess.run(["rm", path + "/" + sample + "_snpeff.vcf"])
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:
         steps.write("SnpEff\n")
 
+
 def dbNSFP(sample, toml_config):
     title("Add dbNSFP to snpEff output")
-    
+
     genome = toml_config["general"]["reference"]
     path = toml_config["general"]["output"] + "/" + sample + "/Variants"
-    
+
     chromosomes = [
         "1",
         "2",
@@ -1323,16 +1358,13 @@ def dbNSFP(sample, toml_config):
         "Y",
         "MT",
     ]
-    
+
     var = pd.read_csv(
         path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
     )
-    var = var.rename(
-        columns={
-            "CHROM": "CHROM_"+genome,
-            "POS": "POS_"+genome})
+    var = var.rename(columns={"CHROM": "CHROM_" + genome, "POS": "POS_" + genome})
 
-    var = var.astype({"CHROM_"+genome: str, "POS_"+genome: str})
+    var = var.astype({"CHROM_" + genome: str, "POS_" + genome: str})
 
     appended_data = []
     ref = "/lustre09/project/6019267/shared/tools/main_pipelines/short-read/dbNSFP"
@@ -1346,17 +1378,20 @@ def dbNSFP(sample, toml_config):
             low_memory=False,
         )
 
-        db = db.astype({"CHROM_"+genome: str, "POS_"+genome: str})
+        db = db.astype({"CHROM_" + genome: str, "POS_" + genome: str})
 
-        var_chr = var[var["CHROM_"+genome] == chromosome]
+        var_chr = var[var["CHROM_" + genome] == chromosome]
 
-        m = pd.merge(var_chr, db, how="left", on=["CHROM_"+genome, "POS_"+genome, "REF", "ALT"])
+        m = pd.merge(
+            var_chr,
+            db,
+            how="left",
+            on=["CHROM_" + genome, "POS_" + genome, "REF", "ALT"],
+        )
         appended_data.append(m)
 
     final = pd.concat(appended_data)
-    final.to_csv(
-        path + "/" + sample + "_annotated_dbNSFP.txt", sep="\t", index=False
-    )
+    final.to_csv(path + "/" + sample + "_annotated_dbNSFP.txt", sep="\t", index=False)
 
     n_rows = len(final.index)
     rows_ann = final["rsID"].count()
@@ -1383,7 +1418,7 @@ def formatting(sample, toml_config):
 
     genome = toml_config["general"]["reference"]
     path = toml_config["general"]["output"] + "/" + sample + "/Variants"
-    
+
     if genome == "grch37" or genome == "grch38":
         final = pd.read_csv(
             path + "/" + sample + "_annotated_dbNSFP.txt",
@@ -1411,15 +1446,28 @@ def formatting(sample, toml_config):
             }
         )
 
-        final["Position_"+genome] = final["CHROM_"+genome].astype(str) + ":" + final["POS_"+genome].astype(str)
+        final["Position_" + genome] = (
+            final["CHROM_" + genome].astype(str)
+            + ":"
+            + final["POS_" + genome].astype(str)
+        )
         final["Quality"] = round(final["Quality"], 2)
         final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
 
-        columns = ["Gene_name", "Gene_id", "Transcript", "Effect", "Impact", "Biotype", "Codon_change", "Protein_change"]
+        columns = [
+            "Gene_name",
+            "Gene_id",
+            "Transcript",
+            "Effect",
+            "Impact",
+            "Biotype",
+            "Codon_change",
+            "Protein_change",
+        ]
 
         for index, row in final.iterrows():
             infos = []
-    
+
             for c in columns:
                 cell_value = str(row[c])
                 str_split = [sub.replace('"', "") for sub in cell_value.split("|")]
@@ -1429,69 +1477,77 @@ def formatting(sample, toml_config):
 
                 # Update the final DataFrame with the first part of split value
                 final.at[index, c] = str_split[0]
-    
+
                 # Transpose and concatenate corresponding elements from each list
                 if len(infos) > 1:
-                    info_concat = ["|".join([info[i] for info in infos]) for i in range(len(infos[0]))]
+                    info_concat = [
+                        "|".join([info[i] for info in infos])
+                        for i in range(len(infos[0]))
+                    ]
                     final.at[index, "Infos"] = "; ".join(info_concat)
                 else:
                     final.at[index, "Infos"] = "; ".join(infos[0])
-        
+
         final = final[
-            ["Position_"+genome,
-             "Ref",
-             "Alt",
-             "Quality",
-             "Read_depth",
-             "Zygosity",
-             "rsID",
-             "Variation",
-             "Gene_name",
-             "Gene_id",
-             "Transcript",
-             "Effect",
-             "Impact",
-             "Biotype",
-             "Codon_change",
-             "Protein_change",
-             "Infos",
-             "genename",
-             "Ensembl_geneid",
-             "Ensembl_transcriptid",
-             "Ensembl_proteinid",
-             "codon_change",
-             "protein_change",
-             "SIFT_score",
-             "PolyPhen2_HDIV_score",
-             "GERP_score",
-             "phyloP_score",
-             "phastCons_score",
-             "MutationTaster_score",
-             "FATHMM_score",
-             "REVEL_score",
-             "AlphaMissense_score",
-             "CADD_phred_score",
-             "1000G_AF",
-             "ExAC_AF",
-             "gnomAD_exomes_AF",
-             "gnomAD_exomes_NFE_AF",
-             "gnomAD_genomes_AF",
-             "gnomAD_genomes_NFE_AF",
-             "clinvar_id",
-             "clinvar_trait",
-             "clinvar_clnsig",
-             "OMIM",
+            [
+                "Position_" + genome,
+                "Ref",
+                "Alt",
+                "Quality",
+                "Read_depth",
+                "Zygosity",
+                "rsID",
+                "Variation",
+                "Gene_name",
+                "Gene_id",
+                "Transcript",
+                "Effect",
+                "Impact",
+                "Biotype",
+                "Codon_change",
+                "Protein_change",
+                "Infos",
+                "genename",
+                "Ensembl_geneid",
+                "Ensembl_transcriptid",
+                "Ensembl_proteinid",
+                "codon_change",
+                "protein_change",
+                "SIFT_score",
+                "PolyPhen2_HDIV_score",
+                "GERP_score",
+                "phyloP_score",
+                "phastCons_score",
+                "MutationTaster_score",
+                "FATHMM_score",
+                "REVEL_score",
+                "AlphaMissense_score",
+                "CADD_phred_score",
+                "1000G_AF",
+                "ExAC_AF",
+                "gnomAD_exomes_AF",
+                "gnomAD_exomes_NFE_AF",
+                "gnomAD_genomes_AF",
+                "gnomAD_genomes_NFE_AF",
+                "clinvar_id",
+                "clinvar_trait",
+                "clinvar_clnsig",
+                "OMIM",
             ]
         ]
 
         # count "Het" for each gene
-        final['het_count'] = final.groupby('Gene_name')['Zygosity'].transform(lambda x: (x == 'Het').sum())
+        final["het_count"] = final.groupby("Gene_name")["Zygosity"].transform(
+            lambda x: (x == "Het").sum()
+        )
 
         # Remplace "Het" for "Multiple-het" if het_count > 1
-        final.loc[(final['het_count'] > 1) & (final['Zygosity'] == 'Het'), 'Zygosity'] = 'Multiple-het'
-        
+        final.loc[
+            (final["het_count"] > 1) & (final["Zygosity"] == "Het"), "Zygosity"
+        ] = "Multiple-het"
+
         # Remove het_count
-        final = final.drop(columns=['het_count'])
+        final = final.drop(columns=["het_count"])
 
         final = final.replace(".", np.nan)
         final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
@@ -1500,9 +1556,7 @@ def formatting(sample, toml_config):
         # https://www.htslib.org/workflow/filter.html
         # https://jp.support.illumina.com/content/dam/illumina-support/help/Illumina_DRAGEN_Bio_IT_Platform_v3_7_1000000141465/Content/SW/Informatics/Dragen/QUAL_QD_GQ_Formulation_fDG.htm
 
-        df_filtered = final[
-            (final["Quality"] > 20) & (final["Read_depth"] > 5)
-        ]
+        df_filtered = final[(final["Quality"] > 20) & (final["Read_depth"] > 5)]
 
         df_filtered.to_csv(
             path + "/" + sample + "_variants_filtered.txt", sep="\t", index=False
@@ -1533,32 +1587,41 @@ def formatting(sample, toml_config):
 
         final = final.rename(
             columns={
-            "REF": "Ref",
-            "ALT": "Alt",
-            "QUAL": "Quality",
-            "TYPE": "Variation",
-            "HOM": "Zygosity",
-            "DP": "Read_depth",
-            "ANN[*].GENE": "Gene_name",
-            "ANN[*].GENEID": "Gene_id",
-            "ANN[*].FEATUREID": "Transcript",
-            "ANN[*].EFFECT": "Effect",
-            "ANN[*].IMPACT": "Impact",
-            "ANN[*].BIOTYPE": "Biotype",
-            "ANN[*].HGVS_C": "Codon_change",
-            "ANN[*].HGVS_P": "Protein_change",
+                "REF": "Ref",
+                "ALT": "Alt",
+                "QUAL": "Quality",
+                "TYPE": "Variation",
+                "HOM": "Zygosity",
+                "DP": "Read_depth",
+                "ANN[*].GENE": "Gene_name",
+                "ANN[*].GENEID": "Gene_id",
+                "ANN[*].FEATUREID": "Transcript",
+                "ANN[*].EFFECT": "Effect",
+                "ANN[*].IMPACT": "Impact",
+                "ANN[*].BIOTYPE": "Biotype",
+                "ANN[*].HGVS_C": "Codon_change",
+                "ANN[*].HGVS_P": "Protein_change",
             }
         )
-        
+
         final["Position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
         final["Quality"] = round(final["Quality"], 2)
         final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
-        
-        columns = ["Gene_name", "Gene_id", "Transcript", "Effect", "Impact", "Biotype", "Codon_change", "Protein_change"]
+
+        columns = [
+            "Gene_name",
+            "Gene_id",
+            "Transcript",
+            "Effect",
+            "Impact",
+            "Biotype",
+            "Codon_change",
+            "Protein_change",
+        ]
 
         for index, row in final.iterrows():
             infos = []
-    
+
             for c in columns:
                 cell_value = str(row[c])
                 str_split = [sub.replace('"', "") for sub in cell_value.split("|")]
@@ -1568,10 +1631,13 @@ def formatting(sample, toml_config):
 
                 # Update the final DataFrame with the first part of split value
                 final.at[index, c] = str_split[0]
-    
+
                 # Transpose and concatenate corresponding elements from each list
                 if len(infos) > 1:
-                    info_concat = ["|".join([info[i] for info in infos]) for i in range(len(infos[0]))]
+                    info_concat = [
+                        "|".join([info[i] for info in infos])
+                        for i in range(len(infos[0]))
+                    ]
                     final.at[index, "Infos"] = "; ".join(info_concat)
                 else:
                     final.at[index, "Infos"] = "; ".join(infos[0])
@@ -1596,24 +1662,26 @@ def formatting(sample, toml_config):
                 "Infos",
             ]
         ]
-        
+
         # count "Het" for each gene
-        final['het_count'] = final.groupby('Gene_name')['Zygosity'].transform(lambda x: (x == 'Het').sum())
+        final["het_count"] = final.groupby("Gene_name")["Zygosity"].transform(
+            lambda x: (x == "Het").sum()
+        )
 
         # Remplace "Het" for "Multiple-het" if het_count > 1
-        final.loc[(final['het_count'] > 1) & (final['Zygosity'] == 'Het'), 'Zygosity'] = 'Multiple-het'
-        
+        final.loc[
+            (final["het_count"] > 1) & (final["Zygosity"] == "Het"), "Zygosity"
+        ] = "Multiple-het"
+
         # Remove het_count
-        final = final.drop(columns=['het_count'])
+        final = final.drop(columns=["het_count"])
 
         final = final.replace(".", np.nan)
         print(final)
-        
+
         final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
 
-        df_filtered = final[
-            (final["Quality"] > 20) & (final["Read_depth"] > 5)
-        ]
+        df_filtered = final[(final["Quality"] > 20) & (final["Read_depth"] > 5)]
         df_filtered.to_csv(
             path + "/" + sample + "_variants_filtered.txt", sep="\t", index=False
         )
@@ -1635,7 +1703,7 @@ def formatting(sample, toml_config):
             percentage,
             "%",
         )
-    
+
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:

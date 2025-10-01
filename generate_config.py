@@ -19,23 +19,23 @@ group.add_argument("--genome", action="store_true", help="Run WGS analysis")
 
 parser.add_argument(
     "--trimming",
-    action='store_true',
-    help='Enable trimming with bbduk.',
+    action="store_true",
+    help="Enable trimming with bbduk.",
 )
 parser.add_argument(
     "--pseudo",
-    action='store_true',
-    help='Enable pseudoalignment with salmon.',
+    action="store_true",
+    help="Enable pseudoalignment with salmon.",
 )
 parser.add_argument(
     "--quantification",
-    action='store_true',
-    help='Enable gene quantification with featurecounts.',
+    action="store_true",
+    help="Enable gene quantification with featurecounts.",
 )
 parser.add_argument(
     "--variants",
-    action='store_true',
-    help='Enable variant calling.',
+    action="store_true",
+    help="Enable variant calling.",
 )
 
 args = parser.parse_args()
@@ -88,12 +88,12 @@ if args.rna:
     quantMode  = "GeneCounts"   # types of quantification requested. -, TranscriptomeSAM and/or GeneCounts
     \n
 """
-else: 
+else:
     if args.exome:
         sequencing = "exome"
     elif args.genome:
         sequencing = "genome"
-    
+
     alignment = "bwa"
     options += """# Alignment
 [bwa-mem]
@@ -122,14 +122,15 @@ else:
     options += "# No quantification\n"
 
 # VARIANT CALLING
-if args.variants: 
+if args.variants:
     options += """# Variant calling
 [snpeff]
     \n
 """
-    
-else: options += "# No variant calling\n"
-    
+
+else:
+    options += "# No variant calling\n"
+
 
 # Create config file
 general = """# TOML config file for {0}
@@ -188,4 +189,3 @@ general = """# TOML config file for {0}
 toml_config = general + options
 
 print(toml_config, file=open(work_dir + "/" + project_name + ".config.toml", "w"))
-
