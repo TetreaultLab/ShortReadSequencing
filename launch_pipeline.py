@@ -79,7 +79,7 @@ python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/Short
 print(slurm, file=open(work_dir + "/" + sample_name + "_" + project + ".slurm", "w"))
 
 if args.redo:
-    subprocess.run(["rm", toml_config["general"]["output"] + "/" + sample_name, "/steps_done.txt"])
+    subprocess.run(["rm", toml_config["general"]["output"] + "/" + sample_name + "/steps_done.txt"])
 
 if args.test:
     print("\n\nTesting mode! The pipeline will not be launched!\n\n")
