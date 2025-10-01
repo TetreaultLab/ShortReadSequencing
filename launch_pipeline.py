@@ -18,6 +18,12 @@ parser.add_argument(
     required=False,
     help="Will not launch, only create the script.",
 )
+parser.add_argument(
+    "--redo",
+    action="store_true",
+    required=False,
+    help="Removes steps_done.txt file and start from scratch",
+)
 
 args = parser.parse_args()
 
@@ -72,6 +78,8 @@ python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/Short
 
 print(slurm, file=open(work_dir + "/" + sample_name + "_" + project + ".slurm", "w"))
 
+if args.redo:
+    subprocess.run(["rm", toml_config["general"]["output"] + "/" + sample_name, "/steps_done.txt"])
 
 if args.test:
     print("\n\nTesting mode! The pipeline will not be launched!\n\n")
