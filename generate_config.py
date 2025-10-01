@@ -138,7 +138,7 @@ general = """# TOML config file for {0}
 [general]
     threads = 8  # Number of threads.
     memory = 64 # Total memory needed.
-    time = "01-23:59" # DD-HH:MM. Default: 1 day 23h59
+    time = "02-23:59" # DD-HH:MM. Default: 2 days 23h59
     project = "{0}"   # Choose a project name. Should not start with a number.
     output = "/lustre10/scratch/{1}/{0}/output" # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/output/.
     temporary = "/lustre10/scratch/{1}/{0}/tmp" # The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/tmp/. 
@@ -188,3 +188,4 @@ general = """# TOML config file for {0}
 toml_config = general + options
 
 print(toml_config, file=open(work_dir + "/" + project_name + ".config.toml", "w"))
+
