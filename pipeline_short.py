@@ -583,7 +583,7 @@ def bwa(sample, toml_config):
             "-R",
             att,
             "-v",
-            "2",
+            "1",
             ref,
             I1_toAlign,
             I2_toAlign,
@@ -599,7 +599,7 @@ def bwa(sample, toml_config):
             "-R",
             att,
             "-v",
-            "2",
+            "1",
             ref,
             I_toAlign,
         ]
