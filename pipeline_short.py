@@ -304,10 +304,9 @@ def check_fastqc_report(zip_path: Path):
                 f"FastQC failures detected in {zip_path}\nPlease check fastQC report (and adjust for trimming or not) before resubmitting.\n"
             )
             print(content)
-            return False
+            sys.exit(1)
         else:
             print(f"FastQC passed with no failures in {zip_path}\n")
-            return True
 
 
 def fastqc(sample, toml_config):
@@ -371,15 +370,8 @@ def fastqc(sample, toml_config):
     fastqc_reports = list(Path(output + "/").glob(sample + "*_fastqc.zip"))
     print()
 
-    all_passed = True
     for report in fastqc_reports:
-        if not check_fastqc_report(report):
-            all_passed = False
-
-    if not all_passed:
-        sys.exit(1)  # stop pipeline if any fail
-    else:
-        sys.exit(0)
+        check_fastqc_report(report)
 
 
 def bbduk(sample, toml_config):
