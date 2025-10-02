@@ -174,11 +174,14 @@ def main():
     # TO-DO
 
     # Move results to projects directory
+    print(">>> Transferring from scratch to results")
     current_directory = os.getcwd()
-    results = Path(str(current_directory).replace("/work", "/results")) / sample
+    results = Path(str(current_directory).replace("/work", "/results"))
     output = Path(toml_config["general"]["output"] + "/" + sample)
     results.parent.mkdir(parents=True, exist_ok=True)
-    shutil.move(str(output), str(results))
+    cmd = ["rsync", "-avzh", "--no-g", "--no-p", "--partial", str(output), str(results)]
+    print(cmd)
+    subprocess.run(cmd, check=True)
 
     end = get_time()
     total_time = end - start
