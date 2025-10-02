@@ -181,7 +181,7 @@ def main():
     results.parent.mkdir(parents=True, exist_ok=True)
     cmd = ["rsync", "-avzh", "--no-g", "--no-p", "--partial", str(output), str(results)]
     subprocess.run(cmd, check=True)
-    final = f"{str(results)}{sample}"
+    final = f"{str(results)}/{sample}"
     print(f"\n\n>>> Results found in {final}")
 
     end = get_time()
@@ -1155,6 +1155,9 @@ def freebayes(sample, toml_config):
     subprocess.run(["bgzip", "-f", output + sample + "_freebayes_norm.vcf"], check=True)
     subprocess.run(
         ["tabix", "-p", "vcf", output + sample + "_freebayes_norm.vcf.gz"], check=True
+    )
+    subprocess.run(
+        ["rm", toml_config["general"]["output"] + "/" + sample + "/sample.txt"]
     )
 
     with open(
