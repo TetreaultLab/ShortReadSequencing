@@ -166,7 +166,8 @@ def main():
     for func in function_queue:
         try:
             func(sample, toml_config)
-        except:
+        except Exception as e:
+            print(f"Error: {e}")
             exit(1)
 
     # Get log and extract all >>> lines from it and save to file "steps_summary.txt"
@@ -456,8 +457,6 @@ def star(sample, toml_config):
     I2_toAlign = files["I2_toAlign"]
     I_toAlign = files["I_toAlign"]
     O_aligned = files["O_aligned"]
-
-    att = "ID:" + sample + " SM:" + sample + " LB:lib1 PL:illumina PU:unit1"
 
     if toml_config["general"]["reads"] == "PE":
         command = [
@@ -1166,8 +1165,6 @@ def bcftools_filter(sample, toml_config):
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
-
-    ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
 
     command_concat = [
         "bcftools",
