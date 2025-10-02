@@ -301,12 +301,11 @@ def check_fastqc_report(zip_path: Path):
         # Search for WARN or FAIL
         if re.search(r"\b(FAIL)\b", content):
             print(
-                f"FastQC failures detected in {zip_path}\nPlease check fastQC report (and adjust for trimming or not) before resubmitting.\n"
+                f">>> FastQC failures detected in {zip_path}\nPlease check fastQC report (and adjust for trimming or not) before resubmitting.\n"
             )
-            print(content)
             sys.exit(1)
         else:
-            print(f"FastQC passed with no failures in {zip_path}\n")
+            print(f">>> FastQC passed with no failures in {zip_path}\n")
 
 
 def fastqc(sample, toml_config):
