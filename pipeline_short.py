@@ -366,7 +366,7 @@ def fastqc(sample, toml_config):
         steps.write("FastQC\n")
 
     # Check if any failures in FastQC report
-    fastqc_reports = list(Path(output + "/" + sample).glob("*_fastqc.zip"))
+    fastqc_reports = list(Path(output + "/").glob(sample + "*_fastqc.zip"))
     print(fastqc_reports)
 
     all_passed = True
