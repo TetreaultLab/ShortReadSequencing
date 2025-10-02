@@ -299,14 +299,14 @@ def check_fastqc_report(zip_path: Path):
             return False
 
         # Search for WARN or FAIL
-        if re.search(r"\b(WARN|FAIL)\b", content):
+        if re.search(r"\b(FAIL)\b", content):
             print(
-                f"FastQC warnings or failures detected in {zip_path}, please check fastQC report (and adjust for trimming or not) before resubmitting"
+                f"FastQC failures detected in {zip_path}\nPlease check fastQC report (and adjust for trimming or not) before resubmitting."
             )
             print(content)
             return False
         else:
-            print(f"FastQC passed with no warnings or failures in {zip_path}")
+            print(f"FastQC passed with no failures in {zip_path}")
             return True
 
 
@@ -369,7 +369,7 @@ def fastqc(sample, toml_config):
 
     # Check if any failures in FastQC report
     fastqc_reports = list(Path(output + "/").glob(sample + "*_fastqc.zip"))
-    print(fastqc_reports)
+    print()
 
     all_passed = True
     for report in fastqc_reports:
