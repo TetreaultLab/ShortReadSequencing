@@ -293,7 +293,7 @@ def check_fastqc_report(zip_path: Path):
         try:
             with z.open(summary_file) as f:
                 content = f.read().decode("utf-8")
-                print(content)
+                print(content.rstrip())
         except KeyError:
             print(f"No summary.txt found in {zip_path}")
             return False
@@ -301,12 +301,12 @@ def check_fastqc_report(zip_path: Path):
         # Search for WARN or FAIL
         if re.search(r"\b(FAIL)\b", content):
             print(
-                f"FastQC failures detected in {zip_path}\nPlease check fastQC report (and adjust for trimming or not) before resubmitting."
+                f"FastQC failures detected in {zip_path}\nPlease check fastQC report (and adjust for trimming or not) before resubmitting.\n"
             )
             print(content)
             return False
         else:
-            print(f"FastQC passed with no failures in {zip_path}")
+            print(f"FastQC passed with no failures in {zip_path}\n")
             return True
 
 
