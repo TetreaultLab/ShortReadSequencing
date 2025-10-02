@@ -1,6 +1,5 @@
 import argparse
 import re
-import shutil
 import zipfile
 import toml
 from datetime import datetime
@@ -587,8 +586,6 @@ def bwa(sample, toml_config):
     I2_toAlign = files["I2_toAlign"]
     I_toAlign = files["I_toAlign"]
 
-    att = "@RG\tID:" + sample + "\tSM:" + sample + "\tLB:lib1\tPL:illumina\tPU:unit1"
-
     if toml_config["general"]["reads"] == "PE":
         command = [
             "bwa-mem2",
@@ -597,8 +594,6 @@ def bwa(sample, toml_config):
             output + "/" + sample + ".sam",
             "-t",
             str(toml_config["general"]["threads"]),
-            "-R",
-            att,
             "-v",
             "1",
             ref,
@@ -613,8 +608,6 @@ def bwa(sample, toml_config):
             output + "/" + sample + ".sam",
             "-t",
             str(toml_config["general"]["threads"]),
-            "-R",
-            att,
             "-v",
             "1",
             ref,
