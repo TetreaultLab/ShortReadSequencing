@@ -292,6 +292,7 @@ def check_fastqc_report(zip_path: Path):
         try:
             with z.open("summary.txt") as f:
                 content = f.read().decode("utf-8")
+                print(content)
         except KeyError:
             print(f"No summary.txt found in {zip_path}")
             return False
