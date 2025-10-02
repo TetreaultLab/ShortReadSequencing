@@ -174,22 +174,22 @@ def main():
     # TO-DO
 
     # Move results to projects directory
-    print(">>> Transferring from scratch to results")
+    print("\n>>> Transferring from scratch to results")
     current_directory = os.getcwd()
-    results = Path(str(current_directory).replace("/work", "/results"))
+    results = Path(str(current_directory).replace("/work", "/results/"))
     output = Path(toml_config["general"]["output"] + "/" + sample)
     results.parent.mkdir(parents=True, exist_ok=True)
     cmd = ["rsync", "-avzh", "--no-g", "--no-p", "--partial", str(output), str(results)]
-    print(cmd)
     subprocess.run(cmd, check=True)
+    final = f"{str(results)}{sample}"
+    print(f"\n\n>>> Results found in {final}")
 
     end = get_time()
     total_time = end - start
-    end_str = ">>> {}-seq pipeline for {} completed in {}.".format(
+    end_str = "\n>>> {}-seq pipeline for {} completed in {}.".format(
         toml_config["general"]["sequencing"], sample, total_time
     )
     print("=" * len(end_str) + "\n" + end_str + "\n" + "=" * len(end_str))
-    print(f">>> Results found in {results}")
 
 
 def get_time():
