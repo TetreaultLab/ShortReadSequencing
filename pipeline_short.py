@@ -288,8 +288,10 @@ def get_reference(ref, tool):
 
 def check_fastqc_report(zip_path: Path):
     with zipfile.ZipFile(zip_path, "r") as z:
+        file_list = z.namelist()
+        summary_file = [f for f in file_list if f.endswith("summary.txt")][0]
         try:
-            with z.open("summary.txt") as f:
+            with z.open(summary_file) as f:
                 content = f.read().decode("utf-8")
                 print(content)
         except KeyError:
