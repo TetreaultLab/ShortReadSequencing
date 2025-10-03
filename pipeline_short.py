@@ -790,12 +790,19 @@ def bamqc(sample, toml_config):
     print(f">>> {command_str}\n")
     subprocess.run(command, check=True)
 
-    subprocess.run(["rm", output + "/" + sample + "_sortedCoordinate_fastqc.zip"])
-
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
     ) as steps:
         steps.write("FastQC for bam\n")
+
+    # Check if any failures in FastQC report
+    fastqc_reports = list(
+        Path(output + "/").glob(sample + "*_sortedCoordinate_fastqc.zip")
+    )
+    print()
+
+    for report in fastqc_reports:
+        check_fastqc_report(report)
 
 
 def markduplicates(sample, toml_config):
@@ -810,7 +817,7 @@ def markduplicates(sample, toml_config):
     input = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     bamCoord = input + "/" + sample + "_sortedCoordinate.bam"
     metrics = output + sample + "_duplicates_metrics.txt"
-    records = output + sample + "_removedDuplicates.bam"
+    records = output + sample + "_markDuplicates.bam"
 
     command = [
         "gatk",
@@ -834,6 +841,8 @@ def markduplicates(sample, toml_config):
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
     subprocess.run(command, check=True)
+
+    subprocess.run("rm", "-r", temporary)
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
