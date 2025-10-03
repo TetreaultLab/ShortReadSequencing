@@ -65,7 +65,7 @@ module load StdEnv/2023
 module load python/3.11.5 apptainer
 module load fastqc/0.12.1 bbmap/39.06 star/2.7.11a bwa-mem2/2.2.1 gcc/12.3 openmpi/4.1.5 salmon/1.10.2 samtools/1.22.1 gatk/4.6.1.0 subread/2.0.6 htslib/1.22.1 bcftools/1.22 freebayes/1.3.7
 source /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate
-export JAVA_TOOL_OPTIONS="-Xmx64g -Xms64g -XX:ParallelGCThreads=8"
+export JAVA_TOOL_OPTIONS="-Xmx64g -XX:ParallelGCThreads=8"
 #
 ### Launch script
 #
