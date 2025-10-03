@@ -1298,7 +1298,7 @@ def snpeff(sample, toml_config):
         "QUAL",
         "HOM",
         "DP",
-        "TYPE",
+        # "TYPE",
         "ANN[*].GENE",
         "ANN[*].GENEID",
         "ANN[*].FEATUREID",
