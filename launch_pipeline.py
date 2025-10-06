@@ -46,7 +46,10 @@ project = toml_config["general"]["project"]
 
 f.close()
 
-path_config = work_dir + "/" + toml_file
+if "/" in toml_file:
+    path_config = toml_file
+else:
+    path_config = work_dir + "/" + toml_file
 
 slurm = """#!/bin/sh
 #SBATCH -N 1 #Number of nodes
