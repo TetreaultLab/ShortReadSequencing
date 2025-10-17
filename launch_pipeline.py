@@ -72,7 +72,7 @@ export JAVA_TOOL_OPTIONS="-Xmx64g -XX:ParallelGCThreads=8"
 #
 ### Launch script
 #
-# newgrp rrg-tetreaum
+newgrp rrg-tetreaum
 #
 python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/ShortReadSequencing/pipeline_short.py --sample {3} --config {6}
 #
