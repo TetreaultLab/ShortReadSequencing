@@ -449,7 +449,7 @@ def star(sample, toml_config):
     temporary = toml_config["general"]["temporary"] + "/" + sample + "/star_tmp"
     subprocess.run(["rm", "-r", temporary])
 
-    ref = get_reference(toml_config["general"]["reference"], "star")["index"] + "/"
+    ref = get_reference(toml_config["general"]["reference"], "star")["index"]
 
     files = get_file_trimmed(toml_config, output, sample)
     I1_toAlign = files["I1_toAlign"]
