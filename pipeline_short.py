@@ -1237,7 +1237,6 @@ def snpeff(sample, toml_config):
 
     cmd_snpeff = [
         "java",
-        "-Xmx8g",
         "-jar",
         snpeff + "/snpEff.jar",
         "-noLog",
@@ -1262,7 +1261,6 @@ def snpeff(sample, toml_config):
 
     cmd_vartype = [
         "java",
-        "-Xmx8g",
         "-jar",
         snpeff + "/SnpSift.jar",
         "varType",
@@ -1281,7 +1279,6 @@ def snpeff(sample, toml_config):
 
     cmd_extract = [
         "java",
-        "-Xmx8g",
         "-jar",
         snpeff + "/SnpSift.jar",
         "extractFields",
