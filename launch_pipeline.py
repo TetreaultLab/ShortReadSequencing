@@ -1024,7 +1024,8 @@ def steps_main(sample, toml_config, done):
 
     job = create_script(cores, memory, time, sample, step, email, command, output)
 
-    with open(output + "/main.sh", "a") as f:
+    work_dir = os.getcwd()
+    with open(work_dir + "/main.sh", "a") as f:
         f.write("\n# Main steps")
         f.write(f"\nmain=$(sbatch --parsable {job})\n")
 
@@ -1086,8 +1087,6 @@ def steps_downstream(sample, toml_config, done):
     else:
         print("\t>>> Variant Calling: none")
 
-    print(command)
-
     cores = "1"
     memory = "4"
     time = toml_config["general"]["time"]
@@ -1096,7 +1095,8 @@ def steps_downstream(sample, toml_config, done):
 
     job = create_script(cores, memory, time, sample, step, email, command, output)
 
-    with open(output + "/main.sh", "a") as f:
+    work_dir = os.getcwd()
+    with open(work_dir + "/main.sh", "a") as f:
         f.write("\n# Main steps")
         if "main" not in done:
             f.write(f"\nsbatch --dependency=afterok:$main {job}\n")
