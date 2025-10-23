@@ -1014,8 +1014,6 @@ def steps_main(sample, toml_config, done):
     if "FastQC for bam" not in done:
         command += bamqc(sample, toml_config)
 
-    print(command)
-
     cores = toml_config["general"]["threads"]
     memory = toml_config["general"]["memory"]
     time = toml_config["general"]["time"]
