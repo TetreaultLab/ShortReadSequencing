@@ -92,10 +92,6 @@ def main():
 
 
 # Functions needed by others
-def title(message):
-    print(f"\n>>> Running {message}]")
-
-
 def get_file_trimmed(toml_config, output, sample):
     files = {}
     if toml_config["general"]["trimming"] == "bbduk":
@@ -224,8 +220,6 @@ def create_script(cores, memory, time, sample_name, step, email, command, output
 
 ## Tool functions
 def fastqc(sample, toml_config):
-    title("FastQC")
-
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
     subprocess.run(["mkdir", "-p", output])
 
@@ -278,8 +272,6 @@ def fastqc(sample, toml_config):
 
 
 def bbduk(sample, toml_config):
-    title("BBDuk")
-
     output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
     subprocess.run(["mkdir", "-p", output])
 
@@ -342,7 +334,6 @@ def bbduk(sample, toml_config):
 
 
 def star(sample, toml_config):
-    title("STAR")
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     subprocess.run(["mkdir", "-p", output])
 
@@ -445,8 +436,6 @@ def star(sample, toml_config):
 
 
 def bwa(sample, toml_config):
-    title("BWA-MEM2")
-
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     subprocess.run(["mkdir", "-p", output])
 
@@ -499,8 +488,6 @@ def bwa(sample, toml_config):
 
 
 def salmon(sample, toml_config):
-    title("Salmon")
-
     output = toml_config["general"]["output"] + "/" + sample + "/Salmon"
     subprocess.run(["mkdir", "-p", output])
 
@@ -568,7 +555,6 @@ def salmon(sample, toml_config):
 
 
 def samtools(sample, toml_config):
-    title("Samtools")
     in_out = toml_config["general"]["output"] + "/" + sample + "/Aligned"
 
     inBAM = in_out + "/" + sample + ".bam"
@@ -579,7 +565,7 @@ def samtools(sample, toml_config):
     command_str = f"\nsamtools sort {inBAM} -o {bamCoord}"
 
     # Index bam sorted by coordinates
-    command_str += f"\nsamtools", "index", "-b", {bamCoord}, "-o", {bamCoord} + ".bai"
+    command_str += f"\nsamtools index -b {bamCoord} -o {bamCoord}.bai"
 
     # alignment stats
     command_str += f"\nsamtools stats {bamCoord} | grep ^SN | cut -f, 2- > {stats}"
@@ -591,8 +577,6 @@ def samtools(sample, toml_config):
 
 
 def bamqc(sample, toml_config):
-    title("FastQC for bam")
-
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
     subprocess.run(["mkdir", "-p", output])
 
@@ -634,8 +618,6 @@ def bamqc(sample, toml_config):
 
 
 def markduplicates(sample, toml_config):
-    title("MarkDuplicates")
-
     output = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/"
     subprocess.run(["mkdir", "-p", output])
 
@@ -679,8 +661,6 @@ def markduplicates(sample, toml_config):
 
 
 def featurecounts(sample, toml_config):
-    title("FeatureCounts")
-
     temporary = toml_config["general"]["temporary"] + "/" + sample
     output = toml_config["general"]["output"] + "/" + sample + "/FeatureCounts"
     subprocess.run(["mkdir", "-p", output])
@@ -758,7 +738,6 @@ def featurecounts(sample, toml_config):
 
 
 def multiqc(sample, toml_config):
-    title("MultiQC")
     input = toml_config["general"]["output"] + "/" + sample + "/"
     output = toml_config["general"]["output"] + "/" + sample + "/QC/multiQC/"
     subprocess.run(["mkdir", "-p", output])
@@ -787,8 +766,6 @@ def multiqc(sample, toml_config):
 
 
 def bcftools(sample, toml_config):
-    title("BCFtools")
-
     input = (
         toml_config["general"]["output"]
         + "/"
@@ -862,8 +839,6 @@ def bcftools(sample, toml_config):
 
 
 def freebayes(sample, toml_config):
-    title("FreeBayes")
-
     input = (
         toml_config["general"]["output"]
         + "/"
@@ -913,8 +888,6 @@ def freebayes(sample, toml_config):
 
 
 def bcftools_filter(sample, toml_config):
-    title("BCFtools filters")
-
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
 
@@ -962,8 +935,6 @@ def bcftools_filter(sample, toml_config):
 
 
 def snpeff(sample, toml_config):
-    title("SnpEff")
-
     snpeff = "/lustre09/project/6019267/shared/tools/main_pipelines/short-read/snpEff"
 
     genome = toml_config["general"]["reference"]
@@ -996,8 +967,6 @@ def snpeff(sample, toml_config):
 
 
 def dbNSFP_and_format(sample, toml_config):
-    title("Add dbNSFP to snpEff output and format")
-
     command_str = f"python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/ShortReadSequencing/dbnsfp.py --config {toml_config} --sample {sample}"
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
