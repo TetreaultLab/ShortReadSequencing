@@ -1,5 +1,4 @@
 import argparse
-import datetime
 from pathlib import Path
 import re
 import sys
@@ -91,6 +90,7 @@ def main():
         subprocess.run(["bash", output + "/scripts/main.sh"])
 
 
+# Functions needed by others
 def title(message):
     print(f"\n>>> Running {message} [{get_time()}]")
 
@@ -181,30 +181,6 @@ def get_reference(ref, tool):
     return reference
 
 
-def check_fastqc_report(zip_path: Path):
-    with zipfile.ZipFile(zip_path, "r") as z:
-        file_list = z.namelist()
-        summary_file = [f for f in file_list if f.endswith("summary.txt")][0]
-        try:
-            with z.open(summary_file) as f:
-                content = f.read().decode("utf-8")
-                print(content.rstrip())
-        except KeyError:
-            print(f"No summary.txt found in {zip_path}")
-            return False
-
-        # Search for WARN or FAIL
-        if re.search(r"\b(FAIL)\b", content):
-            print(
-                ">>> FastQC failures detected.\n>>> Please check FastQC report (and adjust for trimming if necessary) before resubmitting (with --redo).\n"
-            )
-            # sys.exit(1)
-        elif re.search(r"\b(WARN)\b", content):
-            print(">>> FastQC warnings detected\n")
-        else:
-            print(">>> FastQC passed with no warnings or failures.\n")
-
-
 def create_script(cores, memory, time, sample_name, step, email, command, output):
     steps_done = output + "/steps_done.txt"
     work_dir = os.getcwd()
@@ -245,6 +221,7 @@ def create_script(cores, memory, time, sample_name, step, email, command, output
     return job
 
 
+## Tool functions
 def fastqc(sample, toml_config):
     title("FastQC")
 
@@ -273,8 +250,6 @@ def fastqc(sample, toml_config):
             Read2,
         ]
         command_str = " ".join(command)
-        print(f">>> {command_str}\n")
-        subprocess.run(command, check=True)
 
     else:
         Read = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
@@ -294,20 +269,11 @@ def fastqc(sample, toml_config):
         ]
 
         command_str = " ".join(command)
-        print(f">>> {command_str}\n")
-        subprocess.run(command, check=True)
 
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("FastQC\n")
+    steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
+    command_str += f'\nif [ $? -eq 0 ]; then echo "FastQC" >> "{steps_done}"; fi\n\n'
 
-    # Check if any failures in FastQC report
-    fastqc_reports = list(Path(output + "/").glob(sample + "*_fastqc.zip"))
-    print()
-
-    for report in fastqc_reports:
-        check_fastqc_report(report)
+    return command_str
 
 
 def bbduk(sample, toml_config):
@@ -367,13 +333,11 @@ def bbduk(sample, toml_config):
         ]
 
     command_str = " ".join(command)
-    print(f">>> {command_str}\n")
-    subprocess.run(command, check=True)
 
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("BBDuk\n")
+    steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
+    command_str += f'\nif [ $? -eq 0 ]; then echo "BBDuk" >> "{steps_done}"; fi\n\n'
+
+    return command_str
 
 
 def star(sample, toml_config):
@@ -460,47 +424,23 @@ def star(sample, toml_config):
             toml_config["star"]["quantMode"],
         ]
     command_str = " ".join(command)
-    print(f">>> {command_str}\n")
-    subprocess.run(command, check=True)
 
-    # rename BAM file
-    subprocess.run(
-        [
-            "mv",
-            output + "/" + sample + "_Aligned.sortedByCoord.out.bam",
-            output + "/" + sample + ".bam",
-        ]
+    command_str += (
+        f"\nmv {output}/{sample}_Aligned.sortedByCoord.out.bam {output}/{sample}.bam"
     )
-    subprocess.run(
-        [
-            "mv",
-            output + "/" + sample + "_Log.final.out",
-            output + "/" + sample + "_summary_mapping_stats.out",
-        ]
+    command_str += f"\nmv {output}/{sample}_Log.final.out {output}/{sample}_summary_mapping_stats.out"
+    command_str += (
+        f"\nmv {output}/{sample}_Log.out {output}/{sample}_run_information.out"
     )
-    subprocess.run(
-        [
-            "mv",
-            output + "/" + sample + "_Log.out",
-            output + "/" + sample + "_run_information.out",
-        ]
-    )
-    subprocess.run(["rm", output + "/" + sample + "_Log.progress.out"])
-    subprocess.run(["rm", output + "/" + sample + "_Unmapped.out.mate1"])
-    subprocess.run(["rm", output + "/" + sample + "_Unmapped.out.mate2"])
-    subprocess.run(["rm", "-r", output + "/" + sample + "__STARpass1"])
-    subprocess.run(
-        [
-            "mv",
-            output + "/" + sample + "__STARgenome/sjdbList.out.tab",
-            output + "/" + sample + "_sjdbList.out.tab",
-        ]
-    )
+    command_str += f"\nrm {output}/{sample}_Log.progress.out"
+    command_str += f"\nrm {output}/{sample}_Unmapped.out.mate1"
+    command_str += f"\nrm {output}/{sample}_Unmapped.out.mate2"
+    command_str += f"\nrm -r {output}/{sample}__STARpass1"
+    command_str += f"\nmv {output}/{sample}__STARgenome/sjdbList.out.tab {output}/{sample}_sjdbList.out.tab"
 
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("STAR\n")
+    steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
+    command_str += f'\nif [ $? -eq 0 ]; then echo "STAR" >> "{steps_done}"; fi\n\n'
+    return command_str
 
 
 def bwa(sample, toml_config):
@@ -545,30 +485,16 @@ def bwa(sample, toml_config):
         ]
 
     command_str = " ".join(command)
-    print(f">>> {command_str}\n")
-    subprocess.run(command, check=True)
 
-    # Change SAM to BAM format
-    subprocess.run(
-        [
-            "samtools",
-            "view",
-            "-S",
-            "-b",
-            output + "/" + sample + ".sam",
-            "-o",
-            output + "/" + sample + ".bam",
-        ],
-        check=True,
+    # Change SAM to BAM format and remove SAM
+    command_str += (
+        f"\nsamtools view -S -b {output}/{sample}.sam -o {output}/{sample}.bam",
     )
-    # Remove the SAM file using subprocess
-    sam_file = output + "/" + sample + ".sam"
-    subprocess.run(["rm", sam_file], check=True)
+    command_str += f"\nrm {output}/{sample}.sam"
 
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("BWA-MEM2\n")
+    steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
+    command_str += f'\nif [ $? -eq 0 ]; then echo "BWA-MEM2" >> "{steps_done}"; fi\n\n'
+    return command_str
 
 
 def salmon(sample, toml_config):
@@ -627,24 +553,17 @@ def salmon(sample, toml_config):
         ]
 
     command_str = " ".join(command)
-    print(f">>> {command_str}\n")
-    subprocess.run(command, check=True)
 
-    subprocess.run(
-        ["mv", output + "/logs/salmon_quant.log", output + "/" + sample + "_log.out"]
-    )
-    subprocess.run(
-        ["mv", output + "/quant.sf", output + "/" + sample + "_transcript_quant.sf"]
-    )
-    subprocess.run(["rm", output + "/cmd_info.json"])
-    subprocess.run(["rm", "-r", output + "/libParams"])
-    subprocess.run(["rm", "-r", output + "/logs"])
-    subprocess.run(["rm", "-r", output + "/salmon_tmp"])
+    command_str += f"\nmv {output}/logs/salmon_quant.log {output}/{sample}_log.out"
+    command_str += f"\nmv  {output}/quant.sf {output}/{sample}_transcript_quant.sf"
+    command_str += f"\nrm {output}/cmd_info.json"
+    command_str += f"\nrm -r {output}/libParams"
+    command_str += f"\nrm -r {output}/logs"
+    command_str += f"\nrm -r {output}/salmon_tmp"
 
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("Salmon\n")
+    steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
+    command_str += f'\nif [ $? -eq 0 ]; then echo "Salmon" >> "{steps_done}"; fi\n\n'
+    return command_str
 
 
 def samtools(sample, toml_config):
@@ -653,40 +572,21 @@ def samtools(sample, toml_config):
 
     inBAM = in_out + "/" + sample + ".bam"
     bamCoord = in_out + "/" + sample + "_sortedCoordinate.bam"
-    stats1 = in_out + "/" + sample + "_stats1.txt"
-    stats2 = in_out + "/" + sample + "_stats2.txt"
     stats = in_out + "/" + sample + "_stats.txt"
 
     # Sort by coordinate
-    subprocess.run(["samtools", "sort", inBAM, "-o", bamCoord])
+    command_str = f"\nsamtools sort {inBAM} -o {bamCoord}"
 
     # Index bam sorted by coordinates
-    subprocess.run(["samtools", "index", "-b", bamCoord, "-o", bamCoord + ".bai"])
+    command_str = f"\nsamtools", "index", "-b", {bamCoord}, "-o", {bamCoord} + ".bai"
 
     # alignment stats
-    with open(stats1, "w") as outfile1:
-        subprocess.run(["samtools", "stats", bamCoord], stdout=outfile1)
+    command_str = f"\nsamtools stats {bamCoord} | grep ^SN | cut -f, 2- > {stats}"
+    command_str = f"\nrm {inBAM}"
 
-    with open(stats2, "w") as outfile2:
-        subprocess.run(
-            [
-                "grep",
-                "^SN",
-                stats1,
-            ],
-            stdout=outfile2,
-        )
-    with open(stats, "w") as outfile:
-        subprocess.run(["cut", "-f", "2-", stats2], stdout=outfile)
-
-    subprocess.run(["rm", stats1])
-    subprocess.run(["rm", stats2])
-    subprocess.run(["rm", inBAM])
-
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("Samtools\n")
+    steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
+    command_str += f'\nif [ $? -eq 0 ]; then echo "Samtools" >> "{steps_done}"; fi\n\n'
+    return command_str
 
 
 def bamqc(sample, toml_config):
@@ -722,22 +622,14 @@ def bamqc(sample, toml_config):
     ]
 
     command_str = " ".join(command)
-    print(f">>> {command_str}\n")
-    subprocess.run(command, check=True)
-
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("FastQC for bam\n")
-
-    # Check if any failures in FastQC report
-    fastqc_reports = list(
-        Path(output + "/").glob(sample + "*_sortedCoordinate_fastqc.zip")
+    steps_done = output + "/steps_done.txt"
+    command_str += (
+        f'\nif [ $? -eq 0 ]; then echo "FastQC for bam" >> "{steps_done}"; fi\n\n'
     )
-    print()
 
-    for report in fastqc_reports:
-        check_fastqc_report(report)
+    command_str += f"python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/ShortReadSequencing/check_fasqc.py --path {output} --sample {sample}"
+
+    return command_str
 
 
 def markduplicates(sample, toml_config):
