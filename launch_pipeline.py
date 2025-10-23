@@ -90,7 +90,7 @@ def main():
         exit(1)
 
     if args.test:
-        print("\n\nTESTING MODE!\nThe pipeline will not be launched\n\n")
+        print("\n\nTESTING MODE!\nThe pipeline will not be launched.\n\n")
     else:
         # Call main.sh (Launch the pipeline)
         subprocess.run(["bash", output + "/main.sh"])
