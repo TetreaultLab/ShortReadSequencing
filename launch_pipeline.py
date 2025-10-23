@@ -70,6 +70,11 @@ def main():
         for line in f:
             done.append(line.strip())
 
+    # Create main.sh
+    work_dir = os.getcwd()
+    with open(work_dir + "/" + sample + "_main.sh", "w") as f:
+        f.write("#!/bin/sh\n")
+
     # Get tools and versions
     print(">>> Parameters:")
 
@@ -1023,7 +1028,7 @@ def steps_main(sample, toml_config, done):
     job = create_script(cores, memory, time, sample, step, email, command, output)
 
     work_dir = os.getcwd()
-    with open(work_dir + "/main.sh", "a") as f:
+    with open(work_dir + "/" + sample + "_main.sh", "a") as f:
         f.write("\n# Main steps")
         f.write(f"\nmain=$(sbatch --parsable {job})\n")
 
@@ -1094,8 +1099,8 @@ def steps_downstream(sample, toml_config, done):
     job = create_script(cores, memory, time, sample, step, email, command, output)
 
     work_dir = os.getcwd()
-    with open(work_dir + "/main.sh", "a") as f:
-        f.write("\n# Main steps")
+    with open(work_dir + "/" + sample + "_main.sh", "a") as f:
+        f.write("\n# Downstream analysis")
         if "main" not in done:
             f.write(f"\nsbatch --dependency=afterok:$main {job}\n")
         else:
