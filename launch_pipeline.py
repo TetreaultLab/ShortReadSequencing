@@ -3,6 +3,7 @@ from pathlib import Path
 import re
 import sys
 import zipfile
+import pandas as pd
 import toml
 import os
 import subprocess
@@ -92,7 +93,7 @@ def main():
 
 # Functions needed by others
 def title(message):
-    print(f"\n>>> Running {message} [{get_time()}]")
+    print(f"\n>>> Running {message}]")
 
 
 def get_file_trimmed(toml_config, output, sample):
@@ -578,11 +579,11 @@ def samtools(sample, toml_config):
     command_str = f"\nsamtools sort {inBAM} -o {bamCoord}"
 
     # Index bam sorted by coordinates
-    command_str = f"\nsamtools", "index", "-b", {bamCoord}, "-o", {bamCoord} + ".bai"
+    command_str += f"\nsamtools", "index", "-b", {bamCoord}, "-o", {bamCoord} + ".bai"
 
     # alignment stats
-    command_str = f"\nsamtools stats {bamCoord} | grep ^SN | cut -f, 2- > {stats}"
-    command_str = f"\nrm {inBAM}"
+    command_str += f"\nsamtools stats {bamCoord} | grep ^SN | cut -f, 2- > {stats}"
+    command_str += f"\nrm {inBAM}"
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
     command_str += f'\nif [ $? -eq 0 ]; then echo "Samtools" >> "{steps_done}"; fi\n\n'
@@ -743,35 +744,17 @@ def featurecounts(sample, toml_config):
         ]
 
     command_str = " ".join(command)
-    print(f">>> {command_str}\n")
-    subprocess.run(command, check=True)
 
     # Keep Geneid and counts
-    with open(output + "/" + sample + "_0.counts", "w") as outfile:
-        subprocess.run(
-            ["tail", "-n", "+2", output + "/" + sample + "_geneID.txt"], stdout=outfile
-        )
+    command_str += f"\ntail -n +2 {output}/{sample}_geneID.txt | cut -f1,7 > {output}/{sample}_counts.txt"
 
-    with open(output + "/" + sample + "_counts.txt", "w") as outfile:
-        subprocess.run(
-            ["cut", "-f1,7", output + "/" + sample + "_0.counts"], stdout=outfile
-        )
+    command_str += f'\nsed -i "1s|.*|gene_id\t" {sample} | {output}/{sample}_counts.txt'
 
-    subprocess.run(
-        [
-            "sed",
-            "-i",
-            "1s|.*|gene_id\t" + sample + "|",
-            output + "/" + sample + "_counts.txt",
-        ]
+    steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
+    command_str += (
+        f'\nif [ $? -eq 0 ]; then echo "FeatureCounts" >> "{steps_done}"; fi\n\n'
     )
-    subprocess.run(["rm", output + "/" + sample + "_0.counts"])
-
-    # Steps done
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("FeatureCounts\n")
+    return command_str
 
 
 def multiqc(sample, toml_config):
@@ -793,29 +776,14 @@ def multiqc(sample, toml_config):
         f.write(input + "MarkDuplicates/\n")
     f.close()
 
-    subprocess.run(
-        [
-            "apptainer",
-            "run",
-            "/lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif",
-            "multiqc",
-            "--file-list",
-            output + "my_file_list.txt",
-            "--force",
-            "--filename",
-            sample + "_multiqc_report",
-            "--outdir",
-            output,
-        ]
-    )
+    command_str = f"\napptainer run /lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif multiqc --file-list {output}my_file_list.txt --force --filename {sample}_multiqc_report --outdir {output}"
 
-    subprocess.run(["rm", output + "my_file_list.txt"])
-    subprocess.run(["rm", "-r", output + "/" + sample + "_multiqc_report_data"])
+    command_str += f"\nrm {output}my_file_list.txt"
+    command_str += f"\nrm -r {output}/{sample}_multiqc_report_data"
 
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("MultiQC\n")
+    steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
+    command_str += f'\nif [ $? -eq 0 ]; then echo "MultiQC" >> "{steps_done}"; fi\n\n'
+    return command_str
 
 
 def bcftools(sample, toml_config):
@@ -833,11 +801,9 @@ def bcftools(sample, toml_config):
     subprocess.run(["mkdir", "-p", output])
 
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
+    sample_file = toml_config["general"]["output"] + "/" + sample + "/sample.txt"
 
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/sample.txt", "w"
-    ) as sample_file:
-        subprocess.run(["echo", sample], stdout=sample_file)
+    command_str = f"\necho {sample} > {sample_file}"
 
     mpileup = [
         "bcftools",
@@ -868,27 +834,12 @@ def bcftools(sample, toml_config):
         output + sample + "_mpileup.vcf",
     ]
 
-    command_1 = " ".join(mpileup)
-    print(f">>> {command_1}\n")
-    subprocess.run(mpileup, check=True)
+    command_str += " ".join(mpileup)
+    command_str += "\n"
+    command_str += " ".join(call)
 
-    command_2 = " ".join(call)
-    print(f">>> {command_2}\n")
-    subprocess.run(call, check=True)
-
-    subprocess.run(["rm", output + sample + "_mpileup.vcf"])
-    subprocess.run(
-        [
-            "bcftools",
-            "reheader",
-            "--samples",
-            toml_config["general"]["output"] + "/" + sample + "/sample.txt",
-            "-o",
-            output + sample + "_bcftools_header.vcf",
-            output + sample + "_bcftools.vcf",
-        ],
-        check=True,
-    )
+    command_str += f"\nrm {output}{sample}_mpileup.vcf"
+    command_str += f"\nbcftools reheader --samples {sample_file} -o {output}{sample}_bcftools_header.vcf {output}{sample}_bcftools.vcf"
 
     command_norm = [
         "bcftools",
@@ -899,19 +850,15 @@ def bcftools(sample, toml_config):
         output + sample + "_bcftools_header.vcf",
     ]
 
-    command_norm_str = " ".join(command_norm)
-    print(f">>> {command_norm_str}\n")
-    subprocess.run(command_norm, check=True)
+    command_str += "\n"
+    command_str += " ".join(command_norm)
 
-    subprocess.run(["bgzip", "-f", output + sample + "_bcftools_norm.vcf"], check=True)
-    subprocess.run(
-        ["tabix", "-p", "vcf", output + sample + "_bcftools_norm.vcf.gz"], check=True
-    )
+    command_str += f"\nbgzip -f {output}{sample}_bcftools_norm.vcf"
+    command_str += f"\ntabix -p vcf {output}{sample}_bcftools_norm.vcf.gz"
 
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("BCFtools\n")
+    steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
+    command_str += f'\nif [ $? -eq 0 ]; then echo "BCFtools" >> "{steps_done}"; fi\n\n'
+    return command_str
 
 
 def freebayes(sample, toml_config):
@@ -929,6 +876,8 @@ def freebayes(sample, toml_config):
     subprocess.run(["mkdir", "-p", output])
 
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
+
+    sample_file = toml_config["general"]["output"] + "/" + sample + "/sample.txt"
 
     # freebayes with legacy genotype calling and naive variant calling
     command = [
@@ -949,47 +898,18 @@ def freebayes(sample, toml_config):
     ]
 
     command_str = " ".join(command)
-    print(f">>> {command_str}\n")
-    subprocess.run(command, check=True)
 
-    subprocess.run(
-        [
-            "bcftools",
-            "reheader",
-            "--samples",
-            toml_config["general"]["output"] + "/" + sample + "/sample.txt",
-            "-o",
-            output + sample + "_freebayes_header.vcf",
-            output + sample + "_freebayes.vcf",
-        ],
-        check=True,
-    )
+    command_str += f"\nbcftools reheader --samples {sample_file} -o {output}{sample}_freebayes_header.vcf {output}{sample}_freebayes.vcf"
 
-    command_norm = [
-        "bcftools",
-        "norm",
-        "-m-any",
-        "-o",
-        output + sample + "_freebayes_norm.vcf",
-        output + sample + "_freebayes_header.vcf",
-    ]
+    command_str += f"\nbcftools norm -m-any -o {output}{sample}_freebayes_norm.vcf {output}{sample}_freebayes_header.vcf"
 
-    command_norm_str = " ".join(command_norm)
-    print(f">>> {command_norm_str}\n")
-    subprocess.run(command_norm, check=True)
+    command_str += f"\nbgzip -f {output}{sample}_freebayes_norm.vcf"
+    command_str += f"\ntabix -p vcf {output}{sample}_freebayes_norm.vcf.gz"
+    command_str += f"\nrm {sample_file}"
 
-    subprocess.run(["bgzip", "-f", output + sample + "_freebayes_norm.vcf"], check=True)
-    subprocess.run(
-        ["tabix", "-p", "vcf", output + sample + "_freebayes_norm.vcf.gz"], check=True
-    )
-    subprocess.run(
-        ["rm", toml_config["general"]["output"] + "/" + sample + "/sample.txt"]
-    )
-
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("FreeBayes\n")
+    steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
+    command_str += f'\nif [ $? -eq 0 ]; then echo "FreeBayes" >> "{steps_done}"; fi\n\n'
+    return command_str
 
 
 def bcftools_filter(sample, toml_config):
@@ -1013,8 +933,6 @@ def bcftools_filter(sample, toml_config):
     ]
 
     command_concat_str = " ".join(command_concat)
-    print(f">>> {command_concat_str}\n")
-    subprocess.run(command_concat, check=True)
 
     command_filter = [
         "bcftools",
@@ -1027,8 +945,8 @@ def bcftools_filter(sample, toml_config):
     ]
 
     command_filter_str = " ".join(command_filter)
-    print(f">>> {command_filter_str}\n")
-    subprocess.run(command_filter, check=True)
+
+    command_str = command_concat_str + "\n" + command_filter_str
 
     # remove intermediate vcf files
     # subprocess.run(["rm", output + sample + "_unannotated.vcf"])
@@ -1036,10 +954,11 @@ def bcftools_filter(sample, toml_config):
     # subprocess.run(["rm", output + sample + "_freebayes.vcf"])
     # subprocess.run(["rm", output + sample + "_bcftools.vcf"])
 
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("BCFtools filters\n")
+    steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
+    command_str += (
+        f'\nif [ $? -eq 0 ]; then echo "BCFtools filters" >> "{steps_done}"; fi\n\n'
+    )
+    return command_str
 
 
 def snpeff(sample, toml_config):
@@ -1062,478 +981,30 @@ def snpeff(sample, toml_config):
 
     path = toml_config["general"]["output"] + "/" + sample + "/Variants"
 
-    cmd_snpeff = [
-        "java",
-        "-jar",
-        snpeff + "/snpEff.jar",
-        "-noLog",
-        ref,
-        "-c",
-        snpeff + "/snpEff.config",
-        "-stats",
-        path + "/" + sample + "_summary.html",
-        "-csvStats",
-        path + "/" + sample + "_summary.csv",
-        path + "/" + sample + "_unannotated.vcf",
-    ]
+    command_str = f"\njava -jar {snpeff}/snpEff.jar -noLog {ref} -c {snpeff}/snpEff.config -stats {path}/{sample}_summary.html -csvStats {path}/{sample}_summary.csv {path}/{sample}_unannotated.vcf > {path}/{sample}_snpeff.vcf"
 
-    command_str1 = " ".join(cmd_snpeff)
-    print(f">>> {command_str1}\n")
-    with open(path + "/" + sample + "_snpeff.vcf", "w") as outfile:
-        subprocess.run(
-            cmd_snpeff,
-            stdout=outfile,
-            check=True,
-        )
+    command_str += f"\njava -jar {snpeff}/SnpSift.jar varType -noLog {path}/{sample}_snpeff.vcf > {path}/{sample} _annotated.vcf"
 
-    cmd_vartype = [
-        "java",
-        "-jar",
-        snpeff + "/SnpSift.jar",
-        "varType",
-        "-noLog",
-        path + "/" + sample + "_snpeff.vcf",
-    ]
-
-    command_str2 = " ".join(cmd_vartype)
-    print(f">>> {command_str2}\n")
-    with open(path + "/" + sample + "_annotated.vcf", "w") as outfile:
-        subprocess.run(
-            cmd_vartype,
-            stdout=outfile,
-            check=True,
-        )
-
-    cmd_extract = [
-        "java",
-        "-jar",
-        snpeff + "/SnpSift.jar",
-        "extractFields",
-        "-noLog",
-        "-s",
-        "|",
-        "-e",
-        ".",
-        path + "/" + sample + "_annotated.vcf",
-        "CHROM",
-        "POS",
-        "REF",
-        "ALT",
-        "QUAL",
-        "HOM",
-        "DP",
-        # "TYPE",
-        "ANN[*].GENE",
-        "ANN[*].GENEID",
-        "ANN[*].FEATUREID",
-        "ANN[*].EFFECT",
-        "ANN[*].IMPACT",
-        "ANN[*].BIOTYPE",
-        "ANN[*].HGVS_C",
-        "ANN[*].HGVS_P",
-    ]
-
-    command_str3 = " ".join(cmd_extract)
-    print(f">>> {command_str3}\n")
-    with open(path + "/" + sample + "_annotated.txt", "w") as outfile:
-        subprocess.run(
-            cmd_extract,
-            stdout=outfile,
-            check=True,
-        )
+    command_str += f"\njava -jar {snpeff}/SnpSift.jar extractFields -noLog -s '|' -e '.' {path}/{sample}_annotated.vcf CHROM POS REF ALT QUAL HOM DP ANN[*].GENE ANN[*].GENEID ANN[*].FEATUREID ANN[*].EFFECT ANN[*].IMPACT ANN[*].BIOTYPE ANN[*].HGVS_C ANN[*].HGVS_P > {path}/{sample}_annotated.txt"
 
     # subprocess.run(["rm", path + "/" + sample + "_summary.csv"])
     # subprocess.run(["rm", path + "/" + sample + "_snpeff.vcf"])
 
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("SnpEff\n")
+    steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
+    command_str += f'\nif [ $? -eq 0 ]; then echo "SnpEff" >> "{steps_done}"; fi\n\n'
+    return command_str
 
 
-def dbNSFP(sample, toml_config):
-    title("Add dbNSFP to snpEff output")
+def dbNSFP_and_format(sample, toml_config):
+    title("Add dbNSFP to snpEff output and format")
 
-    genome = toml_config["general"]["reference"]
-    path = toml_config["general"]["output"] + "/" + sample + "/Variants"
+    command_str = f"python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/ShortReadSequencing/dbnsfp.py --config {toml_config} --sample {sample}"
 
-    chromosomes = [
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "9",
-        "10",
-        "11",
-        "12",
-        "13",
-        "14",
-        "15",
-        "16",
-        "17",
-        "18",
-        "19",
-        "20",
-        "21",
-        "22",
-        "X",
-        "Y",
-        "MT",
-    ]
-
-    var = pd.read_csv(
-        path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
+    steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
+    command_str += (
+        f'\nif [ $? -eq 0 ]; then echo "dbNSFP and formating" >> "{steps_done}"; fi\n\n'
     )
-    var = var.rename(columns={"CHROM": "CHROM_" + genome, "POS": "POS_" + genome})
-
-    var = var.astype({"CHROM_" + genome: str, "POS_" + genome: str})
-
-    appended_data = []
-    ref = "/lustre09/project/6019267/shared/tools/main_pipelines/short-read/dbNSFP"
-
-    for chromosome in chromosomes:
-        print(chromosome)
-        db = pd.read_csv(
-            ref + "/dbNSFP4.7a_variant.chr" + chromosome + "_small.txt",
-            header=0,
-            sep="\t",
-            low_memory=False,
-        )
-
-        db = db.astype({"CHROM_" + genome: str, "POS_" + genome: str})
-
-        var_chr = var[var["CHROM_" + genome] == chromosome]
-
-        m = pd.merge(
-            var_chr,
-            db,
-            how="left",
-            on=["CHROM_" + genome, "POS_" + genome, "REF", "ALT"],
-        )
-        appended_data.append(m)
-
-    final = pd.concat(appended_data)
-    final.to_csv(path + "/" + sample + "_annotated_dbNSFP.txt", sep="\t", index=False)
-
-    n_rows = len(final.index)
-    rows_ann = final["rsID"].count()
-    percentage = round(rows_ann / n_rows * 100, 2)
-
-    print(
-        "\nFinal\nannotated variants: ",
-        rows_ann,
-        "\ntotal variants:",
-        n_rows,
-        "\npercentage dbNSFP annotation: ",
-        percentage,
-        "%",
-    )
-
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("dbNSFP\n")
-
-
-def formatting(sample, toml_config):
-    title("Format variants output")
-
-    genome = toml_config["general"]["reference"]
-    path = toml_config["general"]["output"] + "/" + sample + "/Variants"
-
-    if genome == "grch37" or genome == "grch38":
-        final = pd.read_csv(
-            path + "/" + sample + "_annotated_dbNSFP.txt",
-            sep="\t",
-            header=0,
-            low_memory=False,
-        )
-
-        final = final.rename(
-            columns={
-                "REF": "Ref",
-                "ALT": "Alt",
-                "QUAL": "Quality",
-                # "TYPE": "Variation",
-                "HOM": "Zygosity",
-                "DP": "Read_depth",
-                "ANN[*].GENE": "Gene_name",
-                "ANN[*].GENEID": "Gene_id",
-                "ANN[*].FEATUREID": "Transcript",
-                "ANN[*].EFFECT": "Effect",
-                "ANN[*].IMPACT": "Impact",
-                "ANN[*].BIOTYPE": "Biotype",
-                "ANN[*].HGVS_C": "Codon_change",
-                "ANN[*].HGVS_P": "Protein_change",
-            }
-        )
-
-        final["Position_" + genome] = (
-            final["CHROM_" + genome].astype(str)
-            + ":"
-            + final["POS_" + genome].astype(str)
-        )
-        final["Quality"] = round(final["Quality"], 2)
-        final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
-
-        columns = [
-            "Gene_name",
-            "Gene_id",
-            "Transcript",
-            "Effect",
-            "Impact",
-            "Biotype",
-            "Codon_change",
-            "Protein_change",
-        ]
-
-        for index, row in final.iterrows():
-            infos = []
-
-            for c in columns:
-                cell_value = str(row[c])
-                str_split = [sub.replace('"', "") for sub in cell_value.split("|")]
-
-                # Append to infos, or take the first split value if there's only one
-                infos.append(str_split if len(str_split) > 1 else [cell_value])
-
-                # Update the final DataFrame with the first part of split value
-                final.at[index, c] = str_split[0]
-
-                # Transpose and concatenate corresponding elements from each list
-                if len(infos) > 1:
-                    info_concat = [
-                        "|".join([info[i] for info in infos])
-                        for i in range(len(infos[0]))
-                    ]
-                    final.at[index, "Infos"] = "; ".join(info_concat)
-                else:
-                    final.at[index, "Infos"] = "; ".join(infos[0])
-
-        final = final[
-            [
-                "Position_" + genome,
-                "Ref",
-                "Alt",
-                "Quality",
-                "Read_depth",
-                "Zygosity",
-                "rsID",
-                # "Variation",
-                "Gene_name",
-                "Gene_id",
-                "Transcript",
-                "Effect",
-                "Impact",
-                "Biotype",
-                "Codon_change",
-                "Protein_change",
-                "Infos",
-                "genename",
-                "Ensembl_geneid",
-                "Ensembl_transcriptid",
-                "Ensembl_proteinid",
-                "codon_change",
-                "protein_change",
-                "SIFT_score",
-                "PolyPhen2_HDIV_score",
-                "GERP_score",
-                "phyloP_score",
-                "phastCons_score",
-                "MutationTaster_score",
-                "FATHMM_score",
-                "REVEL_score",
-                "AlphaMissense_score",
-                "CADD_phred_score",
-                "1000G_AF",
-                "ExAC_AF",
-                "gnomAD_exomes_AF",
-                "gnomAD_exomes_NFE_AF",
-                "gnomAD_genomes_AF",
-                "gnomAD_genomes_NFE_AF",
-                "clinvar_id",
-                "clinvar_trait",
-                "clinvar_clnsig",
-                "OMIM",
-            ]
-        ]
-
-        # count "Het" for each gene
-        final["het_count"] = final.groupby("Gene_name")["Zygosity"].transform(
-            lambda x: (x == "Het").sum()
-        )
-
-        # Remplace "Het" for "Multiple-het" if het_count > 1
-        final.loc[
-            (final["het_count"] > 1) & (final["Zygosity"] == "Het"), "Zygosity"
-        ] = "Multiple-het"
-
-        # Remove het_count
-        final = final.drop(columns=["het_count"])
-
-        final = final.replace(".", np.nan)
-        final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
-
-        ## Filtering
-        # https://www.htslib.org/workflow/filter.html
-        # https://jp.support.illumina.com/content/dam/illumina-support/help/Illumina_DRAGEN_Bio_IT_Platform_v3_7_1000000141465/Content/SW/Informatics/Dragen/QUAL_QD_GQ_Formulation_fDG.htm
-
-        df_filtered = final[(final["Quality"] > 20) & (final["Read_depth"] > 5)]
-
-        df_filtered.to_csv(
-            path + "/" + sample + "_variants_filtered.txt", sep="\t", index=False
-        )
-
-        print(">>> Filters:")
-        print("\t>>> Quality Phred > 20")
-        print("\t>>> Number of total reads > 5")
-
-        all_var = len(final.index)
-        filtered_var = len(df_filtered.index)
-        percentage = round(filtered_var / all_var * 100, 2)
-
-        print(
-            "\nNumber of variants in all: ",
-            all_var,
-            "\nNumber of variants in filtered: ",
-            filtered_var,
-            "\npercentage filtered variants: ",
-            percentage,
-            "%",
-        )
-
-    else:
-        final = pd.read_csv(
-            path + "/" + sample + "_annotated.txt", header=0, sep="\t", low_memory=False
-        )
-
-        final = final.rename(
-            columns={
-                "REF": "Ref",
-                "ALT": "Alt",
-                "QUAL": "Quality",
-                "TYPE": "Variation",
-                "HOM": "Zygosity",
-                "DP": "Read_depth",
-                "ANN[*].GENE": "Gene_name",
-                "ANN[*].GENEID": "Gene_id",
-                "ANN[*].FEATUREID": "Transcript",
-                "ANN[*].EFFECT": "Effect",
-                "ANN[*].IMPACT": "Impact",
-                "ANN[*].BIOTYPE": "Biotype",
-                "ANN[*].HGVS_C": "Codon_change",
-                "ANN[*].HGVS_P": "Protein_change",
-            }
-        )
-
-        final["Position"] = final["CHROM"].astype(str) + ":" + final["POS"].astype(str)
-        final["Quality"] = round(final["Quality"], 2)
-        final = final.replace({"Zygosity": {True: "Hom", False: "Het"}})
-
-        columns = [
-            "Gene_name",
-            "Gene_id",
-            "Transcript",
-            "Effect",
-            "Impact",
-            "Biotype",
-            "Codon_change",
-            "Protein_change",
-        ]
-
-        for index, row in final.iterrows():
-            infos = []
-
-            for c in columns:
-                cell_value = str(row[c])
-                str_split = [sub.replace('"', "") for sub in cell_value.split("|")]
-
-                # Append to infos, or take the first split value if there's only one
-                infos.append(str_split if len(str_split) > 1 else [cell_value])
-
-                # Update the final DataFrame with the first part of split value
-                final.at[index, c] = str_split[0]
-
-                # Transpose and concatenate corresponding elements from each list
-                if len(infos) > 1:
-                    info_concat = [
-                        "|".join([info[i] for info in infos])
-                        for i in range(len(infos[0]))
-                    ]
-                    final.at[index, "Infos"] = "; ".join(info_concat)
-                else:
-                    final.at[index, "Infos"] = "; ".join(infos[0])
-
-        final = final[
-            [
-                "Position",
-                "Ref",
-                "Alt",
-                "Quality",
-                "Read_depth",
-                "Zygosity",
-                "Variation",
-                "Gene_name",
-                "Gene_id",
-                "Transcript",
-                "Effect",
-                "Impact",
-                "Biotype",
-                "Codon_change",
-                "Protein_change",
-                "Infos",
-            ]
-        ]
-
-        # count "Het" for each gene
-        final["het_count"] = final.groupby("Gene_name")["Zygosity"].transform(
-            lambda x: (x == "Het").sum()
-        )
-
-        # Remplace "Het" for "Multiple-het" if het_count > 1
-        final.loc[
-            (final["het_count"] > 1) & (final["Zygosity"] == "Het"), "Zygosity"
-        ] = "Multiple-het"
-
-        # Remove het_count
-        final = final.drop(columns=["het_count"])
-
-        final = final.replace(".", np.nan)
-        print(final)
-
-        final.to_csv(path + "/" + sample + "_variants_all.txt", sep="\t", index=False)
-
-        df_filtered = final[(final["Quality"] > 20) & (final["Read_depth"] > 5)]
-        df_filtered.to_csv(
-            path + "/" + sample + "_variants_filtered.txt", sep="\t", index=False
-        )
-
-        print(">>> Filters:")
-        print("\t>>> Quality Phred > 20")
-        print("\t>>> Number of total reads > 5")
-
-        all_var = len(final.index)
-        filtered_var = len(df_filtered.index)
-        percentage = round(filtered_var / all_var * 100, 2)
-
-        print(
-            "\nNumber of variants in all: ",
-            all_var,
-            "\nNumber of variants in filtered: ",
-            filtered_var,
-            "\nPercentage filtered variants: ",
-            percentage,
-            "%",
-        )
-
-    with open(
-        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
-    ) as steps:
-        steps.write("formatting\n")
+    return command_str
 
 
 def steps_main(sample, toml_config, done):
@@ -1639,18 +1110,10 @@ def steps_downstream(sample, toml_config, done):
         if "SnpEff" not in done:
             command += snpeff(sample, toml_config)
 
-        # Variant formatting
-        if (
-            toml_config["general"]["reference"] == "grch37"
-            or toml_config["general"]["reference"] == "grch38"
-        ):
-            if "dbNSFP" not in done:
-                command += dbNSFP(sample, toml_config)
-            if "formatting" not in done:
-                command += formatting(sample, toml_config)
-        else:
-            if "formatting" not in done:
-                command += formatting(sample, toml_config)
+        # dbNSFP annotation and variant formatting
+        if "dbNSFP and formating" not in done:
+            command += dbNSFP_and_format(sample, toml_config)
+
     else:
         print("\t>>> Variant Calling: none")
 
