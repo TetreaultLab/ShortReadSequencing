@@ -189,29 +189,29 @@ def create_script(cores, memory, time, sample_name, step, email, command, output
     job = work_dir + "/" + sample_name + "_" + step + ".slurm"
 
     slurm = """#!/bin/sh
-    #SBATCH -N 1 #Number of nodes
-    #SBATCH --cpus-per-task {0} # number of cores
-    #SBATCH --mem {1}G # memory pool for all cores
-    #SBATCH -t {2} # time (DD-HH:MM)
-    #SBATCH -o {3}_{4}.%N.%j.log
-    #SBATCH -e {3}_{4}.%N.%j.log
-    #SBATCH --mail-type=FAIL
-    #SBATCH --account=rrg-tetreaum
-    #SBATCH --mail-user={5}
-    #
-    ### Load environnment
-    #
-    module load StdEnv/2023
-    module load python/3.11.5 apptainer
-    module load fastqc/0.12.1 bbmap/39.06 star/2.7.11a bwa-mem2/2.2.1 gcc/12.3 openmpi/4.1.5 salmon/1.10.2 samtools/1.22.1 gatk/4.6.1.0 subread/2.0.6 htslib/1.22.1 bcftools/1.22 freebayes/1.3.7
-    source /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate
-    export JAVA_TOOL_OPTIONS="-Xmx{1}g -XX:ParallelGCThreads={0}"
-    #
-    ### Launch script
-    #
-    newgrp rrg-tetreaum
-    #
-    {6}
+#SBATCH -N 1 #Number of nodes
+#SBATCH --cpus-per-task {0} # number of cores
+#SBATCH --mem {1}G # memory pool for all cores
+#SBATCH -t {2} # time (DD-HH:MM)
+#SBATCH -o {3}_{4}.%N.%j.log
+#SBATCH -e {3}_{4}.%N.%j.log
+#SBATCH --mail-type=FAIL
+#SBATCH --account=rrg-tetreaum
+#SBATCH --mail-user={5}
+#
+### Load environnment
+#
+module load StdEnv/2023
+module load python/3.11.5 apptainer
+module load fastqc/0.12.1 bbmap/39.06 star/2.7.11a bwa-mem2/2.2.1 gcc/12.3 openmpi/4.1.5 salmon/1.10.2 samtools/1.22.1 gatk/4.6.1.0 subread/2.0.6 htslib/1.22.1 bcftools/1.22 freebayes/1.3.7
+source /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate
+export JAVA_TOOL_OPTIONS="-Xmx{1}g -XX:ParallelGCThreads={0}"
+#
+### Launch script
+#
+newgrp rrg-tetreaum
+#
+{6}
     """.format(cores, memory, time, sample_name, step, email, command)
 
     slurm += f'\nif [ $? -eq 0 ]; then echo "{step}" >> "{steps_done}"; fi\n\n'
