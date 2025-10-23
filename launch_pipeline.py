@@ -88,7 +88,7 @@ def main():
         print("\n\nTESTING MODE!\nThe pipeline will not be launched\n\n")
     else:
         # Call main.sh (Launch the pipeline)
-        subprocess.run(["bash", output + "/scripts/main.sh"])
+        subprocess.run(["bash", output + "/main.sh"])
 
 
 # Functions needed by others
@@ -207,7 +207,6 @@ def create_script(cores, memory, time, sample_name, step, email, command, output
     newgrp rrg-tetreaum
     #
     {6}
-    #
     """.format(cores, memory, time, sample_name, step, email, command)
 
     slurm += f'\nif [ $? -eq 0 ]; then echo "{step}" >> "{steps_done}"; fi\n\n'
