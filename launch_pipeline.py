@@ -343,8 +343,7 @@ def star(sample, toml_config):
     subprocess.run(["mkdir", "-p", output])
 
     temporary = toml_config["general"]["temporary"] + "/" + sample + "/star_tmp"
-    if os.path.exists(temporary):
-        subprocess.run(["rm", "-r", temporary])
+    subprocess.run(["rm", "-r", temporary])
 
     ref = get_reference(toml_config["general"]["reference"], "star")["index"]
 
@@ -630,7 +629,7 @@ def bamqc(sample, toml_config):
         f'\nif [ $? -eq 0 ]; then echo "FastQC for bam" >> "{steps_done}"; fi\n\n'
     )
 
-    command_str += f"python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/ShortReadSequencing/check_fasqc.py --path {output} --sample {sample}"
+    command_str += f"python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/ShortReadSequencing/check_fastqc.py --path {output} --sample {sample}"
     command_str += "\n\necho '>>> FastQC for bam '\n\n"
 
     return command_str
