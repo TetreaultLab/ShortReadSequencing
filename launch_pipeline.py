@@ -270,7 +270,7 @@ def fastqc(sample, toml_config):
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
     command_str += f'\nif [ $? -eq 0 ]; then echo "FastQC" >> "{steps_done}"; fi\n\n'
-    command_str += "\n\necho '>>> FastQC '\n\n"
+    command_str += "\n\necho '>>> FastQC end'"
 
     return command_str
 
@@ -334,7 +334,7 @@ def bbduk(sample, toml_config):
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
     command_str += f'\nif [ $? -eq 0 ]; then echo "BBDuk" >> "{steps_done}"; fi\n\n'
-    command_str += "\n\necho '>>> BBDuk '\n\n"
+    command_str += "\n\necho '>>> BBDuk end'"
 
     return command_str
 
@@ -401,7 +401,9 @@ def star(sample, toml_config):
             "--runThreadN",
             str(toml_config["general"]["threads"]),
             "--limitBAMsortRAM",
-            "60000000000",
+            "30000000000",
+            "--outBAMsortingBinsN",
+            "100",
             "--genomeDir",
             ref,
             "--outSAMattributes",
@@ -442,7 +444,7 @@ def star(sample, toml_config):
     command_str += f"\nrm -r {output}/{sample}__STARpass1"
     command_str += f"\nmv {output}/{sample}__STARgenome/sjdbList.out.tab {output}/{sample}_sjdbList.out.tab"
 
-    command_str += "\n\necho '>>> STAR '\n\n"
+    command_str += "\n\necho '>>> STAR end'"
     return command_str
 
 
@@ -497,7 +499,7 @@ def bwa(sample, toml_config):
     )
     command_str += f"\nrm {output}/{sample}.sam"
 
-    command_str += "\n\necho '>>> BWA-MEM2 '\n\n"
+    command_str += "\n\necho '>>> BWA-MEM2 end'"
     return command_str
 
 
@@ -567,7 +569,7 @@ def salmon(sample, toml_config):
     command_str += f"\nrm -r {output}/logs"
     command_str += f"\nrm -r {output}/salmon_tmp"
 
-    command_str += "\n\necho '>>> Salmon '\n\n"
+    command_str += "\n\necho '>>> Salmon end'"
     return command_str
 
 
@@ -591,7 +593,7 @@ def samtools(sample, toml_config):
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
     command_str += f'\nif [ $? -eq 0 ]; then echo "Samtools" >> "{steps_done}"; fi\n\n'
-    command_str += "\n\necho '>>> Samtools '\n\n"
+    command_str += "\n\necho '>>> Samtools end'"
     return command_str
 
 
@@ -634,7 +636,7 @@ def bamqc(sample, toml_config):
     )
 
     command_str += f"python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/ShortReadSequencing/check_fastqc.py --path {output} --sample {sample}"
-    command_str += "\n\necho '>>> FastQC for bam '\n\n"
+    command_str += "\n\necho '>>> FastQC for bam end'"
 
     return command_str
 
@@ -757,7 +759,7 @@ def featurecounts(sample, toml_config):
     command_str += f"\ntail -n +2 {output}/{sample}_geneID.txt | cut -f1,7 > {output}/{sample}_counts.txt"
     command_str += f'\nsed -i "1s|.*|gene_id\t" {sample} | {output}/{sample}_counts.txt'
 
-    command_str += "\n\necho '>>> FeatureCounts '\n\n"
+    command_str += "\n\necho '>>> FeatureCounts end'"
 
     return command_str
 
@@ -789,7 +791,7 @@ def multiqc(sample, toml_config):
     command_str += f"\nrm {output}my_file_list.txt"
     command_str += f"\nrm -r {output}/{sample}_multiqc_report_data"
 
-    command_str += "\n\necho '>>> MultiQC '\n\n"
+    command_str += "\n\necho '>>> MultiQC end'"
 
     return command_str
 
@@ -866,7 +868,7 @@ def bcftools(sample, toml_config):
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
     command_str += f'\nif [ $? -eq 0 ]; then echo "BCFtools" >> "{steps_done}"; fi\n\n'
 
-    command_str += "\n\necho '>>> BCFtools '\n\n"
+    command_str += "\n\necho '>>> BCFtools end'"
 
     return command_str
 
@@ -919,7 +921,7 @@ def freebayes(sample, toml_config):
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
     command_str += f'\nif [ $? -eq 0 ]; then echo "FreeBayes" >> "{steps_done}"; fi\n\n'
 
-    command_str += "\n\necho '>>> FreeBayes '\n\n"
+    command_str += "\n\necho '>>> FreeBayes end'"
 
     return command_str
 
@@ -970,7 +972,7 @@ def bcftools_filter(sample, toml_config):
         f'\nif [ $? -eq 0 ]; then echo "BCFtools filters" >> "{steps_done}"; fi\n\n'
     )
 
-    command_str += "\n\necho '>>> BCFtools filters '\n\n"
+    command_str += "\n\necho '>>> BCFtools filters end'"
 
     return command_str
 
@@ -1006,7 +1008,7 @@ def snpeff(sample, toml_config):
     # subprocess.run(["rm", path + "/" + sample + "_summary.csv"])
     # subprocess.run(["rm", path + "/" + sample + "_snpeff.vcf"])
 
-    command_str += "\n\necho '>>> SnpEff '\n\n"
+    command_str += "\n\necho '>>> SnpEff end'"
 
     return command_str
 
@@ -1024,7 +1026,7 @@ def dbNSFP_and_format(sample, toml_config):
         f'\nif [ $? -eq 0 ]; then echo "dbNSFP and formating" >> "{steps_done}"; fi\n\n'
     )
 
-    command_str += "\n\necho '>>> dbNSFP and formating '\n\n"
+    command_str += "\n\necho '>>> dbNSFP and formating end'"
 
     return command_str
 
