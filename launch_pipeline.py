@@ -179,7 +179,9 @@ def get_reference(ref, tool):
     return reference
 
 
-def create_script(cores, memory, time, sample_name, step, email, command, output):
+def create_script(
+    cores, memory, time, sample_name, step, email, command, output, project
+):
     steps_done = output + "/steps_done.txt"
     work_dir = os.getcwd()
     job = work_dir + "/" + sample_name + "_" + step + ".slurm"
@@ -189,11 +191,11 @@ def create_script(cores, memory, time, sample_name, step, email, command, output
 #SBATCH --cpus-per-task {0} # number of cores
 #SBATCH --mem {1}G # memory pool for all cores
 #SBATCH -t {2} # time (DD-HH:MM)
-#SBATCH -o {3}_{4}.%N.%j.log
-#SBATCH -e {3}_{4}.%N.%j.log
+#SBATCH -o {3}_{4}_{5}.%N.%j.log
+#SBATCH -e {3}_{4}_{5}.%N.%j.log
 #SBATCH --mail-type=FAIL
 #SBATCH --account=rrg-tetreaum
-#SBATCH --mail-user={5}
+#SBATCH --mail-user={6}
 #
 ### Load environnment
 #
@@ -207,8 +209,8 @@ export JAVA_TOOL_OPTIONS="-Xmx{1}g -XX:ParallelGCThreads={0}"
 #
 newgrp rrg-tetreaum
 #
-{6}
-    """.format(cores, memory, time, sample_name, step, email, command)
+{7}
+    """.format(cores, memory, time, sample_name, project, step, email, command)
 
     slurm += f'\n\nif [ $? -eq 0 ]; then echo "{step}" >> "{steps_done}"; fi\n\n'
 
@@ -1069,8 +1071,11 @@ def steps_main(sample, toml_config, done):
         time = toml_config["general"]["time"]
         email = toml_config["general"]["email"]
         output = toml_config["general"]["output"] + "/" + sample
+        project = toml_config["general"]["project"]
 
-        job = create_script(cores, memory, time, sample, step, email, command, output)
+        job = create_script(
+            cores, memory, time, sample, step, email, command, output, project
+        )
 
         work_dir = os.getcwd()
         with open(work_dir + "/" + sample + ".sh", "a") as f:
@@ -1141,8 +1146,11 @@ def steps_downstream(sample, toml_config, done):
         time = toml_config["general"]["time"]
         email = toml_config["general"]["email"]
         output = toml_config["general"]["output"] + "/" + sample
+        project = toml_config["general"]["project"]
 
-        job = create_script(cores, memory, time, sample, step, email, command, output)
+        job = create_script(
+            cores, memory, time, sample, step, email, command, output, project
+        )
 
         work_dir = os.getcwd()
         with open(work_dir + "/" + sample + ".sh", "a") as f:
