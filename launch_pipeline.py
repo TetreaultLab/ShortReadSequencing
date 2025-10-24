@@ -494,7 +494,7 @@ def bwa(sample, toml_config):
 
     # Change SAM to BAM format and remove SAM
     command_str += (
-        f"\nsamtools view -S -b {output}/{sample}.sam -o {output}/{sample}.bam",
+        f"\nsamtools view -S -b {output}/{sample}.sam -o {output}/{sample}.bam"
     )
     command_str += f"\nrm {output}/{sample}.sam"
 
