@@ -9,19 +9,15 @@ parser = argparse.ArgumentParser(
     description="Generate SLURM job for samples based on a TOML project config file.",
 )
 
-parser.add_argument("--config", type=str, required=True, help="Config file.")
+parser.add_argument("--genome", type=str, required=True, help="Reference genome.")
+parser.add_argument("--output", type=str, required=True, help="Output path.")
 parser.add_argument("--sample", type=str, required=True, help="Sample name.")
 
 args = parser.parse_args()
 
-with open(args.config, "r") as f:
-    toml_config = toml.load(f)
-f.close()
-
 sample = args.sample
-
-genome = toml_config["general"]["reference"]
-path = toml_config["general"]["output"] + "/" + sample + "/Variants"
+genome = args.genome
+path = args.output
 
 if genome == "grch37" or genome == "grch38":
     # dbNSFP

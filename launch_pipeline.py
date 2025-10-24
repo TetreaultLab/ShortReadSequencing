@@ -72,7 +72,7 @@ def main():
 
     # Create main.sh
     work_dir = os.getcwd()
-    with open(work_dir + "/" + sample + "_main.sh", "w") as f:
+    with open(work_dir + "/" + sample + ".sh", "w") as f:
         f.write("#!/bin/sh\n")
 
     # Get tools and versions
@@ -93,7 +93,7 @@ def main():
         print("\n\nTESTING MODE!\nThe pipeline will not be launched.\n\n")
     else:
         # Call main.sh (Launch the pipeline)
-        subprocess.run(["bash", work_dir + "/" + sample + "_main.sh"])
+        subprocess.run(["bash", work_dir + "/" + sample + ".sh"])
 
 
 # Functions needed by others
@@ -1014,7 +1014,11 @@ def snpeff(sample, toml_config):
 
 def dbNSFP_and_format(sample, toml_config):
     command_str = "\n\necho '>>> dbNSFP and formating start'\n\n"
-    command_str += f"python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/ShortReadSequencing/dbnsfp.py --config {toml_config} --sample {sample}"
+
+    ref = toml_config["general"]["reference"]
+    output = toml_config["general"]["output"] + "/" + sample + "/Variants"
+
+    command_str += f"python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/ShortReadSequencing/dbnsfp.py --genome {ref} --output {output} --sample {sample}"
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
     command_str += (
@@ -1064,18 +1068,19 @@ def steps_main(sample, toml_config, done):
     if "FastQC for bam" not in done:
         command += bamqc(sample, toml_config)
 
-    cores = toml_config["general"]["threads"]
-    memory = toml_config["general"]["memory"]
-    time = toml_config["general"]["time"]
-    email = toml_config["general"]["email"]
-    output = toml_config["general"]["output"] + "/" + sample
+    if len(command) != 0:
+        cores = toml_config["general"]["threads"]
+        memory = toml_config["general"]["memory"]
+        time = toml_config["general"]["time"]
+        email = toml_config["general"]["email"]
+        output = toml_config["general"]["output"] + "/" + sample
 
-    job = create_script(cores, memory, time, sample, step, email, command, output)
+        job = create_script(cores, memory, time, sample, step, email, command, output)
 
-    work_dir = os.getcwd()
-    with open(work_dir + "/" + sample + "_main.sh", "a") as f:
-        f.write("\n# Main steps")
-        f.write(f"\nmain=$(sbatch --parsable {job})\n")
+        work_dir = os.getcwd()
+        with open(work_dir + "/" + sample + ".sh", "a") as f:
+            f.write("\n# Main steps")
+            f.write(f"\nmain=$(sbatch --parsable {job})\n")
 
 
 def steps_downstream(sample, toml_config, done):
@@ -1135,21 +1140,22 @@ def steps_downstream(sample, toml_config, done):
     else:
         print("\t>>> Variant Calling: none")
 
-    cores = "1"
-    memory = "4"
-    time = toml_config["general"]["time"]
-    email = toml_config["general"]["email"]
-    output = toml_config["general"]["output"] + "/" + sample
+    if len(command) != 0:
+        cores = "1"
+        memory = "4"
+        time = toml_config["general"]["time"]
+        email = toml_config["general"]["email"]
+        output = toml_config["general"]["output"] + "/" + sample
 
-    job = create_script(cores, memory, time, sample, step, email, command, output)
+        job = create_script(cores, memory, time, sample, step, email, command, output)
 
-    work_dir = os.getcwd()
-    with open(work_dir + "/" + sample + "_main.sh", "a") as f:
-        f.write("\n# Downstream analysis")
-        if "main" not in done:
-            f.write(f"\nsbatch --dependency=afterok:$main {job}\n")
-        else:
-            f.write(f"\nsbatch {job}\n")
+        work_dir = os.getcwd()
+        with open(work_dir + "/" + sample + ".sh", "a") as f:
+            f.write("\n# Downstream analysis")
+            if "main" not in done:
+                f.write(f"\nsbatch --dependency=afterok:$main {job}\n")
+            else:
+                f.write(f"\nsbatch {job}\n")
 
 
 if __name__ == "__main__":
