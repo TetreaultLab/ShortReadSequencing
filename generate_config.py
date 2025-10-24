@@ -66,8 +66,8 @@ if args.trimming:
     mink = 7  # look for shorter kmers at read tips to this min 
     ktrim = "r"  # trim bases that match adapters, trim to the right
     qtrim = "rl"    # Trim read ends to remove bases with quality below trimq. Performed AFTER looking for kmers.  Values: rl (trim both ends), f (neither end), r (right end only), l (left end only), w (sliding window).
-    trimq = 10 # Regions with average quality BELOW this will be trimmed, if qtrim is set to something other than f.
-    minlength = 10 # Reads shorter than this after trimming will be discarded.  Pairs will be discarded if both are shorter.
+    trimq = 5 # Regions with average quality BELOW this will be trimmed, if qtrim is set to something other than f.
+    minlength = 5 # Reads shorter than this after trimming will be discarded.  Pairs will be discarded if both are shorter.
     mlf = 0 # (minlengthfraction) Reads shorter than this fraction of original length after trimming will be discarded.
     minavgquality = 0   # (maq) Reads with average quality (after trimming) below this will be discarded.
     \n
