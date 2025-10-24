@@ -406,7 +406,7 @@ def star(sample, toml_config):
             "--limitBAMsortRAM",
             str(ram_limit),
             "--outBAMsortingBinsN",
-            "100",
+            "200",
             "--genomeDir",
             ref,
             "--outSAMattributes",
