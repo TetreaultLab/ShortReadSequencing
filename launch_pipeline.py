@@ -212,7 +212,7 @@ newgrp rrg-tetreaum
 {7}
     """.format(cores, memory, time, sample_name, project, step, email, command)
 
-    slurm += f'\n\nif [ $? -eq 0 ]; then echo "{step}" >> "{steps_done}"; fi\n\n'
+    slurm += f'[ $? -eq 0 ] && echo "{step}" >> "{steps_done}" || {{ echo "Pipeline failed — exiting."; exit 1; }}\n'
 
     with open(job, "w") as o:
         o.write(slurm)
@@ -269,7 +269,7 @@ def fastqc(sample, toml_config):
         command_str += " ".join(command)
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
-    command_str += f'\nif [ $? -eq 0 ]; then echo "FastQC" >> "{steps_done}"; fi\n\n'
+    command_str += f'[ $? -eq 0 ] && echo "FastQC" >> "{steps_done}" || {{ echo "FastQC failed — exiting."; exit 1; }}\n'
     command_str += "\n\necho '>>> FastQC end'"
 
     return command_str
@@ -333,7 +333,7 @@ def bbduk(sample, toml_config):
     command_str += " ".join(command)
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
-    command_str += f'\nif [ $? -eq 0 ]; then echo "BBDuk" >> "{steps_done}"; fi\n\n'
+    command_str += f'[ $? -eq 0 ] && echo "BBDuk" >> "{steps_done}" || {{ echo "BBDuk failed — exiting."; exit 1; }}\n'
     command_str += "\n\necho '>>> BBDuk end'"
 
     return command_str
@@ -433,7 +433,7 @@ def star(sample, toml_config):
     command_str += " ".join(command)
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
-    command_str += f'\nif [ $? -eq 0 ]; then echo "STAR" >> "{steps_done}"; fi\n'
+    command_str += f'[ $? -eq 0 ] && echo "STAR" >> "{steps_done}" || {{ echo "STAR failed — exiting."; exit 1; }}\n'
 
     command_str += (
         f"\nmv {output}/{sample}_Aligned.sortedByCoord.out.bam {output}/{sample}.bam"
@@ -495,7 +495,7 @@ def bwa(sample, toml_config):
     command_str += " ".join(command)
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
-    command_str += f'\nif [ $? -eq 0 ]; then echo "BWA-MEM2" >> "{steps_done}"; fi\n\n'
+    command_str += f'[ $? -eq 0 ] && echo "BWA-MEM2" >> "{steps_done}" || {{ echo "BWA-MEM2 failed — exiting."; exit 1; }}'
 
     # Change SAM to BAM format and remove SAM
     command_str += (
@@ -564,7 +564,7 @@ def salmon(sample, toml_config):
     command_str += " ".join(command)
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
-    command_str += f'\nif [ $? -eq 0 ]; then echo "Salmon" >> "{steps_done}"; fi\n\n'
+    command_str += f'[ $? -eq 0 ] && echo "Salmon" >> "{steps_done}" || {{ echo "Salmon failed — exiting."; exit 1; }}\n'
 
     command_str += f"\nmv {output}/logs/salmon_quant.log {output}/{sample}_log.out"
     command_str += f"\nmv  {output}/quant.sf {output}/{sample}_transcript_quant.sf"
@@ -596,7 +596,7 @@ def samtools(sample, toml_config):
     command_str += f"\nrm {inBAM}"
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
-    command_str += f'\nif [ $? -eq 0 ]; then echo "Samtools" >> "{steps_done}"; fi\n\n'
+    command_str += f'[ $? -eq 0 ] && echo "Salmon" >> "{steps_done}" || {{ echo "Salmon failed — exiting."; exit 1; }}\n'
     command_str += "\n\necho '>>> Samtools end'"
     return command_str
 
@@ -635,9 +635,7 @@ def bamqc(sample, toml_config):
     command_str += " ".join(command)
 
     steps_done = output + "/steps_done.txt"
-    command_str += (
-        f'\nif [ $? -eq 0 ]; then echo "FastQC for bam" >> "{steps_done}"; fi\n\n'
-    )
+    command_str += f'[ $? -eq 0 ] && echo "FastQC for bam end" >> "{steps_done}" || {{ echo "FastQC for bam end failed — exiting."; exit 1; }}\n'
 
     command_str += f"python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/ShortReadSequencing/check_fastqc.py --path {output} --sample {sample}"
     command_str += "\n\necho '>>> FastQC for bam end'"
@@ -755,9 +753,7 @@ def featurecounts(sample, toml_config):
     command_str += " ".join(command)
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
-    command_str += (
-        f'\nif [ $? -eq 0 ]; then echo "FeatureCounts" >> "{steps_done}"; fi\n\n'
-    )
+    command_str += f'[ $? -eq 0 ] && echo "FeatureCounts" >> "{steps_done}" || {{ echo "FeatureCounts failed — exiting."; exit 1; }}\n'
 
     # Keep Geneid and counts
     command_str += f"\ntail -n +2 {output}/{sample}_geneID.txt | cut -f1,7 > {output}/{sample}_counts.txt"
@@ -790,7 +786,7 @@ def multiqc(sample, toml_config):
     command_str += f"\napptainer run /lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif multiqc --file-list {output}my_file_list.txt --force --filename {sample}_multiqc_report --outdir {output}"
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
-    command_str += f'\nif [ $? -eq 0 ]; then echo "MultiQC" >> "{steps_done}"; fi\n\n'
+    command_str += f'[ $? -eq 0 ] && echo "MultiQC" >> "{steps_done}" || {{ echo "MultiQC failed — exiting."; exit 1; }}\n'
 
     command_str += f"\nrm {output}my_file_list.txt"
     command_str += f"\nrm -r {output}/{sample}_multiqc_report_data"
@@ -870,7 +866,7 @@ def bcftools(sample, toml_config):
     command_str += f"\ntabix -p vcf {output}{sample}_bcftools_norm.vcf.gz"
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
-    command_str += f'\nif [ $? -eq 0 ]; then echo "BCFtools" >> "{steps_done}"; fi\n\n'
+    command_str += f'[ $? -eq 0 ] && echo "BCFtools" >> "{steps_done}" || {{ echo "BCFtools failed — exiting."; exit 1; }}\n'
 
     command_str += "\n\necho '>>> BCFtools end'"
 
@@ -923,7 +919,7 @@ def freebayes(sample, toml_config):
     command_str += f"\nrm {sample_file}"
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
-    command_str += f'\nif [ $? -eq 0 ]; then echo "FreeBayes" >> "{steps_done}"; fi\n\n'
+    command_str += f'[ $? -eq 0 ] && echo "FreeBayes" >> "{steps_done}" || {{ echo "FreeBayes failed — exiting."; exit 1; }}\n'
 
     command_str += "\n\necho '>>> FreeBayes end'"
 
@@ -972,9 +968,7 @@ def bcftools_filter(sample, toml_config):
     # subprocess.run(["rm", output + sample + "_bcftools.vcf"])
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
-    command_str += (
-        f'\nif [ $? -eq 0 ]; then echo "BCFtools filters" >> "{steps_done}"; fi\n\n'
-    )
+    command_str += f'[ $? -eq 0 ] && echo "BCFtools filters" >> "{steps_done}" || {{ echo "BCFtools filters failed — exiting."; exit 1; }}\n'
 
     command_str += "\n\necho '>>> BCFtools filters end'"
 
@@ -1007,7 +1001,7 @@ def snpeff(sample, toml_config):
     command_str += f"\njava -jar {snpeff}/SnpSift.jar extractFields -noLog -s '|' -e '.' {path}/{sample}_annotated.vcf CHROM POS REF ALT QUAL HOM DP ANN[*].GENE ANN[*].GENEID ANN[*].FEATUREID ANN[*].EFFECT ANN[*].IMPACT ANN[*].BIOTYPE ANN[*].HGVS_C ANN[*].HGVS_P > {path}/{sample}_annotated.txt"
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
-    command_str += f'\nif [ $? -eq 0 ]; then echo "SnpEff" >> "{steps_done}"; fi\n\n'
+    command_str += f'[ $? -eq 0 ] && echo "SnpEff" >> "{steps_done}" || {{ echo "SnpEff failed — exiting."; exit 1; }}'
 
     # subprocess.run(["rm", path + "/" + sample + "_summary.csv"])
     # subprocess.run(["rm", path + "/" + sample + "_snpeff.vcf"])
@@ -1026,9 +1020,7 @@ def dbNSFP_and_format(sample, toml_config):
     command_str += f"python -u /lustre09/project/6019267/shared/tools/main_pipelines/short-read/ShortReadSequencing/dbnsfp.py --genome {ref} --output {output} --sample {sample}"
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
-    command_str += (
-        f'\nif [ $? -eq 0 ]; then echo "dbNSFP and formating" >> "{steps_done}"; fi\n\n'
-    )
+    command_str += f'[ $? -eq 0 ] && echo "dbNSFP and formating" >> "{steps_done}" || {{ echo "dbNSFP and formating failed — exiting."; exit 1; }}'
 
     command_str += "\n\necho '>>> dbNSFP and formating end'"
 
