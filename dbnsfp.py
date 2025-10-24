@@ -1,6 +1,7 @@
 import argparse
 import numpy as np
 import pandas as pd
+import toml
 
 
 parser = argparse.ArgumentParser(
@@ -13,7 +14,10 @@ parser.add_argument("--sample", type=str, required=True, help="Sample name.")
 
 args = parser.parse_args()
 
-toml_config = args.config
+with open(args.config, "r") as f:
+    toml_config = toml.load(f)
+f.close()
+
 sample = args.sample
 
 genome = toml_config["general"]["reference"]
