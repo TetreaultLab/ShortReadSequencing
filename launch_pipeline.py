@@ -366,7 +366,7 @@ def star(sample, toml_config):
             "--runThreadN",
             str(toml_config["general"]["threads"]),
             "--limitBAMsortRAM",
-            "60000000000",
+            "30000000000",
             "--genomeDir",
             ref,
             "--outFileNamePrefix",
