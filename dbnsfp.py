@@ -1,8 +1,6 @@
 import argparse
 import numpy as np
 import pandas as pd
-import toml
-
 
 parser = argparse.ArgumentParser(
     prog="GenerateJob",
