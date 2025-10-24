@@ -345,7 +345,7 @@ def star(sample, toml_config):
     subprocess.run(["mkdir", "-p", output])
 
     temporary = toml_config["general"]["temporary"] + "/" + sample + "/star_tmp"
-    subprocess.run(["rm", "-r", temporary])
+    command_str += f"rm -r {temporary}"
 
     ref = get_reference(toml_config["general"]["reference"], "star")["index"]
 
@@ -355,6 +355,9 @@ def star(sample, toml_config):
     I_toAlign = files["I_toAlign"]
     O_aligned = files["O_aligned"]
 
+    mem = toml_config["general"]["memory"]
+    ram_limit = mem * 1000000000
+
     if toml_config["general"]["reads"] == "PE":
         command = [
             "STAR",
@@ -363,7 +366,7 @@ def star(sample, toml_config):
             "--runThreadN",
             str(toml_config["general"]["threads"]),
             "--limitBAMsortRAM",
-            "30000000000",
+            str(ram_limit),
             "--outBAMsortingBinsN",
             "100",
             "--genomeDir",
@@ -401,7 +404,7 @@ def star(sample, toml_config):
             "--runThreadN",
             str(toml_config["general"]["threads"]),
             "--limitBAMsortRAM",
-            "30000000000",
+            str(ram_limit),
             "--outBAMsortingBinsN",
             "100",
             "--genomeDir",
@@ -426,6 +429,7 @@ def star(sample, toml_config):
             "--quantMode",
             toml_config["star"]["quantMode"],
         ]
+    command_str += "\n"
     command_str += " ".join(command)
 
     steps_done = toml_config["general"]["output"] + "/" + sample + "/steps_done.txt"
