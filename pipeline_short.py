@@ -1102,19 +1102,10 @@ def freebayes(sample, toml_config):
 
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
 
-    # freebayes with legacy genotype calling and naive variant calling
     command = [
         "freebayes",
         "-f",
         ref,
-        "--legacy-gls",
-        "--min-alternate-fraction",
-        "0.01",
-        "--ploidy",
-        "50",
-        "--min-repeat-entropy",
-        "1",
-        "--no-partial-observations",
         input,
         "--vcf",
         output + sample + "_freebayes.vcf",
