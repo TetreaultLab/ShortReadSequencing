@@ -1240,7 +1240,7 @@ def openCravat(sample, toml_config):
         "-a",
         "alfa alphamissense cadd clingen clinvar clinvar_acmg dbsnp denovo gerp geuvadis gnomad4 gtex gwas_catalog hg19 interpro mutation_assessor mutationtaster phastcons phylop polyphen2 provean revel sift spliceai thousandgenomes aloft bayesdel clinpred fathmm genehancer hpo mitomap mutpred_indel omim pangolin repeat segway_blood segway_brain segway_muscle",
         "--mp",
-        threads,
+        str(threads),
         "--debug",
         "-l",
         ref,
