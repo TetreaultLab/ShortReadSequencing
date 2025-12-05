@@ -1254,8 +1254,6 @@ def openCravat(sample, toml_config):
     print(f">>> {command_str}\n")
     subprocess.run(oc, check=True)
 
-    name = sample + ".vcf"
-
     def normalize_headers(h1, h2):
         # propagate h1 values forward
         last = ""
@@ -1300,7 +1298,7 @@ def openCravat(sample, toml_config):
 
         return pd.DataFrame(rows, columns=columns, dtype=str)
 
-    df = load_tsv_until_next_hash(name + ".vcf.tsv")
+    df = load_tsv_until_next_hash(vcf + ".tsv")
 
     df.to_csv(sample + "_all.tsv", sep="\t", index=False, lineterminator="\n")
 
