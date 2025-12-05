@@ -1229,8 +1229,8 @@ def openCravat(sample, toml_config):
 
     subprocess.run(
         [
-            "source",
-            "/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin/activate",
+            "python",
+            "/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin/activate_this.py",
         ]
     )
     oc = [
