@@ -1227,7 +1227,6 @@ def openCravat(sample, toml_config):
     if genome == "grch38":
         ref = "hg38"
 
-    subprocess.run(["ml", "python/3.10"])
     subprocess.run(
         [
             "source",
@@ -1583,8 +1582,8 @@ def snpeff(sample, toml_config):
             check=True,
         )
 
-    # subprocess.run(["rm", path + "/" + sample + "_summary.csv"])
-    # subprocess.run(["rm", path + "/" + sample + "_snpeff.vcf"])
+    subprocess.run(["rm", path + "/" + sample + "_summary.csv"])
+    subprocess.run(["rm", path + "/" + sample + "_snpeff.vcf"])
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
