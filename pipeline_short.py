@@ -1323,7 +1323,7 @@ def openCravat(sample, toml_config):
 
     df = load_tsv_until_next_hash(vcf + ".tsv")
 
-    df.to_csv(sample + "_all.tsv", sep="\t", index=False, lineterminator="\n")
+    df.to_csv(output + sample + "_all.tsv", sep="\t", index=False, lineterminator="\n")
 
     cols = [
         "Variant_Annotation_Chrom",
@@ -1499,7 +1499,9 @@ def openCravat(sample, toml_config):
         "%",
     )
 
-    df_filt.to_csv(sample + "_filtered.tsv", sep="\t", index=False, lineterminator="\n")
+    df_filt.to_csv(
+        output + sample + "_filtered.tsv", sep="\t", index=False, lineterminator="\n"
+    )
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
