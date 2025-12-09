@@ -147,11 +147,13 @@ def main():
             or toml_config["general"]["reference"] == "grch38"
         ):
             # openCravat
+            print(toml_config["general"]["reference"])
             print("\t>>> Variant Annotation: openCravat (v2.17.0)")
             if "openCravat" not in done:
                 function_queue.append(openCravat)
         else:
             # SnpEff
+            print(toml_config["general"]["reference"])
             print("\t>>> Variant Annotation: SnpEff + SnpSift (v5.2a)")
             if "SnpEff" not in done:
                 function_queue.append(snpeff)
