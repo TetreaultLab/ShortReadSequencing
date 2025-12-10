@@ -1276,6 +1276,7 @@ def openCravat(sample, toml_config):
         output,
         "-t",
         "text",
+        "--cleanrun",
     ]
 
     command_str = " ".join(oc)
