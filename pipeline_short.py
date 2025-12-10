@@ -1218,6 +1218,11 @@ def openCravat(sample, toml_config):
     if genome == "grch38":
         ref = "hg38"
 
+    env = {}
+    env["PATH"] = (
+        "/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin:/usr/bin:/bin"
+    )
+
     oc = [
         "/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin/oc",
         "run",
