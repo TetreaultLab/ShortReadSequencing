@@ -1293,7 +1293,7 @@ def openCravat(sample, toml_config):
         with open(current_directory + "/run_openCravat_" + sample + ".bash", "w") as o:
             o.write(slurm_filled)
     subprocess.run(
-        ["bash", current_directory + "/run_openCravat_" + sample + ".bash"],
+        ["bash", "-l", current_directory + "/run_openCravat_" + sample + ".bash"],
         check=True,
     )
 
