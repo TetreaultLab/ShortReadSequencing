@@ -1262,11 +1262,6 @@ def openCravat(sample, toml_config):
         "segway_blood",
         "segway_brain",
         "segway_muscle",
-        "gencode",
-        "calibrated_classification",
-        "pathogenic",
-        "rare_coding",
-        "splicing",
         "--mp",
         str(threads),
         "--debug",
@@ -1282,35 +1277,9 @@ def openCravat(sample, toml_config):
     command_str = " ".join(oc)
     print(f">>> {command_str}\n")
 
-    current_directory = os.getcwd()
-    with open(
-        "/lustre09/project/6019267/shared/tools/main_pipelines/short-read/ShortReadSequencing/run_openCravat.bash",
-        "r",
-    ) as f:
-        slurm = f.read()
-        slurm_filled = slurm.format(command_str)
-
-        with open(current_directory + "/run_openCravat_" + sample + ".bash", "w") as o:
-            o.write(slurm_filled)
-
-    os.chmod(current_directory + "/run_openCravat_" + sample + ".bash", 0o755)
-
-    env = {
-        "PATH": "/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin:/usr/bin:/bin"
-    }
-
     subprocess.run(
-        [
-            "env",
-            "-i",
-            "PATH=/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin:/usr/bin:/bin",
-            "bash",
-            "-l",
-            "-c",
-            current_directory + "/run_openCravat_" + sample + ".bash",
-        ],
+        oc,
         check=True,
-        env=env,
     )
 
     def normalize_headers(h1, h2):
