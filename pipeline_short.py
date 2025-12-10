@@ -1286,7 +1286,7 @@ def openCravat(sample, toml_config):
 
     command_str = " ".join(oc)
     print(f">>> {command_str}\n")
-    subprocess.run(oc, check=True)
+    subprocess.run(oc, check=True, env=env)
 
     def normalize_headers(h1, h2):
         # propagate h1 values forward
