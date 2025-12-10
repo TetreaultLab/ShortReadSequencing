@@ -1219,7 +1219,7 @@ def openCravat(sample, toml_config):
         ref = "hg38"
 
     oc = [
-        "oc",
+        "/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin/oc",
         "run",
         vcf,
         "-a",
