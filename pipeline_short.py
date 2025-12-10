@@ -1292,6 +1292,9 @@ def openCravat(sample, toml_config):
 
         with open(current_directory + "/run_openCravat_" + sample + ".bash", "w") as o:
             o.write(slurm_filled)
+
+    os.chmod(current_directory + "/run_openCravat_" + sample + ".bash", 0o755)
+
     subprocess.run(
         ["bash", "-l", "-c", current_directory + "/run_openCravat_" + sample + ".bash"],
         check=True,
