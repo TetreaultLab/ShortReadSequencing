@@ -1295,9 +1295,22 @@ def openCravat(sample, toml_config):
 
     os.chmod(current_directory + "/run_openCravat_" + sample + ".bash", 0o755)
 
+    env = {
+        "PATH": "/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin:/usr/bin:/bin"
+    }
+
     subprocess.run(
-        ["bash", "-l", "-c", current_directory + "/run_openCravat_" + sample + ".bash"],
+        [
+            "env",
+            "-i",
+            "PATH=/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin:/usr/bin:/bin",
+            "bash",
+            "-l",
+            "-c",
+            current_directory + "/run_openCravat_" + sample + ".bash",
+        ],
         check=True,
+        env=env,
     )
 
     def normalize_headers(h1, h2):
