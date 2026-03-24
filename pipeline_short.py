@@ -1259,9 +1259,6 @@ def openCravat(sample, toml_config):
         "omim",
         "pangolin",
         "repeat",
-        "segway_blood",
-        "segway_brain",
-        "segway_muscle",
         "--mp",
         str(threads),
         "--debug",
@@ -1474,6 +1471,8 @@ def openCravat(sample, toml_config):
     }
 
     df_small = df_cols.rename(columns=column_mapping)
+
+    # Add Gene annotation
 
     df_small["alt_reads"] = pd.to_numeric(df_small["alt_reads"], errors="coerce")
     df_small["total_reads"] = pd.to_numeric(df_small["total_reads"], errors="coerce")
