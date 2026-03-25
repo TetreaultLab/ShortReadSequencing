@@ -146,6 +146,11 @@ def main():
             toml_config["general"]["reference"] == "grch37"
             or toml_config["general"]["reference"] == "grch38"
         ):
+            # VEP
+            print("\t>>> Variant Annotation: VEP (v115.2)")
+            if "vep" not in done:
+                function_queue.append(vep)
+
             # openCravat
             print("\t>>> Variant Annotation: openCravat (v2.17.0)")
             if "openCravat" not in done:
@@ -1204,12 +1209,71 @@ def bcftools_filter(sample, toml_config):
         steps.write("BCFtools filters\n")
 
 
+def vep(sample, toml_config):
+    title("Annotate with VEP")
+
+    threads = toml_config["general"]["threads"]
+    output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
+    ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
+    gtf = get_reference(toml_config["general"]["reference"], "")["gtf"]
+    vcf = output + sample + ".vcf"
+    out_vcf = output + sample + "_vep.vcf"
+
+    vep = [
+        "apptainer",
+        "run",
+        "/lustre09/project/6019267/shared/tools/variants/annotation/VEP/vep.sif",
+        "vep",
+        "--offline",
+        "--fasta",
+        ref,
+        "--gtf",
+        gtf,
+        "-i",
+        vcf,
+        "-o",
+        out_vcf,
+        "--vcf",
+        "--force_overwrite",
+        "--stats_file",
+        output + sample + "_vep_summary.html",
+        "--variant_class",
+        "--nearest",
+        "symbol",
+        "--regulatory",
+        "--individual_zyg",
+        "all",
+        "--total_length",
+        "--vcf_info_field",
+        "ANN",
+        "--terms",
+        "SO",
+        "--hgvs",
+        "--protein",
+        "--symbol",
+        "--ccds",
+        "--biotype",
+        "--check_existing",
+        "--fork",
+        str(threads),
+    ]
+
+    command_str = " ".join(vep)
+    print(f">>> {command_str}\n")
+    subprocess.run(vep, check=True)
+
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("vep\n")
+
+
 def openCravat(sample, toml_config):
     title("Annotate with openCravat")
 
     threads = toml_config["general"]["threads"]
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
-    vcf = output + sample + ".vcf"
+    vcf = output + sample + "_vep.vcf"
 
     genome = toml_config["general"]["reference"]
 
@@ -1274,10 +1338,7 @@ def openCravat(sample, toml_config):
     command_str = " ".join(oc)
     print(f">>> {command_str}\n")
 
-    subprocess.run(
-        oc,
-        check=True,
-    )
+    subprocess.run(oc, check=True)
 
     def normalize_headers(h1, h2):
         # propagate h1 values forward
@@ -1400,9 +1461,9 @@ def openCravat(sample, toml_config):
     df_cols = df[cols]
 
     column_mapping = {
-        "Variant_Annotation_Chrom": "chrom",
-        "Variant_Annotation_Position": "start",
-        "Variant_Annotation_End_Position": "end",
+        "Variant_Annotation_Chrom": "Chromosome",
+        "Variant_Annotation_Position": "Start",
+        "Variant_Annotation_End_Position": "End",
         "Variant_Annotation_Ref_Base": "ref",
         "Variant_Annotation_Alt_Base": "alt",
         "VCF_Info_Phred": "phred",
