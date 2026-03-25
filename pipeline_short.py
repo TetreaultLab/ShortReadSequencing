@@ -1252,7 +1252,6 @@ def vep(sample, toml_config):
         "--symbol",
         "--ccds",
         "--biotype",
-        "--check_existing",
         "--fork",
         str(threads),
     ]
