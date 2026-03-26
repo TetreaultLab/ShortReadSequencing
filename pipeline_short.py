@@ -1214,8 +1214,6 @@ def vep(sample, toml_config):
 
     threads = toml_config["general"]["threads"]
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
-    ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
-    gtf = get_reference(toml_config["general"]["reference"], "")["gtf"]
     vcf = output + sample + ".vcf"
     out_vcf = output + sample + "_vep.vcf"
 
@@ -1255,6 +1253,7 @@ def vep(sample, toml_config):
         "--mirna",
         "--appris",
         "--tsl",
+        "--pick_allele",
         "--fork",
         str(threads),
     ]
