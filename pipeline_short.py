@@ -1395,17 +1395,17 @@ def openCravat(sample, toml_config):
         "Variant_Annotation_Ref_Base",
         "Variant_Annotation_Alt_Base",
         "VCF_Info_Phred",
-        "VCF_Info_Zygosity",
         "VCF_Info_Alternate_reads",
         "VCF_Info_Total_reads",
-        "Variant_Annotation_Gene",
-        "Variant_Annotation_Transcript",
-        "Variant_Annotation_Coding",
-        "Variant_Annotation_Sequence_Ontology",
-        "Variant_Annotation_Exon_Number",
-        "Variant_Annotation_cDNA_change",
-        "Variant_Annotation_Protein_Change",
-        "Variant_Annotation_All_Mappings",
+        "VCF_Info_Zygosity",
+        "Extra_VCF_INFO_Annotations_CSQ_STRAND",
+        "Extra_VCF_INFO_Annotations_CSQ_SYMBOL",
+        "Extra_VCF_INFO_Annotations_CSQ_Gene",
+        "Extra_VCF_INFO_Annotations_CSQ_Feature",
+        "Extra_VCF_INFO_Annotations_CSQ_BIOTYPE",
+        "Extra_VCF_INFO_Annotations_CSQ_VARIANT_CLASS",
+        "Extra_VCF_INFO_Annotations_CSQ_Consequence",
+        "Extra_VCF_INFO_Annotations_CSQ_IMPACT",
         "dbSNP_rsID",
         "1000_Genomes_AF",
         "ALFA:_Allele_Frequency_Aggregator_Global_AF",
@@ -1470,14 +1470,14 @@ def openCravat(sample, toml_config):
         "VCF_Info_Alternate_reads": "alt_reads",
         "VCF_Info_Total_reads": "total_reads",
         "VCF_Info_Zygosity": "zygosity",
-        "Variant_Annotation_Gene": "gene",
-        "Variant_Annotation_Transcript": "transcript",
-        "Variant_Annotation_Coding": "coding",
-        "Variant_Annotation_Sequence_Ontology": "sequence_ontology",
-        "Variant_Annotation_Exon_Number": "exon_number",
-        "Variant_Annotation_cDNA_change": "cDNA_change",
-        "Variant_Annotation_Protein_Change": "protein_change",
-        "Variant_Annotation_All_Mappings": "all_mappings",
+        "Extra_VCF_INFO_Annotations_CSQ_STRAND": "strand",
+        "Extra_VCF_INFO_Annotations_CSQ_SYMBOL": "gene_symbol",
+        "Extra_VCF_INFO_Annotations_CSQ_Gene": "gene_id",
+        "Extra_VCF_INFO_Annotations_CSQ_Feature": "transcript",
+        "Extra_VCF_INFO_Annotations_CSQ_BIOTYPE": "biotype",
+        "Extra_VCF_INFO_Annotations_CSQ_VARIANT_CLASS": "class",
+        "Extra_VCF_INFO_Annotations_CSQ_Consequence": "consequence",
+        "Extra_VCF_INFO_Annotations_CSQ_IMPACT": "impact",
         "dbSNP_rsID": "rsID",
         "1000_Genomes_AF": "1000_Genomes_AF",
         "ALFA:_Allele_Frequency_Aggregator_Global_AF": "ALFA_AF",
@@ -1538,34 +1538,99 @@ def openCravat(sample, toml_config):
     df_small["alt_reads"] = pd.to_numeric(df_small["alt_reads"], errors="coerce")
     df_small["total_reads"] = pd.to_numeric(df_small["total_reads"], errors="coerce")
     df_small["phred"] = pd.to_numeric(df_small["phred"], errors="coerce")
+    df_small["1000_Genomes_AF"] = pd.to_numeric(
+        df_small["1000_Genomes_AF"], errors="coerce"
+    )
+    df_small["ALFA_AF"] = pd.to_numeric(df_small["ALFA_AF"], errors="coerce")
+    df_small["gnomAD4_global_AF"] = pd.to_numeric(
+        df_small["gnomAD4_global_AF"], errors="coerce"
+    )
 
-    df_filt = df_small[
+    ("1000_Genomes_AF",)
+    ("ALFA_AF",)
+    ("gnomAD4_global_AF",)
+
+    df_rare = df_small[
         (df_small["alt_reads"] >= 2)
         & (df_small["total_reads"] >= 5)
         & (df_small["phred"] >= 20)
+        & (
+            (df_small["1000_Genomes_AF"] <= 0.05)
+            | (df_small["ALFA_AF"] <= 0.05)
+            | (df_small["gnomAD4_global_AF"] <= 0.05)
+        )
     ]
 
-    print(">>> Filters:")
-    print("\t>>> Quality Phred > 20")
-    print("\t>>> Number of alt reads > 5")
-    print("\t>>> Number of total reads > 5")
+    print('>>> Filters "Rare":')
+    print("\t>>> Quality Phred >= 20")
+    print("\t>>> Number of alt reads >= 2")
+    print("\t>>> Allele Frequency <= 5%")
 
-    all_var = len(df_cols.index)
-    filtered_var = len(df_filt.index)
-    percentage = round(filtered_var / all_var * 100, 2)
+    df_rare.to_csv(
+        output + sample + "_rare.tsv", sep="\t", index=False, lineterminator="\n"
+    )
+
+    df_patho = df_rare[
+        (
+            ((df_rare["impact"] == "MODERATE") | (df_rare["impact"] == "HIGH"))
+            | (df_rare["CADD_score"] >= 10)
+            | (df_rare["GERP++_score"] >= 2)
+            | (df_rare["PhastCons_score"] >= 0.5)
+            | (df_rare["PhyloP_score"] >= 2.27)
+            | (
+                (df_rare["MutationTaster_prediction"] == "Automatic Disease Causing")
+                | (df_rare["MutationTaster_prediction"] == "Damaging")
+            )
+            | (
+                (df_rare["polyPhen2_HDIV_score"] >= 0.5)
+                | (df_rare["polyPhen2_HVAR_score"] >= 0.5)
+            )
+            | (
+                (df_rare["SIFT_score"] == "Damaging")
+                & (df_rare["SIFT_confidence"] == "High")
+            )
+            | (
+                (df_rare["SpliceAI_acceptor_gain_score"] >= 0.8)
+                | (df_rare["SpliceAI_acceptor_loss_score"] >= 0.8)
+                | (df_rare["SpliceAI_donor_gain_score"] >= 0.8)
+                | (df_rare["SpliceAI_donor_loss_score"] >= 0.8)
+            )
+        )
+    ]
+
+    print('>>> Filters "Pathogenic":')
+    print('\t>>> Same as "Rare" and :')
+    print('\t>>> Variant impact is "Moderate" or "High"')
+    print("\t>>> or CADD (pathogenecity) >= 10")
+    print("\t>>> or GERP++ (conservation) >= 2")
+    print("\t>>> or PhastCons (conservation) >= 0.5")
+    print("\t>>> or PhyloP (conservation) >= 2.27")
+    print(
+        '\t>>> or MutationTaster  (function prediction) is "Damaging" or "Disease Causing"'
+    )
+    print("\t>>> or PolyPhen-2 (function prediction) HDIV or HVAR >= 0.5")
+    print('\t>>> or SIFT (function prediction) is "Damaging" with high confidence')
+    print("\t>>> or SpliceAI (splicing) one of the four scores >= 0.8")
+
+    if len(df_patho) > 0:
+        df_patho.to_csv(
+            output + sample + "_pathogenic.tsv",
+            sep="\t",
+            index=False,
+            lineterminator="\n",
+        )
+
+    all_var = len(df_small.index)
+    rare_var = len(df_rare.index)
+    patho_var = len(df_patho.index)
 
     print(
         "\nNumber of variants in all: ",
         all_var,
-        "\nNumber of variants in filtered: ",
-        filtered_var,
-        "\nPercentage filtered variants: ",
-        percentage,
-        "%",
-    )
-
-    df_filt.to_csv(
-        output + sample + "_filtered.tsv", sep="\t", index=False, lineterminator="\n"
+        "\nNumber of variants in rare: ",
+        rare_var,
+        "\nNumber of variants in pathogenic: ",
+        patho_var,
     )
 
     with open(
