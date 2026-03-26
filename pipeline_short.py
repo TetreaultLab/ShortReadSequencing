@@ -1253,7 +1253,7 @@ def vep(sample, toml_config):
         "--mirna",
         "--appris",
         "--tsl",
-        "--pick_allele",
+        "--pick",
         "--fork",
         str(threads),
     ]
