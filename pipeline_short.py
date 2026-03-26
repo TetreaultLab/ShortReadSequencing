@@ -1533,23 +1533,28 @@ def openCravat(sample, toml_config):
 
     df_small = df_cols.rename(columns=column_mapping)
 
-    # Add Gene annotation
+    # Change to numeric
+    cols_to_fix = [
+        "alt_reads",
+        "total_reads",
+        "phred",
+        "1000_Genomes_AF",
+        "ALFA_AF",
+        "gnomAD4_global_AF",
+        "CADD_score",
+        "GERP++_score",
+        "PhastCons_score",
+        "PhyloP_score",
+        "polyPhen2_HDIV_score",
+        "polyPhen2_HVAR_score",
+        "SpliceAI_acceptor_gain_score",
+        "SpliceAI_acceptor_loss_score",
+        "SpliceAI_donor_gain_score",
+        "SpliceAI_donor_loss_score",
+    ]
+    df_small[cols_to_fix] = df_small[cols_to_fix].apply(pd.to_numeric, errors="coerce")
 
-    df_small["alt_reads"] = pd.to_numeric(df_small["alt_reads"], errors="coerce")
-    df_small["total_reads"] = pd.to_numeric(df_small["total_reads"], errors="coerce")
-    df_small["phred"] = pd.to_numeric(df_small["phred"], errors="coerce")
-    df_small["1000_Genomes_AF"] = pd.to_numeric(
-        df_small["1000_Genomes_AF"], errors="coerce"
-    )
-    df_small["ALFA_AF"] = pd.to_numeric(df_small["ALFA_AF"], errors="coerce")
-    df_small["gnomAD4_global_AF"] = pd.to_numeric(
-        df_small["gnomAD4_global_AF"], errors="coerce"
-    )
-
-    ("1000_Genomes_AF",)
-    ("ALFA_AF",)
-    ("gnomAD4_global_AF",)
-
+    # Rare variants
     df_rare = df_small[
         (df_small["alt_reads"] >= 2)
         & (df_small["total_reads"] >= 5)
@@ -1570,6 +1575,7 @@ def openCravat(sample, toml_config):
         output + sample + "_rare.tsv", sep="\t", index=False, lineterminator="\n"
     )
 
+    # Likely Pathogenic variants
     df_patho = df_rare[
         (
             ((df_rare["impact"] == "MODERATE") | (df_rare["impact"] == "HIGH"))
@@ -1620,6 +1626,7 @@ def openCravat(sample, toml_config):
             lineterminator="\n",
         )
 
+    # Get number of variants
     all_var = len(df_small.index)
     rare_var = len(df_rare.index)
     patho_var = len(df_patho.index)
