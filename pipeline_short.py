@@ -1340,6 +1340,8 @@ def openCravat(sample, toml_config):
 
     subprocess.run(oc, check=True)
 
+    print(">>> Filtering OpenCravat output")
+
     def normalize_headers(h1, h2):
         # propagate h1 values forward
         last = ""
