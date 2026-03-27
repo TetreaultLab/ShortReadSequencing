@@ -189,7 +189,7 @@ def main():
 
     end = get_time()
     total_time = end - start
-    end_str = "\n>>> {}-seq pipeline for {} completed in {}.".format(
+    end_str = ">>> {}-seq pipeline for {} completed in {}.".format(
         toml_config["general"]["sequencing"], sample, total_time
     )
     print("=" * len(end_str) + "\n" + end_str + "\n" + "=" * len(end_str))
@@ -1340,7 +1340,7 @@ def openCravat(sample, toml_config):
 
     subprocess.run(oc, check=True)
 
-    print(">>> Filtering OpenCravat output")
+    print(">>> Filtering OpenCravat output\n")
 
     def normalize_headers(h1, h2):
         # propagate h1 values forward
@@ -1606,7 +1606,7 @@ def openCravat(sample, toml_config):
         )
     ]
 
-    print('>>> Filters "Pathogenic":')
+    print('\n>>> Filters "Pathogenic":')
     print('\t>>> Same as "Rare" and :')
     print('\t>>> Variant impact is "Moderate" or "High"')
     print("\t>>> or CADD (pathogenecity) >= 10")
@@ -1634,11 +1634,11 @@ def openCravat(sample, toml_config):
     patho_var = len(df_patho.index)
 
     print(
-        "\nNumber of variants in all: ",
+        "\n>>> Number of variants in all: ",
         all_var,
-        "\nNumber of variants in rare: ",
+        "\n>>> Number of variants in rare: ",
         rare_var,
-        "\nNumber of variants in pathogenic: ",
+        "\n>>> Number of variants in pathogenic: ",
         patho_var,
     )
 
