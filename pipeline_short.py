@@ -110,9 +110,9 @@ def main():
         function_queue.append(bamqc)
 
     # MarkDuplicates
-    # print("\t>>> MarkDuplicates: GATK (4.6.1.0) & Picard (v3.0.0)")
-    # if "MarkDuplicates" not in done:
-    #     function_queue.append(markduplicates)
+    print("\t>>> MarkDuplicates: GATK (4.6.1.0) & Picard (v3.0.0)")
+    if "MarkDuplicates" not in done:
+        function_queue.append(markduplicates)
 
     # Quantification
     if toml_config["general"]["quantification"] == "True":
@@ -860,15 +860,11 @@ def featurecounts(sample, toml_config):
     temporary = toml_config["general"]["temporary"] + "/" + sample
     output = toml_config["general"]["output"] + "/" + sample + "/FeatureCounts"
     subprocess.run(["mkdir", "-p", output])
-
-    input = (
-        toml_config["general"]["output"]
-        + "/"
-        + sample
-        + "/Aligned/"
-        + sample
-        + "_sortedCoordinate.bam"
+    markduplicates_dir = (
+        toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/"
     )
+
+    input = markduplicates_dir + sample + "_markDuplicates.bam"
 
     gtf = get_reference(toml_config["general"]["reference"], "")["gtf"]
 
