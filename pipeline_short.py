@@ -1384,8 +1384,7 @@ def openCravat(sample, toml_config):
 
     df = load_tsv_until_next_hash(vcf + ".tsv")
 
-    df.to_csv(output + sample + "_all.tsv", sep="\t", index=False, lineterminator="\n")
-
+    # Select columns of interest
     cols = [
         "Variant_Annotation_Chrom",
         "Variant_Annotation_Position",
@@ -1530,6 +1529,11 @@ def openCravat(sample, toml_config):
     }
 
     df_small = df_cols.rename(columns=column_mapping)
+
+    # All
+    df_small.to_csv(
+        output + sample + "_all.tsv", sep="\t", index=False, lineterminator="\n"
+    )
 
     # Change to numeric
     cols_to_fix = [
