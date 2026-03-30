@@ -854,6 +854,7 @@ def markduplicates(sample, toml_config):
     subprocess.run(command2, check=True)
 
     subprocess.run("rm", "-r", temporary)
+    subprocess.run("rm", bam_RG)
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
