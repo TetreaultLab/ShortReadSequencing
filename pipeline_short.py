@@ -825,7 +825,7 @@ def markduplicates(sample, toml_config):
     records = output + sample + "_markDuplicates.bam"
 
     # Add RG tag to bam file
-    command = ["samtools", "addreplacerg", "-r", f'"@RG\\tID:{sample}\\tPL:Illumina\\tSM:{sample}\\tPU:{sample}"', "-o", bam_RG, bamCoord]
+    command = ["samtools", "addreplacerg", "-r", f"@RG\\tID:{sample}\\tPL:Illumina\\tSM:{sample}\\tPU:{sample}", "-o", bam_RG, bamCoord]
     command_str = " ".join(command)
     print(f">>> {command_str}\n")
     subprocess.run(command, check=True)
