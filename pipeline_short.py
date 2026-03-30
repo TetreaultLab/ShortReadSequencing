@@ -820,14 +820,18 @@ def markduplicates(sample, toml_config):
 
     input = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     bamCoord = input + "/" + sample + "_sortedCoordinate.bam"
+    bam_RG = input + "/" + sample + "_sortedCoordinate_RG.bam"
     metrics = output + sample + "_duplicates_metrics.txt"
     records = output + sample + "_markDuplicates.bam"
+
+    # Add RG tag to bam file
+    command = ["samtools", "addreplacerg", "-r", f'\"@RG\\tID:{sample}\\tPL:Illumina\\tSM:{sample}\\tPU:{sample}\"', "-o", bam_RG, bamCoord]
 
     command = [
         "gatk",
         "MarkDuplicates",
         "--INPUT",
-        bamCoord,
+        bam_RG,
         "--METRICS_FILE",
         metrics,
         "--REMOVE_DUPLICATES",
