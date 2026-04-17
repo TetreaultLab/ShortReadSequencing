@@ -59,7 +59,7 @@ slurm = """#!/bin/sh
 #SBATCH -o {3}_{4}.%N.%j.log
 #SBATCH -e {3}_{4}.%N.%j.log
 #SBATCH --mail-type=FAIL
-#SBATCH --account=rrg-tetreaum
+#SBATCH --account=def-tetreaum
 #SBATCH --mail-user={5}
 #
 ### Load environnment
