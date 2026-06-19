@@ -1212,7 +1212,9 @@ def bcftools_filter(sample, toml_config):
 
     # remove intermediate vcf files
     subprocess.run(["rm", output + sample + "_merged.vcf.gz"])
+    subprocess.run(["rm", output + sample + "_freebayes_header.vcf"])
     subprocess.run(["rm", output + sample + "_freebayes.vcf"])
+    subprocess.run(["rm", output + sample + "_bcftools_header.vcf"])
     subprocess.run(["rm", output + sample + "_bcftools.vcf"])
 
     with open(
