@@ -206,7 +206,7 @@ def title(message):
 
 def get_file_trimmed(toml_config, output, sample):
     files = {}
-    if toml_config["general"]["trimming"] == "bbduk":
+    if toml_config["general"]["trimming"] == "True":
         files = {
             "I1_toAlign": toml_config["general"]["output"]
             + "/"
