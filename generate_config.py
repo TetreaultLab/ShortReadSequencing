@@ -80,9 +80,9 @@ if args.trimming:
         length = 36
 
         options += f"""
-        [fastp]
-            phred = {phred}
-            length = {length}
+[fastp]
+    phred = {phred}
+    length = {length}
 """
 else:
     options += "# No trimming\n"
