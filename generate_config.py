@@ -160,11 +160,11 @@ general = """# TOML config file for {0}
 # Required information
 [general]
     threads = 8  # Number of threads.
-    memory = {0} # Total memory needed.
-    time = {1} # DD-HH:MM.
-    project = "{2}"   # Choose a project name. Should not start with a number.
-    output = "/lustre10/scratch/{3}/{2}/output" # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/output/.
-    temporary = "/lustre10/scratch/{3}/{2}/tmp" # The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/tmp/. 
+    memory = {1} # Total memory needed.
+    time = {2} # DD-HH:MM.
+    project = "{0}"   # Choose a project name. Should not start with a number.
+    output = "/lustre10/scratch/{3}/{0}/output" # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/output/.
+    temporary = "/lustre10/scratch/{3}/{0}/tmp" # The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/tmp/. 
     sequencing = "{4}" # Type of sequencing. rna, exome or genome.
     trimming = "{5}"
     alignment = "{6}"
@@ -198,9 +198,9 @@ general = """# TOML config file for {0}
     remove = "false"
 \n
 """.format(
+    project_name,
     memory,
     time,
-    project_name,
     username,
     sequencing,
     args.trimming,
