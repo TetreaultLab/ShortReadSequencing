@@ -333,7 +333,7 @@ def fastqc(sample, toml_config):
             output,
             "--noextract",
             "--threads",
-            "6",
+            str(toml_config["general"]["threads"]),
             "--dir",
             temporary,
             "--kmers",
@@ -354,7 +354,7 @@ def fastqc(sample, toml_config):
             output,
             "--noextract",
             "--threads",
-            "6",
+            str(toml_config["general"]["threads"]),
             "--dir",
             temporary,
             "--kmers",
@@ -589,12 +589,12 @@ def bwa(sample, toml_config):
         command = [
             "bwa-mem2",
             "mem",
-            "-o",
-            output + "/" + sample + ".sam",
             "-t",
             str(toml_config["general"]["threads"]),
             "-v",
             "1",
+            "-o",
+            output + "/" + sample + ".sam",
             ref,
             I1_toAlign,
             I2_toAlign,
@@ -603,12 +603,12 @@ def bwa(sample, toml_config):
         command = [
             "bwa-mem2",
             "mem",
-            "-o",
-            output + "/" + sample + ".sam",
             "-t",
             str(toml_config["general"]["threads"]),
             "-v",
             "1",
+            "-o",
+            output + "/" + sample + ".sam",
             ref,
             I_toAlign,
         ]
@@ -623,6 +623,8 @@ def bwa(sample, toml_config):
             "samtools",
             "view",
             "-S",
+            "--threads",
+            str(toml_config["general"]["threads"]),
             "-b",
             output + "/" + sample + ".sam",
             "-o",
@@ -727,10 +729,14 @@ def samtools(sample, toml_config):
     stats = in_out + "/" + sample + "_stats.txt"
 
     # Sort by coordinate
-    subprocess.run(["samtools", "sort", inBAM, "-o", bamCoord])
+    subprocess.run(
+        ["samtools", "sort", "--threads", "7", "-m", "4G", inBAM, "-o", bamCoord]
+    )
 
     # Index bam sorted by coordinates
-    subprocess.run(["samtools", "index", "-b", bamCoord, "-o", bamCoord + ".bai"])
+    subprocess.run(
+        ["samtools", "index", "--threads", "7", "-b", bamCoord, "-o", bamCoord + ".bai"]
+    )
 
     # alignment stats
     with open(stats1, "w") as outfile1:
@@ -782,7 +788,7 @@ def bamqc(sample, toml_config):
         output,
         "--noextract",
         "--threads",
-        "2",
+        str(toml_config["general"]["threads"]),
         "--dir",
         temporary,
         "--kmers",
@@ -841,6 +847,8 @@ def markduplicates(sample, toml_config):
     command2 = [
         "gatk",
         "MarkDuplicates",
+        "--VERBOSITY",
+        "ERROR",
         "--INPUT",
         bam_RG,
         "--METRICS_FILE",
