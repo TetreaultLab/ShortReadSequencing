@@ -131,6 +131,16 @@ if args.variants:
 else:
     options += "# No variant calling\n"
 
+# PARAMETERS
+if args.exome:
+    memory = 64
+    time = "01-23:45"
+elif args.genome:
+    memory = 128
+    time = "02-23:45"
+elif args.rna:
+    memory = 64
+    time = "00-23:45"
 
 # Create config file
 general = """# TOML config file for {0}
@@ -138,17 +148,17 @@ general = """# TOML config file for {0}
 # Required information
 [general]
     threads = 8  # Number of threads.
-    memory = 64 # Total memory needed.
-    time = "02-23:59" # DD-HH:MM. Default: 2 days 23h59
-    project = "{0}"   # Choose a project name. Should not start with a number.
-    output = "/lustre10/scratch/{1}/{0}/output" # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/output/.
-    temporary = "/lustre10/scratch/{1}/{0}/tmp" # The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/tmp/. 
-    sequencing = "{2}" # Type of sequencing. rna, exome or genome.
-    trimming = "{3}"
-    alignment = "{4}"
-    pseudo = "{5}"
-    quantification = "{6}"
-    variants = "{7}"
+    memory = {0} # Total memory needed.
+    time = {1} # DD-HH:MM.
+    project = "{2}"   # Choose a project name. Should not start with a number.
+    output = "/lustre10/scratch/{3}/{2}/output" # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/output/.
+    temporary = "/lustre10/scratch/{3}/{2}/tmp" # The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/tmp/. 
+    sequencing = "{4}" # Type of sequencing. rna, exome or genome.
+    trimming = "{5}"
+    alignment = "{6}"
+    pseudo = "{7}"
+    quantification = "{8}"
+    variants = "{9}"
     #
     ### To fill
     #
@@ -176,6 +186,8 @@ general = """# TOML config file for {0}
     remove = "false"
 \n
 """.format(
+    memory,
+    time,
     project_name,
     username,
     sequencing,
