@@ -72,7 +72,7 @@ if args.trimming:
     minavgquality = 0   # (maq) Reads with average quality (after trimming) below this will be discarded.
 """
     if args.rna:
-        phred = 36
+        phred = 15
         length = 50
     else:
         phred = 20
