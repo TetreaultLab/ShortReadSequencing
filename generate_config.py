@@ -72,6 +72,18 @@ if args.trimming:
     minavgquality = 0   # (maq) Reads with average quality (after trimming) below this will be discarded.
     \n
 """
+    if args.rna:
+        phred = 36
+        length = 50
+    else:
+        phred = 20
+        length = 36
+
+        options += f"""
+        [fastp]
+            phred = {phred}
+            length = {length}
+"""
 else:
     options += "# No trimming\n"
 

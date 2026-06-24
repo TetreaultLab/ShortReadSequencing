@@ -73,9 +73,13 @@ def main():
 
     # Trimming
     if toml_config["general"]["trimming"] == "True":
-        print("\t>>> Trimming: BBDuk (v39.06)")
-        if "BBDuk" not in done:
-            function_queue.append(bbduk)
+        print("\t>>> Trimming: fastp (v1.0.1)")
+        if "fastp" not in done:
+            function_queue.append(fastp)
+
+        # print("\t>>> Trimming: BBDuk (v39.06)")
+        # if "BBDuk" not in done:
+        #     function_queue.append(bbduk)
     else:
         print("\t>>> Trimming: none")
 
@@ -377,6 +381,71 @@ def fastqc(sample, toml_config):
 
     for report in fastqc_reports:
         check_fastqc_report(report)
+
+
+def fastp(sample, toml_config):
+    title("fastp")
+
+    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
+    subprocess.run(["mkdir", "-p", output])
+
+    if toml_config["general"]["reads"] == "PE":
+        I1 = toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz"
+        I2 = toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz"
+        O1 = output + "/" + sample + "_trimmed_R1.fastq.gz"
+        O2 = output + "/" + sample + "_trimmed_R2.fastq.gz"
+
+        command = [
+            "fastp",
+            "--in1",
+            I1,
+            "--in2",
+            I2,
+            "--out1",
+            O1,
+            "--out2",
+            O2,
+            "--thread",
+            str(toml_config["general"]["threads"]),
+            "--detect_adapter_for_pe",
+            "--qualified_quality_phred",
+            str(toml_config["fastp"]["phred"]),
+            "--length_required",
+            str(toml_config["fastp"]["length"]),
+            "--html",
+            output + "/" + sample + "_fastp_report.html",
+            "--json",
+            output + "/" + sample + "_fastp_report.json",
+        ]
+    else:
+        I_SE = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
+        O_SE = output + "/" + sample + "_trimmed.fastq.gz"
+        command = [
+            "fastp",
+            "--in1",
+            I_SE,
+            "--out1",
+            O_SE,
+            "--thread",
+            str(toml_config["general"]["threads"]),
+            "--qualified_quality_phred",
+            str(toml_config["fastp"]["phred"]),
+            "--length_required",
+            str(toml_config["fastp"]["length"]),
+            "--html",
+            output + "/" + sample + "_fastp_report.html",
+            "--json",
+            output + "/" + sample + "_fastp_report.json",
+        ]
+
+    command_str = " ".join(command)
+    print(f">>> {command_str}\n")
+    subprocess.run(command, check=True)
+
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
+    ) as steps:
+        steps.write("fastp\n")
 
 
 def bbduk(sample, toml_config):
