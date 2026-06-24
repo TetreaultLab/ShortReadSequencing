@@ -70,7 +70,6 @@ if args.trimming:
     minlength = 5 # Reads shorter than this after trimming will be discarded.  Pairs will be discarded if both are shorter.
     mlf = 0 # (minlengthfraction) Reads shorter than this fraction of original length after trimming will be discarded.
     minavgquality = 0   # (maq) Reads with average quality (after trimming) below this will be discarded.
-    \n
 """
     if args.rna:
         phred = 36
@@ -83,6 +82,7 @@ if args.trimming:
 [fastp]
     phred = {phred}
     length = {length}
+    \n
 """
 else:
     options += "# No trimming\n"
@@ -161,7 +161,7 @@ general = """# TOML config file for {0}
 [general]
     threads = 8  # Number of threads.
     memory = {1} # Total memory needed.
-    time = {2} # DD-HH:MM.
+    time = "{2}" # DD-HH:MM.
     project = "{0}"   # Choose a project name. Should not start with a number.
     output = "/lustre10/scratch/{3}/{0}/output" # Path to your output, preferably use your scratch. The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/output/.
     temporary = "/lustre10/scratch/{3}/{0}/tmp" # The directory will be created. Exemple: /lustre10/scratch/<user>/<project>/tmp/. 
