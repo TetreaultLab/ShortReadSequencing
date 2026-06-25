@@ -1625,6 +1625,23 @@ def openCravat(sample, toml_config):
 
     df_small = df_cols.rename(columns=column_mapping)
 
+    # count "Het" for each gene
+    df_small["het_count"] = df_small.groupby("gene_id")["zygosity"].transform(
+        lambda x: (x == "het").sum()
+    )
+
+    # Exclude genes without gene_id
+    valid_gene = df_small["gene_id"].notna() & (df_small["gene_id"] != "")
+
+    # Remplace "Het" for "Multiple-het" if het_count > 1
+    df_small.loc[
+        valid_gene & (df_small["het_count"] > 1) & (df_small["zygosity"] == "het"),
+        "zygosity",
+    ] = "multiple-het"
+
+    # Remove het_count
+    df_small = df_small.drop(columns=["het_count"])
+
     # All
     df_small.to_csv(
         output + sample + "_all.tsv", sep="\t", index=False, lineterminator="\n"
@@ -1736,6 +1753,14 @@ def openCravat(sample, toml_config):
         "\n>>> Number of variants in pathogenic: ",
         patho_var,
     )
+
+    # Remove temporary files
+    subprocess.run(["rm", output + sample + "_vep.vcf"])
+    subprocess.run(["rm", output + sample + "_vep.vcf.err"])
+    subprocess.run(["rm", output + sample + "_vep.vcf.log"])
+    subprocess.run(["rm", output + sample + "_vep.vcf.sqlite"])
+    subprocess.run(["rm", output + sample + "_vep.vcf.tsv"])
+    subprocess.run(["rm", output + sample + "_vep.vcf_warnings.txt"])
 
     with open(
         toml_config["general"]["output"] + "/" + sample + "/steps_done.txt", "a"
