@@ -422,9 +422,6 @@ def fastqc(sample, toml_config, done):
             Read1,
             Read2,
         ]
-        command_str = " ".join(command)
-        print(f">>> {command_str}\n")
-        subprocess.run(command, check=True)
 
     else:
         Read = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
@@ -443,7 +440,7 @@ def fastqc(sample, toml_config, done):
             Read,
         ]
 
-        command_str = " ".join(command)
+    command_str = " ".join(command)
 
     job = fill_template(
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
