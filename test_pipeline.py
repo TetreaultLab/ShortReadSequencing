@@ -71,7 +71,7 @@ def main():
 
     # Creating output and tmp directories for sample
     output = toml_config["general"]["output"] + "/" + sample
-    tmp = toml_config["general"]["temporary"] + "/" + sample
+    tmp = toml_config["general"]["tmp"] + "/" + sample
     subprocess.run(["mkdir", "-p", output])
     subprocess.run(["mkdir", "-p", tmp])
 
@@ -406,7 +406,7 @@ def fastqc(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
     subprocess.run(["mkdir", "-p", output])
 
-    temporary = toml_config["general"]["temporary"] + "/" + sample
+    temporary = toml_config["general"]["tmp"] + "/" + sample
     subprocess.run(["mkdir", "-p", temporary])
 
     if toml_config["general"]["reads"] == "PE":
@@ -549,7 +549,7 @@ def star(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     subprocess.run(["mkdir", "-p", output])
 
-    temporary = toml_config["general"]["temporary"] + "/" + sample + "/star_tmp"
+    temporary = toml_config["general"]["tmp"] + "/" + sample + "/star_tmp"
     subprocess.run(["rm", "-r", temporary])
 
     ref = get_reference(toml_config["general"]["reference"], "star")["index"]
@@ -955,7 +955,7 @@ def bamqc(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
     subprocess.run(["mkdir", "-p", output])
 
-    temporary = toml_config["general"]["temporary"] + "/" + sample
+    temporary = toml_config["general"]["tmp"] + "/" + sample
     subprocess.run(["mkdir", "-p", temporary])
 
     input = (
@@ -1014,7 +1014,7 @@ def markduplicates(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/"
     subprocess.run(["mkdir", "-p", output])
 
-    temporary = toml_config["general"]["temporary"] + "/" + sample + "/md_tmp"
+    temporary = toml_config["general"]["tmp"] + "/" + sample + "/md_tmp"
     subprocess.run(["mkdir", "-p", temporary])
 
     input = toml_config["general"]["output"] + "/" + sample + "/Aligned"
@@ -1098,7 +1098,7 @@ def featurecounts(sample, toml_config, done):
     time_allocated = "00-01:00"
     env = "module load StdEnv/2023 subread/2.0.6"
 
-    temporary = toml_config["general"]["temporary"] + "/" + sample
+    temporary = toml_config["general"]["tmp"] + "/" + sample
     output = toml_config["general"]["output"] + "/" + sample + "/FeatureCounts"
     subprocess.run(["mkdir", "-p", output])
     markduplicates_dir = (
