@@ -234,7 +234,7 @@ def create_config_final(path_config):
     # set tmp in scratch
     toml_config["general"]["tmp"] = f"/lustre10/scratch/{username}/{project}/tmp"
 
-    # set trimming, alignment, pseudoalignment, quantification and variants setting
+    # set trimming, alignment, pseudoalignment, quantification and variants setting + other parameter
     toml_config["general"]["trimming"] = "True"
 
     if sequencing == "rna":
@@ -262,6 +262,14 @@ def create_config_final(path_config):
     toml_config["salmon"]["minScoreFraction"] = 0.65
 
     toml_config["general"]["variants"] = "True"
+
+    # FastQC
+    toml_config["fastqc"]["kmers"] = 7
+
+    # MarkDuplicates
+    toml_config["markduplicates"]["index"] = "true"
+    toml_config["markduplicates"]["strategy"] = "SUM_OF_BASE_QUALITIES"
+    toml_config["markduplicates"]["remove"] = "false"
 
     with open(work_dir + "/config_final.toml", "w") as f:
         toml.dump(toml_config, f)
@@ -383,10 +391,10 @@ def get_file_trimmed(toml_config, output, sample):
 def fastqc(sample, toml_config, done):
     tool = "FastQC"
 
-    cpu = ""
-    mem = ""
-    time_allocated = ""
-    env = ""
+    cpu = "8"
+    mem = "16"
+    time_allocated = "00-01:00"
+    env = "module load StdEnv/2023 python/3.11.5 fastqc/0.12.1\nsource /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate"
 
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
     subprocess.run(["mkdir", "-p", output])
@@ -404,7 +412,7 @@ def fastqc(sample, toml_config, done):
             output,
             "--noextract",
             "--threads",
-            str(toml_config["general"]["threads"]),
+            cpu,
             "--dir",
             temporary,
             "--kmers",
@@ -425,7 +433,7 @@ def fastqc(sample, toml_config, done):
             output,
             "--noextract",
             "--threads",
-            str(toml_config["general"]["threads"]),
+            cpu,
             "--dir",
             temporary,
             "--kmers",
@@ -434,6 +442,951 @@ def fastqc(sample, toml_config, done):
         ]
 
         command_str = " ".join(command)
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+            f.write(f"\n# Running {tool} for {sample}")
+            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def fastp(sample, toml_config, done):
+    tool = "fastp"
+
+    cpu = "8"
+    mem = "32"
+    time_allocated = "00-01:00"
+    env = "module load StdEnv/2023 fastp/1.0.1"
+
+    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
+    subprocess.run(["mkdir", "-p", output])
+
+    if toml_config["general"]["reads"] == "PE":
+        I1 = toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz"
+        I2 = toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz"
+        O1 = output + "/" + sample + "_trimmed_R1.fastq.gz"
+        O2 = output + "/" + sample + "_trimmed_R2.fastq.gz"
+
+        command = [
+            "fastp",
+            "--in1",
+            I1,
+            "--in2",
+            I2,
+            "--out1",
+            O1,
+            "--out2",
+            O2,
+            "--thread",
+            cpu,
+            "--detect_adapter_for_pe",
+            "--qualified_quality_phred",
+            str(toml_config["fastp"]["phred"]),
+            "--length_required",
+            str(toml_config["fastp"]["length"]),
+            "--html",
+            output + "/" + sample + "_fastp_report.html",
+            "--json",
+            output + "/" + sample + "_fastp_report.json",
+        ]
+    else:
+        I_SE = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
+        O_SE = output + "/" + sample + "_trimmed.fastq.gz"
+        command = [
+            "fastp",
+            "--in1",
+            I_SE,
+            "--out1",
+            O_SE,
+            "--thread",
+            cpu,
+            "--qualified_quality_phred",
+            str(toml_config["fastp"]["phred"]),
+            "--length_required",
+            str(toml_config["fastp"]["length"]),
+            "--html",
+            output + "/" + sample + "_fastp_report.html",
+            "--json",
+            output + "/" + sample + "_fastp_report.json",
+        ]
+
+    command_str = " ".join(command)
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+            f.write(f"\n# Running {tool} for {sample}")
+            f.write(f"\nfastp=$(sbatch --parsable {job})\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def star(sample, toml_config, done):
+    tool = "STAR"
+
+    cpu = "8"
+    mem = "64"
+    time_allocated = "00-11:00"
+    env = "module load StdEnv/2023 star/2.7.11a"
+
+    output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
+    subprocess.run(["mkdir", "-p", output])
+
+    temporary = toml_config["general"]["temporary"] + "/" + sample + "/star_tmp"
+    subprocess.run(["rm", "-r", temporary])
+
+    ref = get_reference(toml_config["general"]["reference"], "star")["index"]
+
+    files = get_file_trimmed(toml_config, output, sample)
+    I1_toAlign = files["I1_toAlign"]
+    I2_toAlign = files["I2_toAlign"]
+    I_toAlign = files["I_toAlign"]
+    O_aligned = files["O_aligned"]
+
+    if toml_config["general"]["reads"] == "PE":
+        command = [
+            "STAR",
+            "--runMode",
+            "alignReads",
+            "--runThreadN",
+            cpu,
+            "--limitBAMsortRAM",
+            "60000000000",
+            "--genomeDir",
+            ref,
+            "--outFileNamePrefix",
+            O_aligned,
+            "--outSAMattributes",
+            "Standard",
+            "--outTmpDir",
+            temporary,
+            "--outReadsUnmapped",
+            "Fastx",
+            "--sjdbOverhang",
+            "99",
+            "--readFilesCommand",
+            "zcat",
+            "--readFilesIn",
+            I1_toAlign,
+            I2_toAlign,
+            "--outSAMtype",
+            toml_config["star"]["outSAMtype1"],
+            toml_config["star"]["outSAMtype2"],
+            "--twopassMode",
+            toml_config["star"]["twopassMode"],
+            "--outSJtype",
+            toml_config["star"]["outSJtype"],
+            "--quantMode",
+            toml_config["star"]["quantMode"],
+        ]
+    else:
+        command = [
+            "STAR",
+            "--runMode",
+            "alignReads",
+            "--runThreadN",
+            cpu,
+            "--limitBAMsortRAM",
+            "60000000000",
+            "--genomeDir",
+            ref,
+            "--outSAMattributes",
+            "Standard",
+            "--outFileNamePrefix",
+            O_aligned,
+            "--outTmpDir",
+            temporary,
+            "--readFilesCommand",
+            "zcat",
+            "--readFilesIn",
+            I_toAlign,
+            "--outSAMtype",
+            toml_config["star"]["outSAMtype1"],
+            toml_config["star"]["outSAMtype2"],
+            "--twopassMode",
+            toml_config["star"]["twopassMode"],
+            "--outSJtype",
+            toml_config["star"]["outSJtype"],
+            "--quantMode",
+            toml_config["star"]["quantMode"],
+        ]
+
+    command_str1 = " ".join(command)
+    command_str2 = (
+        f"mv {output}/{sample}_Aligned.sortedByCoord.out.bam {output}/{sample}.bam"
+    )
+    command_str3 = f"mv {output}/{sample}_Log.final.out {output}/{sample}_summary_mapping_stats.out"
+    command_str4 = (
+        f"mv {output}/{sample}_Log.final.out {output}/{sample}_run_information.out"
+    )
+    command_str5 = f"rm {output}/{sample}_Log.progress.out"
+    command_str6 = f"rm {output}/{sample}_Unmapped.out.mate1"
+    command_str7 = f"rm {output}/{sample}_Unmapped.out.mate2"
+    command_str8 = f"rm -r {output}/{sample}__STARpass1"
+    command_str9 = f"mv {output}/{sample}__STARgenome/sjdbList.out.tab {output}/{sample}_sjdbList.out.tab"
+
+    command_str = "\n".join(
+        [
+            command_str1,
+            command_str2,
+            command_str3,
+            command_str4,
+            command_str5,
+            command_str6,
+            command_str7,
+            command_str8,
+            command_str9,
+        ]
+    )
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        if toml_config["general"]["trimming"] == "True":
+            if "fastp" not in done:
+                with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                    f.write(f"\n# Running {tool} for {sample}")
+                    f.write(
+                        f"\nstar=$(sbatch --parsable --dependency=afterok:$fastp {job})\n"
+                    )
+            else:
+                with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                    f.write(f"\n# Running {tool} for {sample}")
+                    f.write(f"\nstar=$(sbatch --parsable {job})\n")
+        else:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(f"\nstar=$(sbatch --parsable {job})\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def bwa(sample, toml_config, done):
+    tool = "BWA-MEM2"
+
+    cpu = "8"
+    mem = "64"
+    if toml_config["general"]["sequencing"] == "exome":
+        time_allocated = "00-06:00"
+    else:
+        time_allocated = "00-23:00"
+    env = "module load StdEnv/2023 bwa-mem2/2.2.1"
+
+    output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
+    subprocess.run(["mkdir", "-p", output])
+
+    ref = get_reference(toml_config["general"]["reference"], "bwa-mem2")["index"]
+
+    files = get_file_trimmed(toml_config, output, sample)
+    I1_toAlign = files["I1_toAlign"]
+    I2_toAlign = files["I2_toAlign"]
+    I_toAlign = files["I_toAlign"]
+
+    if toml_config["general"]["reads"] == "PE":
+        command = [
+            "bwa-mem2",
+            "mem",
+            "-t",
+            cpu,
+            "-v",
+            "1",
+            "-o",
+            output + "/" + sample + ".sam",
+            ref,
+            I1_toAlign,
+            I2_toAlign,
+        ]
+    else:
+        command = [
+            "bwa-mem2",
+            "mem",
+            "-t",
+            cpu,
+            "-v",
+            "1",
+            "-o",
+            output + "/" + sample + ".sam",
+            ref,
+            I_toAlign,
+        ]
+
+    command_str1 = " ".join(command)
+    command_str2 = f"samtools view -S --threads {cpu} -b {output}/{sample}.sam -o {output}/{sample}.bam"
+    command_str3 = f"rm {output}/{sample}.sam"
+
+    command_str = "\n".join([command_str1, command_str2, command_str3])
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        if toml_config["general"]["trimming"] == "True":
+            if "fastp" not in done:
+                with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                    f.write(f"\n# Running {tool} for {sample}")
+                    f.write(
+                        f"\nbwa=$(sbatch --parsable --dependency=afterok:$fastp {job})\n"
+                    )
+            else:
+                with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                    f.write(f"\n# Running {tool} for {sample}")
+                    f.write(f"\nbwa=$(sbatch --parsable {job})\n")
+        else:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(f"\nbwa=$(sbatch --parsable {job})\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def salmon(sample, toml_config, done):
+    tool = "Salmon"
+
+    cpu = "8"
+    mem = "32"
+    if toml_config["general"]["sequencing"] == "exome":
+        time_allocated = "00-06:00"
+    else:
+        time_allocated = "00-23:00"
+    env = "module load StdEnv/2023 salmon/1.10.2"
+
+    output = toml_config["general"]["output"] + "/" + sample + "/Salmon"
+    subprocess.run(["mkdir", "-p", output])
+
+    ref = get_reference(toml_config["general"]["reference"], "salmon")["index"]
+
+    files = get_file_trimmed(toml_config, output, sample)
+    I1_toAlign = files["I1_toAlign"]
+    I2_toAlign = files["I2_toAlign"]
+    I_toAlign = files["I_toAlign"]
+
+    if toml_config["general"]["reads"] == "PE":
+        command = [
+            "salmon",
+            "quant",
+            "--libType",
+            "A",
+            "--validateMappings",
+            "--index",
+            ref,
+            "--threads",
+            cpu,
+            "--auxDir",
+            "salmon_tmp",
+            "--minScoreFraction",
+            str(toml_config["salmon"]["minScoreFraction"]),
+            "--mates1",
+            I1_toAlign,
+            "--mates2",
+            I2_toAlign,
+            "--output",
+            output,
+        ]
+    else:
+        command = [
+            "salmon",
+            "quant",
+            "--libType",
+            "A",
+            "--index",
+            ref,
+            "--threads",
+            cpu,
+            "--auxDir",
+            "salmon_tmp",
+            "--minScoreFraction",
+            str(toml_config["salmon"]["minScoreFraction"]),
+            "--unmatedReads",
+            I_toAlign,
+            "--output",
+            output,
+        ]
+
+    command_str1 = " ".join(command)
+
+    command_str2 = f"mv {output}/logs/salmon_quant.log {output}/{sample}_log.out"
+
+    command_str3 = f"mv {output}/quant.sf {output}/{sample}_transcript_quant.sf"
+    command_str4 = f"rm {output}/cmd_info.json"
+    command_str5 = f"rm -r {output}/libParams"
+    command_str6 = f"rm -r {output}/logs"
+    command_str7 = f"rm -r {output}/salmon_tmp"
+
+    command_str = "\n".join(
+        [
+            command_str1,
+            command_str2,
+            command_str3,
+            command_str4,
+            command_str5,
+            command_str6,
+            command_str7,
+        ]
+    )
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        if toml_config["general"]["trimming"] == "True":
+            if "fastp" not in done:
+                with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                    f.write(f"\n# Running {tool} for {sample}")
+                    f.write(
+                        f"\nDEPS+=($(sbatch --parsable --dependency=afterok:$fastp {job}))\n"
+                    )
+            else:
+                with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                    f.write(f"\n# Running {tool} for {sample}")
+                    f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+        else:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def samtools(sample, toml_config, done):
+    tool = "Samtools"
+
+    cpu = "8"
+    mem = "32"
+    if toml_config["general"]["sequencing"] == "rna":
+        time_allocated = "00-06:00"
+    elif toml_config["general"]["sequencing"] == "exome":
+        time_allocated = "00-06:00"
+    else:
+        time_allocated = "00-11:00"
+    env = "module load StdEnv/2023 samtools/1.22.1"
+
+    in_out = toml_config["general"]["output"] + "/" + sample + "/Aligned"
+
+    inBAM = in_out + "/" + sample + ".bam"
+    bamCoord = in_out + "/" + sample + "_sortedCoordinate.bam"
+    stats1 = in_out + "/" + sample + "_stats1.txt"
+    stats2 = in_out + "/" + sample + "_stats2.txt"
+    stats = in_out + "/" + sample + "_stats.txt"
+
+    # Sort by coordinate
+    command_str1 = f"samtools sort --threads {cpu} -m 4G {inBAM} -o {bamCoord}"
+
+    # Index bam sorted by coordinates
+    command_str2 = f"samtools index --threads {cpu} -b bamCoord -o {bamCoord}.bai"
+
+    # alignment stats
+    command_str3 = f"samtools stats {bamCoord} | grep ^SN | cut -f 2- > {stats}"
+    # command_str4 = f"grep ^SN {stats1} > {stats2}"
+    # command_str5 = f"cut -f 2- {stats2} > {stats}"
+
+    # command_str6 = f"rm {stats1}"
+    # command_str7 = f"rm {stats2}"
+    command_str4 = f"rm {inBAM}"
+
+    command_str = "\n".join(
+        [
+            command_str1,
+            command_str2,
+            command_str3,
+            command_str4,
+        ]
+    )
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        if (toml_config["general"]["sequencing"] == "RNA") & ("STAR" not in done):
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(
+                    f"\nsamtools=$(sbatch --parsable --dependency=afterok:$star {job})\n"
+                )
+        elif (toml_config["general"]["sequencing"].isin(["exome", "genome"])) & (
+            "BWA-MEM2" not in done
+        ):
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(
+                    f"\nsamtools=$(sbatch --parsable --dependency=afterok:$bwa {job})\n"
+                )
+        else:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(f"\nsamtools=$(sbatch --parsable {job})\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def bamqc(sample, toml_config, done):
+    tool = "FastQC for bam"
+
+    cpu = "8"
+    mem = "16"
+    time_allocated = "00-01:00"
+    env = "module load StdEnv/2023 python/3.11.5 fastqc/0.12.1\nsource /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate"
+
+    output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
+    subprocess.run(["mkdir", "-p", output])
+
+    temporary = toml_config["general"]["temporary"] + "/" + sample
+    subprocess.run(["mkdir", "-p", temporary])
+
+    input = (
+        toml_config["general"]["output"]
+        + "/"
+        + sample
+        + "/Aligned/"
+        + sample
+        + "_sortedCoordinate.bam"
+    )
+
+    command = [
+        "fastqc",
+        "-o",
+        output,
+        "--noextract",
+        "--threads",
+        cpu,
+        "--dir",
+        temporary,
+        "--kmers",
+        str(toml_config["fastqc"]["kmers"]),
+        input,
+    ]
+
+    command_str = " ".join(command)
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        if "Samtools" not in done:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(
+                    f"\nDEPS+=($(sbatch --parsable --dependency=afterok:$samtools {job}))\n"
+                )
+        else:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def markduplicates(sample, toml_config, done):
+    tool = "MarkDuplicates"
+
+    cpu = "4"
+    mem = "16"
+    time_allocated = "00-01:00"
+    env = "module load StdEnv/2023 gatk/4.6.1.0"
+
+    output = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/"
+    subprocess.run(["mkdir", "-p", output])
+
+    temporary = toml_config["general"]["temporary"] + "/" + sample + "/md_tmp"
+    subprocess.run(["mkdir", "-p", temporary])
+
+    input = toml_config["general"]["output"] + "/" + sample + "/Aligned"
+    bamCoord = input + "/" + sample + "_sortedCoordinate.bam"
+    bam_RG = input + "/" + sample + "_sortedCoordinate_RG.bam"
+    metrics = output + sample + "_duplicates_metrics.txt"
+    records = output + sample + "_markDuplicates.bam"
+
+    # Add RG tag to bam file
+    command = [
+        "samtools",
+        "addreplacerg",
+        "-r",
+        f"@RG\\tID:{sample}\\tPL:Illumina\\tSM:{sample}\\tPU:{sample}",
+        "-o",
+        bam_RG,
+        bamCoord,
+    ]
+    command_str1 = " ".join(command)
+
+    command2 = [
+        "gatk",
+        "MarkDuplicates",
+        "--VERBOSITY",
+        "ERROR",
+        "--INPUT",
+        bam_RG,
+        "--METRICS_FILE",
+        metrics,
+        "--REMOVE_DUPLICATES",
+        toml_config["markduplicates"]["remove"],
+        "--TMP_DIR",
+        temporary,
+        "--OUTPUT",
+        records,
+        "--CREATE_INDEX",
+        toml_config["markduplicates"]["index"],
+        "--DUPLICATE_SCORING_STRATEGY",
+        toml_config["markduplicates"]["strategy"],
+    ]
+
+    command_str2 = " ".join(command2)
+
+    command_str3 = f"rm -r {temporary}"
+    command_str4 = f"rm {bam_RG}"
+
+    command_str = "\n".join(
+        [
+            command_str1,
+            command_str2,
+            command_str3,
+            command_str4,
+        ]
+    )
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        if "Samtools" not in done:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(
+                    f"\nmarkDuplicates=$(sbatch --parsable --dependency=afterok:$samtools {job})\n"
+                )
+        else:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(f"\nmarkDuplicates=$(sbatch --parsable {job})\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def featurecounts(sample, toml_config, done):
+    tool = "FeatureCounts"
+
+    cpu = "8"
+    mem = "32"
+    time_allocated = "00-01:00"
+    env = "module load StdEnv/2023 subread/2.0.6"
+
+    temporary = toml_config["general"]["temporary"] + "/" + sample
+    output = toml_config["general"]["output"] + "/" + sample + "/FeatureCounts"
+    subprocess.run(["mkdir", "-p", output])
+    markduplicates_dir = (
+        toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/"
+    )
+
+    input = markduplicates_dir + sample + "_markDuplicates.bam"
+
+    gtf = get_reference(toml_config["general"]["reference"], "")["gtf"]
+
+    if toml_config["general"]["reads"] == "PE":
+        command = [
+            "featureCounts",
+            "-t",
+            toml_config["featurecounts"]["features"],
+            "-O",
+            "--countReadPairs",
+            "-F",
+            "GTF",
+            "-g",
+            toml_config["featurecounts"]["attribute"],
+            "--minOverlap",
+            str(toml_config["featurecounts"]["overlap"]),
+            "-p",
+            "-T",
+            cpu,
+            "--tmpDir",
+            temporary,
+            "-a",
+            gtf,
+            "-o",
+            output + "/" + sample + "_geneID.txt",
+            input,
+        ]
+    else:
+        command = [
+            "featureCounts",
+            "-t",
+            toml_config["featurecounts"]["features"],
+            "-O",
+            "-F",
+            "GTF",
+            "-g",
+            toml_config["featurecounts"]["attribute"],
+            "--minOverlap",
+            str(toml_config["featurecounts"]["overlap"]),
+            "-T",
+            cpu,
+            "--tmpDir",
+            temporary,
+            "-a",
+            gtf,
+            "-o",
+            output + "/" + sample + "_geneID.txt",
+            input,
+        ]
+
+    command_str1 = " ".join(command)
+
+    command_str2 = f"tail -n +2 {output}/{sample}_geneID.txt | cut -f1,7 | sed -i '1s|.*|gene_id\t{sample}|' > {output}/{sample}_counts.txt"
+
+    command_str = "\n".join([command_str1, command_str2])
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+            f.write(f"\n# Running {tool} for {sample}")
+            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def multiqc(sample, toml_config, done):
+    tool = "MultiQC"
+
+    cpu = "1"
+    mem = "4"
+    time_allocated = "00-01:00"
+    env = "module load StdEnv/2023 python/3.11.5 apptainer/1.3.5"
+
+    input = toml_config["general"]["output"] + "/" + sample + "/"
+    output = toml_config["general"]["output"] + "/" + sample + "/QC/multiQC"
+    subprocess.run(["mkdir", "-p", output])
+
+    with open(output + "/my_file_list.txt", "w") as f:
+        f.write(input + "QC/fastQC/\n")
+        if toml_config["general"]["trimming"] != "False":
+            f.write(input + "Trimmed/\n")
+        if toml_config["general"]["pseudo"] != "False":
+            f.write(input + "Salmon/\n")
+        if toml_config["general"]["quantification"] != "False":
+            f.write(input + "FeatureCounts/\n")
+        f.write(input + "Aligned/\n")
+        f.write(input + "Samtools/\n")
+        f.write(input + "MarkDuplicates/\n")
+    f.close()
+
+    command_str1 = f"apptainer run /lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif multiqc --file-list {output}/my_file_list.txt --force --filename {sample}_multiqc_report --outdir {output}/"
+    command_str2 = f"rm {output}/my_file_list.txt"
+    command_str3 = f"rm -r {output}/{sample}_multiqc_report_data"
+
+    command_str = "\n".join([command_str1, command_str2, command_str3])
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+            f.write(f"\n# Running {tool} for {sample}")
+            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def bcftools(sample, toml_config, done):
+    tool = "BCFtools"
+
+    cpu = ""
+    mem = ""
+    time_allocated = ""
+    env = ""
+
+    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
+    subprocess.run(["mkdir", "-p", output])
+
+    #####
+    command_str = ""
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+            f.write(f"\n# Running {tool} for {sample}")
+            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def freebayes(sample, toml_config, done):
+    tool = "FreeBayes"
+
+    cpu = ""
+    mem = ""
+    time_allocated = ""
+    env = ""
+
+    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
+    subprocess.run(["mkdir", "-p", output])
+
+    #####
+    command_str = ""
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+            f.write(f"\n# Running {tool} for {sample}")
+            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def bcftools_filter(sample, toml_config, done):
+    tool = "BCFtools filters"
+
+    cpu = ""
+    mem = ""
+    time_allocated = ""
+    env = ""
+
+    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
+    subprocess.run(["mkdir", "-p", output])
+
+    #####
+    command_str = ""
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+            f.write(f"\n# Running {tool} for {sample}")
+            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def vep(sample, toml_config, done):
+    tool = "VEP"
+
+    cpu = ""
+    mem = ""
+    time_allocated = ""
+    env = ""
+
+    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
+    subprocess.run(["mkdir", "-p", output])
+
+    #####
+    command_str = ""
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+            f.write(f"\n# Running {tool} for {sample}")
+            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def openCravat(sample, toml_config, done):
+    tool = "openCravat"
+
+    cpu = ""
+    mem = ""
+    time_allocated = ""
+    env = ""
+
+    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
+    subprocess.run(["mkdir", "-p", output])
+
+    #####
+    command_str = ""
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+            f.write(f"\n# Running {tool} for {sample}")
+            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def snpeff(sample, toml_config, done):
+    tool = "SnpEff"
+
+    cpu = ""
+    mem = ""
+    time_allocated = ""
+    env = ""
+
+    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
+    subprocess.run(["mkdir", "-p", output])
+
+    #####
+    command_str = ""
+
+    job = fill_template(
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+    )
+
+    if tool not in done:
+        print(f"To-Do: {tool}")
+        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+            f.write(f"\n# Running {tool} for {sample}")
+            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+    else:
+        print(f"Done: {tool}")
+
+
+def formatting(sample, toml_config, done):
+    tool = "formatting"
+
+    cpu = ""
+    mem = ""
+    time_allocated = ""
+    env = ""
+
+    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
+    subprocess.run(["mkdir", "-p", output])
+
+    #####
+    command_str = ""
 
     job = fill_template(
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
