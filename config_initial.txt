@@ -1,0 +1,8 @@
+# Required information
+[general]
+    fastqs = "" # # Path to raw fastq.gz files. Ex: /lustre09/project/6019267/shared/data/<project>.
+    reads = "" # Type of reads sequencing. Either single-end or paired-end. Possible values: ["SE", "PE"].
+    email = "" # You e-mail address to receive notification.
+    project = "" # Choose a project name that is descriptive and unique.
+    sequencing = "" # Type of sequencing. rna, exome or genome.
+    reference = "" # Possible values: Human: ["grch37", "grch38"]. Mouse: ["grcm39"]. Worm: ["wbcel235"]. Zebrafish: ["grcz11"].

@@ -43,8 +43,10 @@ args = parser.parse_args()
 # if nothing is passed, defaults to trim, quantification and variant calling
 if not any([args.trimming, args.pseudo, args.quantification, args.variants]):
     args.trimming = True
-    args.quantification = True
     args.variants = True
+
+    if args.rna:
+        args.quantification = True
 
 work_dir = os.getcwd()
 
