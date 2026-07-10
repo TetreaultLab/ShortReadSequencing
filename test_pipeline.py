@@ -240,14 +240,17 @@ def create_config_final(path_config):
 
     if sequencing == "rna":
         toml_config["general"]["alignment"] = "star"
+        toml_config["star"] = {}
         toml_config["star"]["outSAMtype1"] = "BAM"
         toml_config["star"]["outSAMtype2"] = "SortedByCoordinate"
         toml_config["star"]["twopassMode"] = "Basic"
         toml_config["star"]["outSJtype"] = "Standard"
         toml_config["star"]["quantMode"] = "GeneCounts"
+        toml_config["fastp"] = {}
         toml_config["fastp"]["phred"] = 15
         toml_config["fastp"]["length"] = 50
         toml_config["general"]["quantification"] = "True"
+        toml_config["featurecounts"] = {}
         toml_config["featurecounts"]["features"] = "gene"
         toml_config["featurecounts"]["attribute"] = "gene_id"
         toml_config["featurecounts"]["overlap"] = 1
@@ -255,19 +258,22 @@ def create_config_final(path_config):
     else:
         toml_config["general"]["alignment"] = "bwa"
         toml_config["general"]["quantification"] = "False"
+        toml_config["fastp"] = {}
         toml_config["fastp"]["phred"] = 20
         toml_config["fastp"]["length"] = 36
-        toml_config["bwa-mem"]
 
     toml_config["general"]["pseudo"] = "False"
+    toml_config["salmon"] = {}
     toml_config["salmon"]["minScoreFraction"] = 0.65
 
     toml_config["general"]["variants"] = "True"
 
     # FastQC
+    toml_config["fastqc"] = {}
     toml_config["fastqc"]["kmers"] = 7
 
     # MarkDuplicates
+    toml_config["markduplicates"] = {}
     toml_config["markduplicates"]["index"] = "true"
     toml_config["markduplicates"]["strategy"] = "SUM_OF_BASE_QUALITIES"
     toml_config["markduplicates"]["remove"] = "false"
