@@ -80,10 +80,7 @@ def main():
         start_str = ">>> {}-seq pipeline starting for {} at {}.".format(
             toml_config["general"]["sequencing"], sample, start
         )
-        f.write(
-            "=" * len(start_str) + "\n" + start_str + "\n" + "=" * len(start_str),
-            file=sys.stdout,
-        )
+        f.write("=" * len(start_str) + "\n" + start_str + "\n" + "=" * len(start_str))
         f.write(f"\n>>> Output saved to {output}\n")
 
     done = []
