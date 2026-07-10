@@ -76,17 +76,15 @@ def main():
     subprocess.run(["mkdir", "-p", tmp])
 
     # Open file for steps done
-    info = open(output + "/infos.txt", "a")
-    start_str = ">>> {}-seq pipeline starting for {} at {}.".format(
-        toml_config["general"]["sequencing"], sample, start
-    )
-    print(
-        "=" * len(start_str) + "\n" + start_str + "\n" + "=" * len(start_str),
-        file=sys.stdout,
-    )
-    print(f"\n>>> Output saved to {output}\n")
-
-    info.close()
+    with open(output + "/infos.txt", "a") as f:
+        start_str = ">>> {}-seq pipeline starting for {} at {}.".format(
+            toml_config["general"]["sequencing"], sample, start
+        )
+        f.write(
+            "=" * len(start_str) + "\n" + start_str + "\n" + "=" * len(start_str),
+            file=sys.stdout,
+        )
+        f.write(f"\n>>> Output saved to {output}\n")
 
     done = []
     with open(output + "/infos.txt", "r") as f:
