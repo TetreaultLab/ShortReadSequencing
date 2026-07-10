@@ -136,7 +136,7 @@ def main():
 
         # Alignment QC
         f.write("\t>>> Quality control: FastQC (v0.12.1)")
-        if "FastQC for bam" not in done:
+        if "FastQC_bam" not in done:
             function_queue.append(bamqc)
 
         # MarkDuplicates
@@ -168,7 +168,7 @@ def main():
 
             # Variant filtering
             f.write("\t>>> Variant Filtering: BCFtools (v1.18)")
-            if "BCFtools filters" not in done:
+            if "BCFtools_filters" not in done:
                 function_queue.append(bcftools_filter)
 
             # Variant Annotation
@@ -937,7 +937,7 @@ def samtools(sample, toml_config, done):
 
 
 def bamqc(sample, toml_config, done):
-    tool = "FastQC for bam"
+    tool = "FastQC_bam"
 
     cpu = "8"
     mem = "16"
@@ -1266,7 +1266,7 @@ def freebayes(sample, toml_config, done):
 
 
 def bcftools_filter(sample, toml_config, done):
-    tool = "BCFtools filters"
+    tool = "BCFtools_filters"
 
     cpu = ""
     mem = ""
