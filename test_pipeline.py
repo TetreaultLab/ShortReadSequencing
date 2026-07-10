@@ -201,6 +201,7 @@ def main():
             f.write("\t>>> Variant Calling: none")
 
         # Create main.sh
+        subprocess.run(["mkdir", "-p", f"{work_dir}/scripts/"])
         with open(f"{work_dir}/scripts/{sample}.sh", "w") as f:
             f.write("#!/bin/sh\n")
             f.write("\nDEPS=()\n")  # Add downstream dependencies
