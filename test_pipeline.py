@@ -1400,3 +1400,7 @@ def formatting(sample, toml_config, done):
             f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
     else:
         print(f"Done: {tool}")
+
+
+if __name__ == "__main__":
+    main()
