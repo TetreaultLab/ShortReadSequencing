@@ -920,7 +920,7 @@ def samtools(sample, toml_config, done):
                 f.write(
                     f"\nsamtools=$(sbatch --parsable --dependency=afterok:$star {job})\n"
                 )
-        elif (toml_config["general"]["sequencing"].isin(["exome", "genome"])) & (
+        elif (toml_config["general"]["sequencing"] in ["exome", "genome"]) & (
             "BWA-MEM2" not in done
         ):
             with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
