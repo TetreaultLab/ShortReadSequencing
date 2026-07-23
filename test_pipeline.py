@@ -26,7 +26,7 @@ def main():
 
     parser.add_argument("--sample", type=str, required=True, help="Sample name.")
     parser.add_argument(
-        "--config", type=str, required=True, help="Project config file, including path."
+        "--config", type=str, required=True, help="Project config file."
     )
     parser.add_argument(
         "--test",
@@ -1220,7 +1220,7 @@ def multiqc(sample, toml_config, done):
     if tool not in done:
         print(f"To-Do: {tool}")
         with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
-            f.write("\n# MultiQC\n")
+            f.write("\n# MultiQC")
             f.write('\nDEPENDENCY_LIST=$(IFS=:; echo "${DEPS[*]}")')
             f.write("\nif [ ${#DEPS[@]} -gt 0 ]; then")
             f.write(f"\n\tsbatch --dependency=afterok:$DEPENDENCY_LIST {job}")
@@ -1657,7 +1657,7 @@ def cleanup(sample, toml_config, done, start):
     if tool not in done:
         print(f"To-Do: {tool}")
         with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
-            f.write("\n# Cleanup\n")
+            f.write("\n# Cleanup")
             f.write('\nDEPENDENCY_LIST=$(IFS=:; echo "${DEPS[*]}")')
             f.write("\nif [ ${#DEPS[@]} -gt 0 ]; then")
             f.write(f"\n\tsbatch --dependency=afterok:$DEPENDENCY_LIST {job}")
