@@ -1218,8 +1218,9 @@ def multiqc(sample, toml_config, done):
     command_str1 = f"apptainer run /lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif multiqc --file-list {output}/my_file_list.txt --force --filename {sample}_multiqc_report --outdir {output}/"
     command_str2 = f"rm {output}/my_file_list.txt"
     command_str3 = f"rm -r {output}/{sample}_multiqc_report_data"
+    command_str4 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/check_fastqc.py --path {input}QC/fastQC --sample {sample}"
 
-    command_str = "\n".join([command_str1, command_str2, command_str3])
+    command_str = "\n".join([command_str1, command_str2, command_str3, command_str4])
 
     job = fill_template(
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
