@@ -201,6 +201,8 @@ def main():
         else:
             f.write("\n>>> Variant Calling: none")
 
+        f.write("\n")
+
         # Create main.sh
         subprocess.run(["mkdir", "-p", f"{work_dir}/scripts/"])
         with open(f"{work_dir}/scripts/{sample}.sh", "w") as f:
