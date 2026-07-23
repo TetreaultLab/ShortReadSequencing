@@ -283,7 +283,7 @@ def create_config_final(path_config):
 
 def fill_template(tool, toml_config, sample, cpu, mem, time_allocated, env, command):
     email = toml_config["general"]["email"]
-    job = f"{work_dir}/scripts/{tool}_{sample}.slurm"
+    job = f"{work_dir}/scripts/{sample}_{tool}_.slurm"
     infos = toml_config["general"]["output"] + "/" + sample + "/infos.txt"
 
     with open(

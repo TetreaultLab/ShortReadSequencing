@@ -11,6 +11,7 @@
 #
 ### Load environnment
 #
+set -o pipefail
 {6}
 #
 ### Running {3} for {4}
