@@ -896,7 +896,7 @@ def samtools(sample, toml_config, done):
     command_str1 = f"samtools sort --threads {cpu} -m 4G {inBAM} -o {bamCoord}"
 
     # Index bam sorted by coordinates
-    command_str2 = f"samtools index --threads {cpu} -b bamCoord -o {bamCoord}.bai"
+    command_str2 = f"samtools index --threads {cpu} -b {bamCoord} -o {bamCoord}.bai"
 
     # alignment stats
     command_str3 = f"samtools stats {bamCoord} | grep ^SN | cut -f 2- > {stats}"
