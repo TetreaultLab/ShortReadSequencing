@@ -292,7 +292,7 @@ def fill_template(tool, toml_config, sample, cpu, mem, time_allocated, env, comm
     ) as f:
         slurm = f.read()
         slurm_filled = slurm.format(
-            cpu, mem, time_allocated, tool, sample, email, env, command, infos
+            cpu, mem, time_allocated, sample, tool, email, env, command, infos
         )
 
         with open(job, "w") as o:
