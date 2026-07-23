@@ -19,5 +19,5 @@ set -o pipefail
 {7}
 #
 if [ $? -eq 0 ]; then
-    echo "{3}" >> "{8}"
+    echo "{4}" >> "{8}"
 fi
