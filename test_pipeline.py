@@ -190,8 +190,6 @@ def main():
                 f.write("\t>>> Variant Annotation: SnpEff + SnpSift (v5.2a)")
                 if "SnpEff" not in done:
                     function_queue.append(snpeff)
-                if "formatting" not in done:
-                    function_queue.append(formatting)
         else:
             f.write("\t>>> Variant Calling: none")
 
@@ -208,6 +206,8 @@ def main():
             except Exception as e:
                 print(f"Error: {e}")
                 exit(1)
+
+        cleanup(sample, toml_config, done, start)
 
         # Check if in testing mode
         if args.test:
@@ -1071,13 +1071,21 @@ def markduplicates(sample, toml_config, done):
         if "Samtools" not in done:
             with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
                 f.write(f"\n# Running {tool} for {sample}")
-                f.write(
-                    f"\nmarkDuplicates=$(sbatch --parsable --dependency=afterok:$samtools {job})\n"
-                )
+                if toml_config["general"]["sequencing"] == "rna":
+                    f.write(
+                        f"\nmarkDuplicates=$(sbatch --parsable --dependency=afterok:$samtools {job})\n"
+                    )
+                else:
+                    f.write(
+                        f"\nDEPS+=($(sbatch --parsable --dependency=afterok:$samtools {job}))\n"
+                    )
         else:
             with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
                 f.write(f"\n# Running {tool} for {sample}")
-                f.write(f"\nmarkDuplicates=$(sbatch --parsable {job})\n")
+                if toml_config["general"]["sequencing"] == "rna":
+                    f.write(f"\nmarkDuplicates=$(sbatch --parsable {job})\n")
+                else:
+                    f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
     else:
         print(f"Done: {tool}")
 
@@ -1160,9 +1168,16 @@ def featurecounts(sample, toml_config, done):
 
     if tool not in done:
         print(f"To-Do: {tool}")
-        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
-            f.write(f"\n# Running {tool} for {sample}")
-            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+        if "MarkDuplicates" not in done:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(
+                    f"\nDEPS+=($(sbatch --parsable --dependency=afterok:$markDuplicates {job}))\n"
+                )
+        else:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
     else:
         print(f"Done: {tool}")
 
@@ -1205,8 +1220,13 @@ def multiqc(sample, toml_config, done):
     if tool not in done:
         print(f"To-Do: {tool}")
         with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
-            f.write(f"\n# Running {tool} for {sample}")
-            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+            f.write("\n# MultiQC\n")
+            f.write('\nDEPENDENCY_LIST=$(IFS=:; echo "${DEPS[*]}")')
+            f.write("\nif [ ${#DEPS[@]} -gt 0 ]; then")
+            f.write(f"\n\tsbatch --dependency=afterok:$DEPENDENCY_LIST {job}")
+            f.write("\nelse")
+            f.write(f"\n\tsbatch {job}")
+            f.write("\nfi\n")
     else:
         print(f"Done: {tool}")
 
@@ -1214,16 +1234,40 @@ def multiqc(sample, toml_config, done):
 def bcftools(sample, toml_config, done):
     tool = "BCFtools"
 
-    cpu = ""
-    mem = ""
-    time_allocated = ""
-    env = ""
+    cpu = "8"
+    mem = "32"
+    if toml_config["general"]["sequencing"] == "genome":
+        time_allocated = "00-11:00"
+    else:
+        time_allocated = "00-03:00"
+    env = "module load StdEnv/2023 bcftools/1.22"
 
-    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
+    input = (
+        toml_config["general"]["output"]
+        + "/"
+        + sample
+        + "/Aligned/"
+        + sample
+        + "_sortedCoordinate.bam"
+    )
+    output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
 
-    #####
-    command_str = ""
+    ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
+
+    with open(
+        toml_config["general"]["output"] + "/" + sample + "/sample.txt", "w"
+    ) as sample_file:
+        subprocess.run(["echo", sample], stdout=sample_file)
+
+    command_str = (
+        f"bcftools mpileup --threads {cpu} -d 1000000 --max-idepth 1000000 -Ou -f {ref} {input} | "
+        f"bcftools call --threads {cpu} -m -v -Ou | "
+        f"bcftools reheader --samples {toml_config['general']['output']}/{sample}/sample.txt | "
+        f"bcftools norm -f {ref} -m -any -Ou | "
+        f"bcftools filter -i 'QUAL >= 10 && FORMAT/DP >= 5' -Oz -o {output}{sample}_bcftools.vcf.gz && "
+        f"tabix -p vcf {output}{sample}_bcftools.vcf.gz"
+    )
 
     job = fill_template(
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
@@ -1231,9 +1275,16 @@ def bcftools(sample, toml_config, done):
 
     if tool not in done:
         print(f"To-Do: {tool}")
-        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
-            f.write(f"\n# Running {tool} for {sample}")
-            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+        if "Samtools" not in done:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(
+                    f"\nbcftools=$(sbatch --parsable --dependency=afterok:$samtools {job})\n"
+                )
+        else:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(f"\nbcftools=$(sbatch --parsable {job})\n")
     else:
         print(f"Done: {tool}")
 
@@ -1241,16 +1292,34 @@ def bcftools(sample, toml_config, done):
 def freebayes(sample, toml_config, done):
     tool = "FreeBayes"
 
-    cpu = ""
-    mem = ""
-    time_allocated = ""
-    env = ""
+    cpu = "8"
+    mem = "32"
+    if toml_config["general"]["sequencing"] == "genome":
+        time_allocated = "00-11:00"
+    else:
+        time_allocated = "00-03:00"
+    env = "module load StdEnv/2023 freebayes/1.3.7 bcftools/1.22"
 
-    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
+    input = (
+        toml_config["general"]["output"]
+        + "/"
+        + sample
+        + "/Aligned/"
+        + sample
+        + "_sortedCoordinate.bam"
+    )
+    output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
 
-    #####
-    command_str = ""
+    ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
+
+    command_str = (
+        f"freebayes -f {ref} {input} | "
+        f"bcftools reheader --samples {toml_config['general']['output']}/{sample}/sample.txt | "
+        f"bcftools norm -f {ref} -m -any -Ou | "
+        f"bcftools filter -i 'QUAL >= 10 && FORMAT/DP >= 5' -Oz -o {output}{sample}_freebayes.vcf.gz && "
+        f"tabix -p vcf {output}{sample}_freebayes.vcf.gz"
+    )
 
     job = fill_template(
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
@@ -1258,9 +1327,16 @@ def freebayes(sample, toml_config, done):
 
     if tool not in done:
         print(f"To-Do: {tool}")
-        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
-            f.write(f"\n# Running {tool} for {sample}")
-            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+        if "Samtools" not in done:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(
+                    f"\nfreebayes=$(sbatch --parsable --dependency=afterok:$samtools {job})\n"
+                )
+        else:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(f"\nfreebayes=$(sbatch --parsable {job})\n")
     else:
         print(f"Done: {tool}")
 
@@ -1268,16 +1344,32 @@ def freebayes(sample, toml_config, done):
 def bcftools_filter(sample, toml_config, done):
     tool = "BCFtools_filters"
 
-    cpu = ""
-    mem = ""
-    time_allocated = ""
-    env = ""
+    cpu = "4"
+    mem = "16"
+    if toml_config["general"]["sequencing"] == "genome":
+        time_allocated = "00-11:00"
+    else:
+        time_allocated = "00-03:00"
+    env = "module load StdEnv/2023 bcftools/1.22"
 
-    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
+    output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
+    isec_dir = f"{output}isec_temp"
+
     subprocess.run(["mkdir", "-p", output])
+    subprocess.run(["mkdir", "-p", isec_dir])
 
-    #####
-    command_str = ""
+    command_str = (
+        # 1. Split into temp directory (0000 = bcftools-only, 0001 = freebayes-only, 0002 = shared)
+        f"bcftools isec -p {isec_dir} -O z "
+        f"{output}{sample}_bcftools.vcf.gz {output}{sample}_freebayes.vcf.gz && "
+        # 2. Concat all sites (-Ou) and pipe directly into final filter (-Oz)
+        f"bcftools concat -a -Ou "
+        f"{isec_dir}/0000.vcf.gz {isec_dir}/0001.vcf.gz {isec_dir}/0002.vcf.gz | "
+        f"bcftools filter -i 'QUAL >= 10 && FORMAT/DP >= 5' -O v -o {output}{sample}_merged.vcf && "
+        # 3. Cleanup temporary files
+        f"rm -r {isec_dir} && "
+        f"rm {toml_config['general']['output']}/{sample}/sample.txt"
+    )
 
     job = fill_template(
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
@@ -1285,9 +1377,19 @@ def bcftools_filter(sample, toml_config, done):
 
     if tool not in done:
         print(f"To-Do: {tool}")
+        active_deps = []
+        if "bcftools" not in done:
+            active_deps.append("$bcftools")
+        if "freebayes" not in done:
+            active_deps.append("$freebayes")
+
+        if active_deps:
+            dep_str = f"--dependency=afterok:{':'.join(active_deps)} "
+        else:
+            dep_str = ""
         with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
             f.write(f"\n# Running {tool} for {sample}")
-            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+            f.write(f"\nmerge=$(sbatch --parsable {dep_str}{job})\n")
     else:
         print(f"Done: {tool}")
 
@@ -1295,16 +1397,60 @@ def bcftools_filter(sample, toml_config, done):
 def vep(sample, toml_config, done):
     tool = "VEP"
 
-    cpu = ""
-    mem = ""
-    time_allocated = ""
-    env = ""
+    cpu = "4"
+    mem = "16"
+    if toml_config["general"]["sequencing"] == "genome":
+        time_allocated = "00-11:00"
+    else:
+        time_allocated = "00-03:00"
+    env = "module load StdEnv/2023 apptainer/1.3.5"
 
-    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
-    subprocess.run(["mkdir", "-p", output])
+    output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
+    vcf = f"{output}{sample}_merged.vcf"
+    out_vcf = output + sample + "_vep.vcf"
 
-    #####
-    command_str = ""
+    vep_cmd = [
+        "apptainer",
+        "run",
+        "/lustre09/project/6019267/shared/tools/variants/annotation/VEP/vep.sif",
+        "vep",
+        "--offline",
+        "--cache",
+        "--dir_cache",
+        "/lustre09/project/6019267/shared/tools/variants/annotation/VEP/vep_data/",
+        "-i",
+        vcf,
+        "-o",
+        out_vcf,
+        "--vcf",
+        "--force_overwrite",
+        "--stats_file",
+        output + sample + "_vep_summary.html",
+        "--variant_class",
+        "--domains",
+        "--regulatory",
+        "--canonical",
+        "--individual_zyg",
+        "all",
+        "--hgvs",
+        "--numbers",
+        "--pubmed",
+        "--uniprot",
+        "--mane",
+        "--protein",
+        "--symbol",
+        "--ccds",
+        "--biotype",
+        "--gene_phenotype",
+        "--mirna",
+        "--appris",
+        "--tsl",
+        "--pick",
+        "--fork",
+        cpu,
+    ]
+
+    command_str = " ".join(vep_cmd)
 
     job = fill_template(
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
@@ -1312,9 +1458,16 @@ def vep(sample, toml_config, done):
 
     if tool not in done:
         print(f"To-Do: {tool}")
-        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
-            f.write(f"\n# Running {tool} for {sample}")
-            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+        if "BCFtools_filters" not in done:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(
+                    f"\nvep=$(sbatch --parsable --dependency=afterok:$merge {job})\n"
+                )
+        else:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(f"\nvep=$(sbatch --parsable {job})\n")
     else:
         print(f"Done: {tool}")
 
@@ -1322,16 +1475,87 @@ def vep(sample, toml_config, done):
 def openCravat(sample, toml_config, done):
     tool = "openCravat"
 
-    cpu = ""
-    mem = ""
-    time_allocated = ""
+    cpu = "8"
+    mem = "128"
+    if toml_config["general"]["sequencing"] == "genome":
+        time_allocated = "01-11:00"
+    else:
+        time_allocated = "00-23:00"
     env = ""
 
-    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
-    subprocess.run(["mkdir", "-p", output])
+    output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
+    vcf = output + sample + "_vep.vcf"
 
-    #####
-    command_str = ""
+    genome = toml_config["general"]["reference"]
+
+    if genome == "grch37":
+        ref = "hg19"
+    if genome == "grch38":
+        ref = "hg38"
+
+    oc = [
+        "/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin/oc",
+        "run",
+        vcf,
+        "-a",
+        "alfa",
+        "alphamissense",
+        "cadd",
+        "clingen",
+        "clinvar",
+        "clinvar_acmg",
+        "dbsnp",
+        "denovo",
+        "gerp",
+        "geuvadis",
+        "gnomad4",
+        "gtex",
+        "gwas_catalog",
+        "hg19",
+        "interpro",
+        "mutation_assessor",
+        "mutationtaster",
+        "phastcons",
+        "phylop",
+        "polyphen2",
+        "provean",
+        "revel",
+        "sift",
+        "spliceai",
+        "thousandgenomes",
+        "aloft",
+        "bayesdel",
+        "clinpred",
+        "fathmm",
+        "genehancer",
+        "hpo",
+        "mitomap",
+        "mutpred_indel",
+        "omim",
+        "pangolin",
+        "repeat",
+        "--mp",
+        cpu,
+        "--debug",
+        "-l",
+        ref,
+        "-d",
+        output,
+        "-t",
+        "text",
+        "--cleanrun",
+    ]
+
+    command_str1 = " ".join(oc)
+
+    command_str2 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/oc_filtering.py --output {output} --sample {sample} --vcf {vcf}"
+
+    command_str3 = (
+        f"rm {output}{sample}_vep.vcf && "
+        f"rm {output}{sample}_vep.vcf.sqlite && "
+        f"rm {output}{sample}_vep.vcf.tsv && "
+    )
+    command_str = "\n".join([command_str1, command_str2, command_str3])
 
     job = fill_template(
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
@@ -1339,9 +1563,16 @@ def openCravat(sample, toml_config, done):
 
     if tool not in done:
         print(f"To-Do: {tool}")
-        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
-            f.write(f"\n# Running {tool} for {sample}")
-            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+        if "VEP" not in done:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(
+                    f"\nDEPS+=($(sbatch --parsable --dependency=afterok:$vep {job}))\n"
+                )
+        else:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
     else:
         print(f"Done: {tool}")
 
@@ -1349,16 +1580,45 @@ def openCravat(sample, toml_config, done):
 def snpeff(sample, toml_config, done):
     tool = "SnpEff"
 
-    cpu = ""
-    mem = ""
-    time_allocated = ""
+    cpu = "4"
+    mem = "32"
+    time_allocated = "00-11:00"
     env = ""
 
-    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
-    subprocess.run(["mkdir", "-p", output])
+    snpeff_path = (
+        "/lustre09/project/6019267/shared/tools/main_pipelines/short-read/snpEff"
+    )
 
-    #####
-    command_str = ""
+    genome = toml_config["general"]["reference"]
+
+    if genome == "grcz11":
+        ref = "GRCz11.105"
+    if genome == "grcm39":
+        ref = "GRCm39.105"
+    if genome == "wbcel235":
+        ref = "WBcel235.105"
+
+    path = toml_config["general"]["output"] + "/" + sample + "/Variants"
+
+    command_str1 = (
+        # 1. snpEff reads sample.vcf and streams output to stdout
+        f"java -jar {snpeff_path}/snpEff.jar -noLog -c {snpeff_path}/snpEff.config "
+        f"-stats {path}/{sample}_summary.html -csvStats {path}/{sample}_summary.csv "
+        f"{ref} {path}/{sample}.vcf | "
+        # 2. SnpSift varType reads from stdin (-) and streams output to stdout
+        f"java -jar {snpeff_path}/SnpSift.jar varType -noLog - | "
+        # 3. SnpSift extractFields reads from stdin (-) and writes TSV output to file
+        f"java -jar {snpeff_path}/SnpSift.jar extractFields -noLog -s '|' -e '.' - "
+        f"CHROM POS REF ALT QUAL HOM DP TYPE "
+        f"'ANN[*].GENE' 'ANN[*].GENEID' 'ANN[*].FEATUREID' "
+        f"'ANN[*].EFFECT' 'ANN[*].IMPACT' 'ANN[*].BIOTYPE' "
+        f"'ANN[*].HGVS_C' 'ANN[*].HGVS_P' "
+        f"> {path}/{sample}_annotated.txt"
+    )
+
+    command_str2 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/snpeff_filtering.py --path {path} --sample {sample}"
+
+    command_str = "\n".join([command_str1, command_str2])
 
     job = fill_template(
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
@@ -1366,26 +1626,29 @@ def snpeff(sample, toml_config, done):
 
     if tool not in done:
         print(f"To-Do: {tool}")
-        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
-            f.write(f"\n# Running {tool} for {sample}")
-            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+        if "BCFtools_filters" not in done:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(
+                    f"\nDEPS+=($(sbatch --parsable --dependency=afterok:$merge {job}))\n"
+                )
+        else:
+            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+                f.write(f"\n# Running {tool} for {sample}")
+                f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
     else:
         print(f"Done: {tool}")
 
 
-def formatting(sample, toml_config, done):
-    tool = "formatting"
+def cleanup(sample, toml_config, done, start):
+    tool = "cleanup"
 
-    cpu = ""
-    mem = ""
-    time_allocated = ""
+    cpu = "1"
+    mem = "4"
+    time_allocated = "00-03:00"
     env = ""
 
-    output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
-    subprocess.run(["mkdir", "-p", output])
-
-    #####
-    command_str = ""
+    command_str = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/cleanup.py --toml_config {toml_config} --start {start} --sample {sample}"
 
     job = fill_template(
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
@@ -1394,8 +1657,13 @@ def formatting(sample, toml_config, done):
     if tool not in done:
         print(f"To-Do: {tool}")
         with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
-            f.write(f"\n# Running {tool} for {sample}")
-            f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+            f.write("\n# Cleanup\n")
+            f.write('\nDEPENDENCY_LIST=$(IFS=:; echo "${DEPS[*]}")')
+            f.write("\nif [ ${#DEPS[@]} -gt 0 ]; then")
+            f.write(f"\n\tsbatch --dependency=afterok:$DEPENDENCY_LIST {job}")
+            f.write("\nelse")
+            f.write(f"\n\tsbatch {job}")
+            f.write("\nfi\n")
     else:
         print(f"Done: {tool}")
 
