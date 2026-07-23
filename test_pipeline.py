@@ -80,7 +80,9 @@ def main():
         start_str = ">>> {}-seq pipeline starting for {} at {}.".format(
             toml_config["general"]["sequencing"], sample, start
         )
-        f.write("=" * len(start_str) + "\n" + start_str + "\n" + "=" * len(start_str))
+        f.write(
+            "\n" + "=" * len(start_str) + "\n" + start_str + "\n" + "=" * len(start_str)
+        )
         f.write(f"\n>>> Output saved to {output}\n")
 
     done = []
@@ -94,72 +96,72 @@ def main():
         f.write(">>> Parameters:")
 
         genome = get_reference(toml_config["general"]["reference"], "")["fasta"]
-        f.write(f"\t>>> Reference genome version: {genome}")
+        f.write(f"\n>>> Reference genome version: {genome}")
 
         # Quality control
-        f.write("\t>>> Quality control: FastQC (v0.12.1)")
+        f.write("\n>>> Quality control: FastQC (v0.12.1)")
         if "FastQC" not in done:
             function_queue.append(fastqc)
 
         # Trimming
         if toml_config["general"]["trimming"] == "True":
-            f.write("\t>>> Trimming: fastp (v1.0.1)")
+            f.write("\n>>> Trimming: fastp (v1.0.1)")
             if "fastp" not in done:
                 function_queue.append(fastp)
         else:
-            f.write("\t>>> Trimming: none")
+            f.write("\n>>> Trimming: none")
 
         # Alignment
         if toml_config["general"]["alignment"] == "star":
-            f.write("\t>>> Alignment: STAR (v2.7.11a)")
+            f.write("\n>>> Alignment: STAR (v2.7.11a)")
             if "STAR" not in done:
                 function_queue.append(star)
         elif toml_config["general"]["alignment"] == "bwa":
-            f.write("\t>>> Alignment: BWA-MEM2 (v2.2.1)")
+            f.write("\n>>> Alignment: BWA-MEM2 (v2.2.1)")
             if "BWA-MEM2" not in done:
                 function_queue.append(bwa)
         else:
-            f.write("\t>>> Alignment: none")
+            f.write("\n>>> Alignment: none")
 
         # Pseudo alignedment
         if toml_config["general"]["pseudo"] == "True":
-            f.write("\t>>> Pseudoalignment: Salmon (v1.10.2)")
+            f.write("\n>>> Pseudoalignment: Salmon (v1.10.2)")
             if "Salmon" not in done:
                 function_queue.append(salmon)
         else:
-            f.write("\t>>> Pseudoalignment: none")
+            f.write("\n>>> Pseudoalignment: none")
 
         # Sorting and indexing
-        f.write("\t>>> Sorting/Indexing: Samtools (v1.18)")
+        f.write("\n>>> Sorting/Indexing: Samtools (v1.18)")
         if "Samtools" not in done:
             function_queue.append(samtools)
 
         # Alignment QC
-        f.write("\t>>> Quality control: FastQC (v0.12.1)")
+        f.write("\n>>> Quality control: FastQC (v0.12.1)")
         if "FastQC_bam" not in done:
             function_queue.append(bamqc)
 
         # MarkDuplicates
-        f.write("\t>>> MarkDuplicates: GATK (4.6.1.0) & Picard (v3.0.0)")
+        f.write("\n>>> MarkDuplicates: GATK (4.6.1.0) & Picard (v3.0.0)")
         if "MarkDuplicates" not in done:
             function_queue.append(markduplicates)
 
         # Quantification
         if toml_config["general"]["quantification"] == "True":
-            f.write("\t>>> Quantification: featureCounts (v2.0.6)")
+            f.write("\n>>> Quantification: featureCounts (v2.0.6)")
             if "FeatureCounts" not in done:
                 function_queue.append(featurecounts)
         else:
-            f.write("\t>>> Quantification: none")
+            f.write("\n>>> Quantification: none")
 
         # MultiQC
-        f.write("\t>>> Quality control report: MultiQC (v1.31)")
+        f.write("\n>>> Quality control report: MultiQC (v1.31)")
         if "MultiQC" not in done:
             function_queue.append(multiqc)
 
         # Variant Calling
         if toml_config["general"]["variants"] == "True":
-            f.write("\t>>> Variant Calling: BCFtools (v1.22) & FreeBayes (v1.37)")
+            f.write("\n>>> Variant Calling: BCFtools (v1.22) & FreeBayes (v1.37)")
             if "BCFtools" not in done:
                 function_queue.append(bcftools)
 
@@ -167,7 +169,7 @@ def main():
                 function_queue.append(freebayes)
 
             # Variant filtering
-            f.write("\t>>> Variant Filtering: BCFtools (v1.18)")
+            f.write("\n>>> Variant Filtering: BCFtools (v1.18)")
             if "BCFtools_filters" not in done:
                 function_queue.append(bcftools_filter)
 
@@ -177,21 +179,21 @@ def main():
                 or toml_config["general"]["reference"] == "grch38"
             ):
                 # VEP
-                f.write("\t>>> Variant Annotation: VEP (v115.2)")
+                f.write("\n>>> Variant Annotation: VEP (v115.2)")
                 if "vep" not in done:
                     function_queue.append(vep)
 
                 # openCravat
-                f.write("\t>>> Variant Annotation: openCravat (v2.17.0)")
+                f.write("\n>>> Variant Annotation: openCravat (v2.17.0)")
                 if "openCravat" not in done:
                     function_queue.append(openCravat)
             else:
                 # SnpEff
-                f.write("\t>>> Variant Annotation: SnpEff + SnpSift (v5.2a)")
+                f.write("\n>>> Variant Annotation: SnpEff + SnpSift (v5.2a)")
                 if "SnpEff" not in done:
                     function_queue.append(snpeff)
         else:
-            f.write("\t>>> Variant Calling: none")
+            f.write("\n>>> Variant Calling: none")
 
         # Create main.sh
         subprocess.run(["mkdir", "-p", f"{work_dir}/scripts/"])
