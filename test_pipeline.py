@@ -875,7 +875,7 @@ def samtools(sample, toml_config, done):
     tool = "Samtools"
 
     cpu = "8"
-    mem = "32"
+    mem = "64"
     if toml_config["general"]["sequencing"] == "rna":
         time_allocated = "00-06:00"
     elif toml_config["general"]["sequencing"] == "exome":
