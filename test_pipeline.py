@@ -684,7 +684,7 @@ def bwa(sample, toml_config, done):
         time_allocated = "00-06:00"
     else:
         time_allocated = "00-23:00"
-    env = "module load StdEnv/2023 bwa-mem2/2.2.1"
+    env = "module load StdEnv/2023 bwa-mem2/2.2.1 samtools/1.22.1"
 
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     subprocess.run(["mkdir", "-p", output])
