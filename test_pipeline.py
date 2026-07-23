@@ -75,6 +75,12 @@ def main():
     subprocess.run(["mkdir", "-p", output])
     subprocess.run(["mkdir", "-p", tmp])
 
+    # if redo, remove infos.txt
+    if args.redo:
+        subprocess.run(
+            ["rm", toml_config["general"]["output"] + "/" + sample + "/infos.txt"]
+        )
+
     # Open file for steps done
     with open(output + "/infos.txt", "a") as f:
         start_str = ">>> {}-seq pipeline starting for {} at {}.".format(
