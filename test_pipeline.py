@@ -1024,13 +1024,14 @@ def markduplicates(sample, toml_config, done):
     bam_RG = input + "/" + sample + "_sortedCoordinate_RG.bam"
     metrics = output + sample + "_duplicates_metrics.txt"
     records = output + sample + "_markDuplicates.bam"
+    rg_line = f"@RG\\tID:{sample}\\tPL:Illumina\\tSM:{sample}\\tPU:{sample}"
 
     # Add RG tag to bam file
     command = [
         "samtools",
         "addreplacerg",
         "-r",
-        f"@RG\\tID:{sample}\\tPL:Illumina\\tSM:{sample}\\tPU:{sample}",
+        rg_line,
         "-o",
         bam_RG,
         bamCoord,
@@ -1376,7 +1377,7 @@ def bcftools_filter(sample, toml_config, done):
         # 2. Concat all sites (-Ou) and pipe directly into final filter (-Oz)
         f"bcftools concat -a -Ou "
         f"{isec_dir}/0000.vcf.gz {isec_dir}/0001.vcf.gz {isec_dir}/0002.vcf.gz | "
-        f"bcftools filter -i 'QUAL >= 10 && DP >= 5' -O v -o {output}{sample}_merged.vcf && "
+        f"bcftools filter -i 'QUAL >= 10 && FORMAT/DP >= 5' -O v -o {output}{sample}_merged.vcf && "
         # 3. Cleanup temporary files
         f"rm -r {isec_dir} && "
         f"rm {toml_config['general']['output']}/{sample}/sample.txt"
