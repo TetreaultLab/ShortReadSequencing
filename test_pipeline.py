@@ -1024,7 +1024,7 @@ def markduplicates(sample, toml_config, done):
     bam_RG = input + "/" + sample + "_sortedCoordinate_RG.bam"
     metrics = output + sample + "_duplicates_metrics.txt"
     records = output + sample + "_markDuplicates.bam"
-    rg_line = f"@RG\\tID:{sample}\\tPL:Illumina\\tSM:{sample}\\tPU:{sample}"
+    rg_line = f"'@RG\\tID:{sample}\\tPL:Illumina\\tSM:{sample}\\tPU:{sample}'"
 
     # Add RG tag to bam file
     command = [
