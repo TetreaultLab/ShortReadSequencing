@@ -11,10 +11,10 @@
 #
 ### Load environnment
 #
-set -o pipefail
+set -euo pipefail
 {6}
 #
-### Running {3} for {4}
+### Running {4} for {3}
 #
 {7}
 #
