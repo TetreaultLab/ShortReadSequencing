@@ -1387,14 +1387,12 @@ def bcftools_filter(sample, toml_config, done):
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
     )
 
-    print(done)
-
     if tool not in done:
         print(f"To-Do: {tool}")
         active_deps = []
-        if "bcftools" not in done:
+        if "BCFtools" not in done:
             active_deps.append("$bcftools")
-        if "freebayes" not in done:
+        if "FreeBayes" not in done:
             active_deps.append("$freebayes")
 
         if len(active_deps) > 0:
