@@ -1395,7 +1395,7 @@ def bcftools_filter(sample, toml_config, done):
         if "freebayes" not in done:
             active_deps.append("$freebayes")
 
-        if active_deps:
+        if len(active_deps) > 0:
             dep_str = f"--dependency=afterok:{':'.join(active_deps)} "
         else:
             dep_str = ""
