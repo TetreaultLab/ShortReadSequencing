@@ -1372,7 +1372,7 @@ def bcftools_filter(sample, toml_config, done):
 
     command_str = (
         # 1. Split into temp directory (0000 = bcftools-only, 0001 = freebayes-only, 0002 = shared)
-        f"bcftools isec -p {isec_dir} -O z "
+        f"bcftools isec -p {isec_dir} -Oz "
         f"{output}{sample}_bcftools.vcf.gz {output}{sample}_freebayes.vcf.gz && "
         # 2. Concat all sites (-Ou) and pipe directly into final filter (-Oz)
         f"bcftools concat -a -Ou "
@@ -1661,7 +1661,8 @@ def cleanup(sample, toml_config, done, start):
     time_allocated = "00-03:00"
     env = ""
 
-    command_str = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/cleanup.py --toml_config {toml_config} --start {start} --sample {sample}"
+    output = toml_config["general"]["output"]
+    command_str = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/cleanup.py --output {output} --start {start} --sample {sample}"
 
     job = fill_template(
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
