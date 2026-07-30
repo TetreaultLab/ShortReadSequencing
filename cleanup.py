@@ -5,12 +5,12 @@ import os
 from pathlib import Path
 
 parser = argparse.ArgumentParser(
-    prog="Filter snpEff output.",
-    description="Filter snpEff output.",
+    prog="Clean up SRS output.",
+    description="TRansfering files from scratch to results in projects.",
 )
 
 parser.add_argument("--output", type=str, required=True, help="Output path.")
-parser.add_argument("--start", type=str, required=True, help="Start time.")
+parser.add_argument("--start", required=True, help="Start time.")
 parser.add_argument("--sample", type=str, required=True, help="Sample name.")
 
 args = parser.parse_args()
