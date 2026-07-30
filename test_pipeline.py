@@ -1387,6 +1387,8 @@ def bcftools_filter(sample, toml_config, done):
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
     )
 
+    print(done)
+
     if tool not in done:
         print(f"To-Do: {tool}")
         active_deps = []
@@ -1399,6 +1401,7 @@ def bcftools_filter(sample, toml_config, done):
             dep_str = f"--dependency=afterok:{':'.join(active_deps)} "
         else:
             dep_str = ""
+
         with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
             f.write(f"\n# Running {tool} for {sample}")
             f.write(f"\nmerge=$(sbatch --parsable {dep_str}{job})\n")
