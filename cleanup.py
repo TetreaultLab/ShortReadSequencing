@@ -10,20 +10,12 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument("--output", type=str, required=True, help="Output path.")
-parser.add_argument("--start", required=True, help="Start time.")
 parser.add_argument("--sample", type=str, required=True, help="Sample name.")
 
 args = parser.parse_args()
 
 output = args.output
-start = args.start
 sample = args.sample
-
-
-def get_time():
-    now = datetime.now()
-    return now
-
 
 # Move results to projects directory
 print("\n>>> Transferring from scratch to results")
@@ -36,7 +28,5 @@ subprocess.run(cmd, check=True)
 final = f"{str(results)}/{sample}"
 print(f"\n\n>>> Results found in {final}")
 
-end = get_time()
-total_time = end - start
-end_str = ">>> Pipeline for {} completed in {}.".format(sample, total_time)
+end_str = ">>> Pipeline for {} completed.".format(sample)
 print("=" * len(end_str) + "\n" + end_str + "\n" + "=" * len(end_str))

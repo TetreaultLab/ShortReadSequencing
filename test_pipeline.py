@@ -201,6 +201,9 @@ def main():
         else:
             f.write("\n>>> Variant Calling: none")
 
+        # Call cleanup for transfer
+        function_queue.append(cleanup)
+
         f.write("\n")
 
         # Create main.sh
@@ -216,8 +219,6 @@ def main():
             except Exception as e:
                 print(f"Error: {e}")
                 exit(1)
-
-        cleanup(sample, toml_config, done, start)
 
         # Check if in testing mode
         if args.test:
@@ -1653,7 +1654,7 @@ def snpeff(sample, toml_config, done):
         print(f"Done: {tool}")
 
 
-def cleanup(sample, toml_config, done, start):
+def cleanup(sample, toml_config, done):
     tool = "cleanup"
 
     cpu = "1"
@@ -1662,7 +1663,7 @@ def cleanup(sample, toml_config, done, start):
     env = ""
 
     output = toml_config["general"]["output"]
-    command_str = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/cleanup.py --output {output} --start {start} --sample {sample}"
+    command_str = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/cleanup.py --output {output} --sample {sample}"
 
     job = fill_template(
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
