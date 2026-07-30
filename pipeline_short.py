@@ -1755,7 +1755,6 @@ def openCravat(sample, toml_config):
     )
 
     # Remove temporary files
-    subprocess.run(["rm", output + sample + "_vep.vcf"])
     subprocess.run(["rm", output + sample + "_vep.vcf.err"])
     subprocess.run(["rm", output + sample + "_vep.vcf.log"])
     subprocess.run(["rm", output + sample + "_vep.vcf.sqlite"])
