@@ -1309,7 +1309,11 @@ def freebayes(sample, toml_config, done):
     tool = "FreeBayes"
 
     cpu = "8"
-    mem = "32"
+    if toml_config["general"]["sequencing"] == "genome":
+        mem = "64"
+    else:
+        mem = "32"
+
     if toml_config["general"]["sequencing"] == "genome":
         time_allocated = "00-11:00"
     else:
