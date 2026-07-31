@@ -1011,7 +1011,10 @@ def markduplicates(sample, toml_config, done):
 
     cpu = "4"
     mem = "16"
-    time_allocated = "00-01:00"
+    if toml_config["general"]["sequencing"] == "genome":
+        time_allocated = "00-11:00"
+    else:
+        time_allocated = "00-03:00"
     env = "module load StdEnv/2023 samtools/1.22.1 gatk/4.6.1.0"
 
     output = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/"
