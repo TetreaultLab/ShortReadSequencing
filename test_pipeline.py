@@ -925,7 +925,7 @@ def samtools(sample, toml_config, done):
 
     if tool not in done:
         print(f"To-Do: {tool}")
-        if (toml_config["general"]["sequencing"] == "RNA") & ("STAR" not in done):
+        if (toml_config["general"]["sequencing"] == "rna") & ("STAR" not in done):
             with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
                 f.write(f"\n# Running {tool} for {sample}")
                 f.write(
