@@ -636,9 +636,7 @@ def star(sample, toml_config, done):
         f"mv {output}/{sample}_Aligned.sortedByCoord.out.bam {output}/{sample}.bam"
     )
     command_str3 = f"mv {output}/{sample}_Log.final.out {output}/{sample}_summary_mapping_stats.out"
-    command_str4 = (
-        f"mv {output}/{sample}_Log.final.out {output}/{sample}_run_information.out"
-    )
+    command_str4 = f"mv {output}/{sample}_Log.out {output}/{sample}_run_information.out"
     command_str5 = f"rm {output}/{sample}_Log.progress.out"
     command_str6 = f"rm {output}/{sample}_Unmapped.out.mate1"
     command_str7 = f"rm {output}/{sample}_Unmapped.out.mate2"
