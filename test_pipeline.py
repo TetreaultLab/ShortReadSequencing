@@ -186,7 +186,7 @@ def main():
             ):
                 # VEP
                 f.write("\n>>> Variant Annotation: VEP (v115.2)")
-                if "vep" not in done:
+                if "VEP" not in done:
                     function_queue.append(vep)
 
                 # openCravat
