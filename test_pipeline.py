@@ -1171,7 +1171,7 @@ def featurecounts(sample, toml_config, done):
 
     command_str1 = " ".join(command)
 
-    command_str2 = f"tail -n +2 {output}/{sample}_geneID.txt | cut -f1,7 | sed -i '1s|.*|gene_id\t{sample}|' > {output}/{sample}_counts.txt"
+    command_str2 = f"tail -n +2 {output}/{sample}_geneID.txt | cut -f1,7 | sed '1s|.*|gene_id\t{sample}|' > {output}/{sample}_counts.txt"
 
     command_str = "\n".join([command_str1, command_str2])
 
