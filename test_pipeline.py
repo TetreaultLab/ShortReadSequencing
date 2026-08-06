@@ -404,8 +404,8 @@ def get_file_trimmed(toml_config, output, sample):
 def fastqc(sample, toml_config, done):
     tool = "FastQC"
 
-    cpu = "8"
-    mem = "16"
+    cpu = "2"
+    mem = "2"
     time_allocated = "00-01:00"
     env = "module load StdEnv/2023 python/3.11.5 fastqc/0.12.1\nsource /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate"
 
@@ -470,7 +470,7 @@ def fastp(sample, toml_config, done):
     tool = "fastp"
 
     cpu = "8"
-    mem = "32"
+    mem = "8"
     time_allocated = "00-01:00"
     env = "module load StdEnv/2023 fastp/1.0.1"
 
@@ -546,7 +546,7 @@ def star(sample, toml_config, done):
 
     cpu = "8"
     mem = "64"
-    time_allocated = "00-11:00"
+    time_allocated = "00-06:00"
     env = "module load StdEnv/2023 star/2.7.11a"
 
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
@@ -875,8 +875,8 @@ def salmon(sample, toml_config, done):
 def samtools(sample, toml_config, done):
     tool = "Samtools"
 
-    cpu = "8"
-    mem = "64"
+    cpu = 3
+    mem = "32"
     if toml_config["general"]["sequencing"] == "rna":
         time_allocated = "00-06:00"
     elif toml_config["general"]["sequencing"] == "exome":
@@ -948,8 +948,8 @@ def samtools(sample, toml_config, done):
 def bamqc(sample, toml_config, done):
     tool = "FastQC_bam"
 
-    cpu = "8"
-    mem = "16"
+    cpu = "2"
+    mem = "2"
     time_allocated = "00-01:00"
     env = "module load StdEnv/2023 python/3.11.5 fastqc/0.12.1\nsource /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate"
 
@@ -1007,8 +1007,8 @@ def bamqc(sample, toml_config, done):
 def markduplicates(sample, toml_config, done):
     tool = "MarkDuplicates"
 
-    cpu = "4"
-    mem = "16"
+    cpu = "2"
+    mem = "8"
     if toml_config["general"]["sequencing"] == "genome":
         time_allocated = "00-11:00"
     else:
@@ -1106,8 +1106,8 @@ def markduplicates(sample, toml_config, done):
 def featurecounts(sample, toml_config, done):
     tool = "FeatureCounts"
 
-    cpu = "8"
-    mem = "32"
+    cpu = "2"
+    mem = "4"
     time_allocated = "00-01:00"
     env = "module load StdEnv/2023 subread/2.0.6"
 
@@ -1199,7 +1199,7 @@ def multiqc(sample, toml_config, done):
     tool = "MultiQC"
 
     cpu = "1"
-    mem = "4"
+    mem = "1"
     time_allocated = "00-01:00"
     env = "module load StdEnv/2023 python/3.11.5 apptainer/1.3.5"
 
@@ -1248,8 +1248,8 @@ def multiqc(sample, toml_config, done):
 def bcftools(sample, toml_config, done):
     tool = "BCFtools"
 
-    cpu = "8"
-    mem = "32"
+    cpu = "2"
+    mem = "4"
     if toml_config["general"]["sequencing"] == "genome":
         time_allocated = "00-11:00"
     else:
@@ -1306,16 +1306,15 @@ def bcftools(sample, toml_config, done):
 def freebayes(sample, toml_config, done):
     tool = "FreeBayes"
 
-    cpu = "8"
     if toml_config["general"]["sequencing"] == "genome":
+        cpu = "8"
         mem = "64"
-    else:
-        mem = "32"
-
-    if toml_config["general"]["sequencing"] == "genome":
         time_allocated = "00-11:00"
     else:
-        time_allocated = "00-03:00"
+        cpu = "2"
+        mem = "4"
+        time_allocated = "00-05:00"
+
     env = "module load StdEnv/2023 freebayes/1.3.7 bcftools/1.22"
 
     input = (
@@ -1362,8 +1361,8 @@ def freebayes(sample, toml_config, done):
 def bcftools_filter(sample, toml_config, done):
     tool = "BCFtools_filters"
 
-    cpu = "4"
-    mem = "16"
+    cpu = "1"
+    mem = "1"
     if toml_config["general"]["sequencing"] == "genome":
         time_allocated = "00-11:00"
     else:
@@ -1416,7 +1415,7 @@ def bcftools_filter(sample, toml_config, done):
 def vep(sample, toml_config, done):
     tool = "VEP"
 
-    cpu = "4"
+    cpu = "2"
     mem = "16"
     if toml_config["general"]["sequencing"] == "genome":
         time_allocated = "00-11:00"
@@ -1494,12 +1493,14 @@ def vep(sample, toml_config, done):
 def openCravat(sample, toml_config, done):
     tool = "openCravat"
 
-    cpu = "8"
-    mem = "128"
+    cpu = "2"
+
     if toml_config["general"]["sequencing"] == "genome":
-        time_allocated = "01-11:00"
-    else:
+        mem = "128"
         time_allocated = "00-23:00"
+    else:
+        mem = "64"
+        time_allocated = "00-03:00"
     env = ""
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
