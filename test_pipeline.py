@@ -1309,11 +1309,11 @@ def freebayes(sample, toml_config, done):
     if toml_config["general"]["sequencing"] == "genome":
         cpu = "8"
         mem = "64"
-        time_allocated = "00-11:00"
+        time_allocated = "00-23:00"
     else:
         cpu = "2"
         mem = "4"
-        time_allocated = "00-05:00"
+        time_allocated = "00-11:00"
 
     env = "module load StdEnv/2023 freebayes/1.3.7 bcftools/1.22"
 
@@ -1500,7 +1500,7 @@ def openCravat(sample, toml_config, done):
         time_allocated = "00-23:00"
     else:
         mem = "64"
-        time_allocated = "00-03:00"
+        time_allocated = "00-11:00"
     env = ""
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
