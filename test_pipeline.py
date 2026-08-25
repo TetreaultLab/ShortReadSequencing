@@ -404,7 +404,7 @@ def get_file_trimmed(toml_config, output, sample):
 def fastqc(sample, toml_config, done):
     tool = "FastQC"
 
-    cpu = "2"
+    cpu = "1"
     mem = "2"
     time_allocated = "00-01:00"
     env = "module load StdEnv/2023 python/3.11.5 fastqc/0.12.1\nsource /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate"
@@ -469,7 +469,11 @@ def fastqc(sample, toml_config, done):
 def fastp(sample, toml_config, done):
     tool = "fastp"
 
-    cpu = "8"
+    if toml_config["general"]["sequencing"] == "genome":
+        cpu = "16"
+    else:
+        cpu = "8"
+
     mem = "8"
     time_allocated = "00-01:00"
     env = "module load StdEnv/2023 fastp/1.0.1"
@@ -544,9 +548,9 @@ def fastp(sample, toml_config, done):
 def star(sample, toml_config, done):
     tool = "STAR"
 
-    cpu = "8"
+    cpu = "6"
     mem = "64"
-    time_allocated = "00-06:00"
+    time_allocated = "00-02:30"
     env = "module load StdEnv/2023 star/2.7.11a"
 
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
@@ -685,7 +689,7 @@ def star(sample, toml_config, done):
 def bwa(sample, toml_config, done):
     tool = "BWA-MEM2"
 
-    cpu = "8"
+    cpu = "4"
     mem = "64"
     if toml_config["general"]["sequencing"] == "exome":
         time_allocated = "00-06:00"
@@ -876,21 +880,22 @@ def samtools(sample, toml_config, done):
     tool = "Samtools"
 
     cpu = 3
-    mem = "32"
+
     if toml_config["general"]["sequencing"] == "rna":
         time_allocated = "00-06:00"
+        mem = "40"
     elif toml_config["general"]["sequencing"] == "exome":
         time_allocated = "00-06:00"
+        mem = "40"
     else:
         time_allocated = "00-11:00"
+        mem = "64"
     env = "module load StdEnv/2023 samtools/1.22.1"
 
     in_out = toml_config["general"]["output"] + "/" + sample + "/Aligned"
 
     inBAM = in_out + "/" + sample + ".bam"
     bamCoord = in_out + "/" + sample + "_sortedCoordinate.bam"
-    stats1 = in_out + "/" + sample + "_stats1.txt"
-    stats2 = in_out + "/" + sample + "_stats2.txt"
     stats = in_out + "/" + sample + "_stats.txt"
 
     # Sort by coordinate
@@ -901,11 +906,7 @@ def samtools(sample, toml_config, done):
 
     # alignment stats
     command_str3 = f"samtools stats {bamCoord} | grep ^SN | cut -f 2- > {stats}"
-    # command_str4 = f"grep ^SN {stats1} > {stats2}"
-    # command_str5 = f"cut -f 2- {stats2} > {stats}"
 
-    # command_str6 = f"rm {stats1}"
-    # command_str7 = f"rm {stats2}"
     command_str4 = f"rm {inBAM}"
 
     command_str = "\n".join(
@@ -948,7 +949,7 @@ def samtools(sample, toml_config, done):
 def bamqc(sample, toml_config, done):
     tool = "FastQC_bam"
 
-    cpu = "2"
+    cpu = "1"
     mem = "2"
     time_allocated = "00-01:00"
     env = "module load StdEnv/2023 python/3.11.5 fastqc/0.12.1\nsource /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate"
@@ -1008,11 +1009,13 @@ def markduplicates(sample, toml_config, done):
     tool = "MarkDuplicates"
 
     cpu = "2"
-    mem = "8"
     if toml_config["general"]["sequencing"] == "genome":
         time_allocated = "00-11:00"
+        mem = "16"
     else:
         time_allocated = "00-03:00"
+        mem = "6"
+
     env = "module load StdEnv/2023 samtools/1.22.1 gatk/4.6.1.0"
 
     output = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/"
@@ -1249,7 +1252,7 @@ def bcftools(sample, toml_config, done):
     tool = "BCFtools"
 
     cpu = "2"
-    mem = "4"
+    mem = "2"
     if toml_config["general"]["sequencing"] == "genome":
         time_allocated = "00-11:00"
     else:
@@ -1306,14 +1309,13 @@ def bcftools(sample, toml_config, done):
 def freebayes(sample, toml_config, done):
     tool = "FreeBayes"
 
+    cpu = "2"
     if toml_config["general"]["sequencing"] == "genome":
-        cpu = "8"
-        mem = "64"
-        time_allocated = "01-23:00"
-    else:
-        cpu = "2"
-        mem = "4"
+        mem = "48"
         time_allocated = "00-23:00"
+    else:
+        mem = "4"
+        time_allocated = "00-11:00"
 
     env = "module load StdEnv/2023 freebayes/1.3.7 bcftools/1.22"
 
@@ -1364,9 +1366,9 @@ def bcftools_filter(sample, toml_config, done):
     cpu = "1"
     mem = "1"
     if toml_config["general"]["sequencing"] == "genome":
-        time_allocated = "00-11:00"
+        time_allocated = "00-06:00"
     else:
-        time_allocated = "00-03:00"
+        time_allocated = "00-01:00"
     env = "module load StdEnv/2023 bcftools/1.22"
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
@@ -1415,12 +1417,14 @@ def bcftools_filter(sample, toml_config, done):
 def vep(sample, toml_config, done):
     tool = "VEP"
 
-    cpu = "2"
-    mem = "16"
     if toml_config["general"]["sequencing"] == "genome":
-        time_allocated = "00-11:00"
+        time_allocated = "00-02:30"
+        cpu = "3"
+        mem = "20"
     else:
-        time_allocated = "00-03:00"
+        time_allocated = "00-01:00"
+        cpu = "1"
+        mem = "10"
     env = "module load StdEnv/2023 apptainer/1.3.5"
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
@@ -1493,14 +1497,18 @@ def vep(sample, toml_config, done):
 def openCravat(sample, toml_config, done):
     tool = "openCravat"
 
-    cpu = "2"
+    time_allocated = "00-03:00"
 
     if toml_config["general"]["sequencing"] == "genome":
         mem = "128"
-        time_allocated = "00-23:00"
-    else:
+        cpu = "2"
+    elif toml_config["general"]["sequencing"] == "exome":
         mem = "64"
-        time_allocated = "00-11:00"
+        cpu = "1"
+    else:
+        mem = "8"
+        cpu = "1"
+
     env = ""
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
