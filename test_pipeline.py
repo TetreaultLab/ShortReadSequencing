@@ -1572,12 +1572,12 @@ def openCravat(sample, toml_config, done):
 
     command_str2 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/oc_filtering.py --output {output} --sample {sample} --vcf {vcf}"
 
-    command_str3 = (
-        f"rm {output}{sample}_vep.vcf.err && "
-        f"rm {output}{sample}_vep.vcf.log && "
-        f"rm {output}{sample}_vep.vcf.sqlite && "
-        f"rm {output}{sample}_vep.vcf.tsv && "
-    )
+    # command_str3 = (
+    #     f"rm {output}{sample}_vep.vcf.err && "
+    #     f"rm {output}{sample}_vep.vcf.log && "
+    #     f"rm {output}{sample}_vep.vcf.sqlite && "
+    #     f"rm {output}{sample}_vep.vcf.tsv && "
+    # )
     command_str = "\n".join([command_str1, command_str2])  # , command_str3])
 
     job = fill_template(
