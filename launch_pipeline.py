@@ -1250,7 +1250,7 @@ def bcftools(sample, toml_config, done):
     if toml_config["general"]["sequencing"] == "genome":
         time_allocated = "00-11:00"
     else:
-        time_allocated = "00-03:00"
+        time_allocated = "00-06:00"
     env = "module load StdEnv/2023 bcftools/1.22"
 
     input = (
@@ -1308,7 +1308,7 @@ def freebayes(sample, toml_config, done):
         mem = "48"
         time_allocated = "00-23:00"
     else:
-        mem = "4"
+        mem = "16"
         time_allocated = "00-11:00"
 
     env = "module load StdEnv/2023 freebayes/1.3.7 bcftools/1.22"
@@ -1606,7 +1606,7 @@ def snpeff(sample, toml_config, done):
     cpu = "4"
     mem = "32"
     time_allocated = "00-11:00"
-    env = ""
+    env = "ml java/25.36"
 
     snpeff_path = (
         "/lustre09/project/6019267/shared/tools/main_pipelines/short-read/snpEff"
