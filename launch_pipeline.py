@@ -1491,17 +1491,18 @@ def vep(sample, toml_config, done):
 def openCravat(sample, toml_config, done):
     tool = "openCravat"
 
-    time_allocated = "00-03:00"
-
     if toml_config["general"]["sequencing"] == "genome":
         mem = "128"
         cpu = "2"
+        time_allocated = "00-23:00"
     elif toml_config["general"]["sequencing"] == "exome":
         mem = "64"
         cpu = "1"
+        time_allocated = "00-11:00"
     else:
-        mem = "8"
+        mem = "16"
         cpu = "1"
+        time_allocated = "00-11:00"
 
     env = ""
 
