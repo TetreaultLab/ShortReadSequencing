@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 import subprocess
 import os
+from pathlib import Path
 
 TOOL_PATH = "/lustre09/project/6019267/shared/tools/"
 work_dir = os.getcwd()
@@ -76,7 +77,7 @@ def main():
     with open(path_config, "r") as f:
         toml_config_initial = toml.load(f)
 
-    if path_config != work_dir + "/config_final.toml":
+    if not (Path(work_dir) / "config_final.toml").is_file():
         # Create final TOML config
         toml_config = create_config_final(path_config, args)
 
