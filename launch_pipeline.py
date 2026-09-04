@@ -266,16 +266,17 @@ def create_config_final(path_config, args):
     # Set trimming, alignment, pseudoalignment, quantification and variants setting + other parameter
     # Default values
     if not any([args.trimming, args.pseudo, args.quantification, args.variants]):
-        args.trimming = True
-        args.variants = True
+        args.trimming = False
         args.pseudo = False
 
         if args.rna:
             args.quantification = True
+            args.variants = False
         else:
             args.quantification = False
+            args.variants = True
 
-    if args.quantification:
+    if args.trimming:
         toml_config["general"]["trimming"] = "True"
     else:
         toml_config["general"]["trimming"] = "False"
