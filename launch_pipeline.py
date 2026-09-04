@@ -200,7 +200,10 @@ def main():
             f.write("\n>>> Variant Calling: none")
 
         # Call cleanup for transfer
-        function_queue.append(cleanup)
+        if "cleanup" not in done:
+            function_queue.append(cleanup)
+        else:
+            print("All done for!")
 
         f.write("\n")
 
