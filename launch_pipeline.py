@@ -39,6 +39,10 @@ def main():
 
     # SAMPLE NAME
     sample = args.sample
+    print()
+    print("=" * len(sample))
+    print(sample)
+    print("=" * len(sample))
 
     # LOAD CONFIG FILE
     toml_file = args.config
