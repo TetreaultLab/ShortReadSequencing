@@ -35,6 +35,27 @@ def main():
         help="Removes steps_done.txt file and start from scratch",
     )
 
+    parser.add_argument(
+        "--trimming",
+        action="store_true",
+        help="Enable trimming with bbduk.",
+    )
+    parser.add_argument(
+        "--pseudo",
+        action="store_true",
+        help="Enable pseudoalignment with salmon.",
+    )
+    parser.add_argument(
+        "--quantification",
+        action="store_true",
+        help="Enable gene quantification with featurecounts.",
+    )
+    parser.add_argument(
+        "--variants",
+        action="store_true",
+        help="Enable variant calling.",
+    )
+
     args = parser.parse_args()
 
     # SAMPLE NAME
@@ -57,7 +78,7 @@ def main():
 
     if path_config != work_dir + "/config_final.toml":
         # Create final TOML config
-        toml_config = create_config_final(path_config)
+        toml_config = create_config_final(path_config, args)
 
         if not args.test:
             print(
@@ -229,21 +250,35 @@ def main():
             subprocess.run(["bash", f"{work_dir}/scripts/{sample}.sh"])
 
 
-def create_config_final(path_config):
+def create_config_final(path_config, args):
     with open(path_config, "r") as f:
         toml_config = toml.load(f)
 
     project = toml_config["general"]["project"]
     sequencing = toml_config["general"]["sequencing"]
 
-    # set output in scratch
+    # Set output in scratch
     toml_config["general"]["output"] = f"/lustre10/scratch/{username}/{project}/output"
 
-    # set tmp in scratch
+    # Set tmp in scratch
     toml_config["general"]["tmp"] = f"/lustre10/scratch/{username}/{project}/tmp"
 
-    # set trimming, alignment, pseudoalignment, quantification and variants setting + other parameter
-    toml_config["general"]["trimming"] = "True"
+    # Set trimming, alignment, pseudoalignment, quantification and variants setting + other parameter
+    # Default values
+    if not any([args.trimming, args.pseudo, args.quantification, args.variants]):
+        args.trimming = True
+        args.variants = True
+        args.pseudo = False
+
+        if args.rna:
+            args.quantification = True
+        else:
+            args.quantification = False
+
+    if args.quantification:
+        toml_config["general"]["trimming"] = "True"
+    else:
+        toml_config["general"]["trimming"] = "False"
 
     if sequencing == "rna":
         toml_config["general"]["alignment"] = "star"
@@ -256,11 +291,14 @@ def create_config_final(path_config):
         toml_config["fastp"] = {}
         toml_config["fastp"]["phred"] = 15
         toml_config["fastp"]["length"] = 50
-        toml_config["general"]["quantification"] = "True"
-        toml_config["featurecounts"] = {}
-        toml_config["featurecounts"]["features"] = "gene"
-        toml_config["featurecounts"]["attribute"] = "gene_id"
-        toml_config["featurecounts"]["overlap"] = 1
+        if args.quantification:
+            toml_config["general"]["quantification"] = "True"
+            toml_config["featurecounts"] = {}
+            toml_config["featurecounts"]["features"] = "gene"
+            toml_config["featurecounts"]["attribute"] = "gene_id"
+            toml_config["featurecounts"]["overlap"] = 1
+        else:
+            toml_config["general"]["quantification"] = "False"
 
     else:
         toml_config["general"]["alignment"] = "bwa"
@@ -269,11 +307,17 @@ def create_config_final(path_config):
         toml_config["fastp"]["phred"] = 20
         toml_config["fastp"]["length"] = 36
 
-    toml_config["general"]["pseudo"] = "False"
-    toml_config["salmon"] = {}
-    toml_config["salmon"]["minScoreFraction"] = 0.65
+    if args.pseudo:
+        toml_config["general"]["pseudo"] = "True"
+        toml_config["salmon"] = {}
+        toml_config["salmon"]["minScoreFraction"] = 0.65
+    else:
+        toml_config["general"]["pseudo"] = "False"
 
-    toml_config["general"]["variants"] = "True"
+    if args.variants:
+        toml_config["general"]["variants"] = "True"
+    else:
+        toml_config["general"]["variants"] = "False"
 
     # FastQC
     toml_config["fastqc"] = {}
