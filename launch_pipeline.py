@@ -225,7 +225,7 @@ def main():
         if "cleanup" not in done:
             function_queue.append(cleanup)
         else:
-            print("All done for!")
+            print("All done!")
 
         f.write("\n")
 
