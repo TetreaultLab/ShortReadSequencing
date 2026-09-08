@@ -454,9 +454,9 @@ def fastqc(sample, toml_config, done):
     cpu = "1"
     mem = "2"
     if toml_config["general"]["sequencing"] == "genome":
-        time_allocated = "00-11:00"
-    else:
         time_allocated = "00-06:00"
+    else:
+        time_allocated = "00-03:00"
 
     env = "module load StdEnv/2023 python/3.11.5 fastqc/0.12.1\nsource /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate"
 
@@ -743,7 +743,7 @@ def bwa(sample, toml_config, done):
     cpu = "4"
     mem = "64"
     if toml_config["general"]["sequencing"] == "exome":
-        time_allocated = "00-11:00"
+        time_allocated = "00-06:00"
     else:
         time_allocated = "01-11:00"
     env = "module load StdEnv/2023 bwa-mem2/2.2.1 samtools/1.22.1"
@@ -1002,7 +1002,10 @@ def bamqc(sample, toml_config, done):
 
     cpu = "1"
     mem = "2"
-    time_allocated = "00-01:00"
+    if toml_config["general"]["sequencing"] == "genome":
+        time_allocated = "00-06:00"
+    else:
+        time_allocated = "00-03:00"
     env = "module load StdEnv/2023 python/3.11.5 fastqc/0.12.1\nsource /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate"
 
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
