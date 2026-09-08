@@ -454,9 +454,9 @@ def fastqc(sample, toml_config, done):
     cpu = "1"
     mem = "2"
     if toml_config["general"]["sequencing"] == "genome":
-        time_allocated = "00-06:00"
+        time_allocated = "00-11:00"
     else:
-        time_allocated = "00-03:00"
+        time_allocated = "00-06:00"
 
     env = "module load StdEnv/2023 python/3.11.5 fastqc/0.12.1\nsource /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate"
 
