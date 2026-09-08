@@ -743,9 +743,9 @@ def bwa(sample, toml_config, done):
     cpu = "4"
     mem = "64"
     if toml_config["general"]["sequencing"] == "exome":
-        time_allocated = "00-06:00"
+        time_allocated = "00-11:00"
     else:
-        time_allocated = "00-23:00"
+        time_allocated = "01-11:00"
     env = "module load StdEnv/2023 bwa-mem2/2.2.1 samtools/1.22.1"
 
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
