@@ -233,7 +233,8 @@ def main():
         subprocess.run(["mkdir", "-p", f"{work_dir}/scripts/"])
         with open(f"{work_dir}/scripts/{sample}.sh", "w") as f:
             f.write("#!/bin/sh\n")
-            f.write("\nDEPS=()\n")  # Add downstream dependencies
+            f.write("\nDEPS=()\n")  # Add multiQC dependencies
+            f.write("\nDEPS2=()\n") # Add cleanup dependencies
 
         # Calling each steps
         for func in function_queue:
@@ -1294,9 +1295,9 @@ def multiqc(sample, toml_config, done):
             f.write("\n# MultiQC")
             f.write('\nDEPENDENCY_LIST=$(IFS=:; echo "${DEPS[*]}")')
             f.write("\nif [ ${#DEPS[@]} -gt 0 ]; then")
-            f.write(f"\n\tsbatch --dependency=afterok:$DEPENDENCY_LIST {job}")
+            f.write(f"\n\tDEPS2+=(sbatch --dependency=afterok:$DEPENDENCY_LIST {job})")
             f.write("\nelse")
-            f.write(f"\n\tsbatch {job}")
+            f.write(f"\n\tDEPS2+=(sbatch {job})")
             f.write("\nfi\n")
     else:
         print(f"Done: {tool}")
@@ -1651,12 +1652,12 @@ def openCravat(sample, toml_config, done):
             with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
                 f.write(f"\n# Running {tool} for {sample}")
                 f.write(
-                    f"\nDEPS+=($(sbatch --parsable --dependency=afterok:$vep {job}))\n"
+                    f"\nDEPS2+=($(sbatch --parsable --dependency=afterok:$vep {job}))\n"
                 )
         else:
             with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
                 f.write(f"\n# Running {tool} for {sample}")
-                f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+                f.write(f"\nDEPS2+=($(sbatch --parsable {job}))\n")
     else:
         print(f"Done: {tool}")
 
@@ -1714,12 +1715,12 @@ def snpeff(sample, toml_config, done):
             with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
                 f.write(f"\n# Running {tool} for {sample}")
                 f.write(
-                    f"\nDEPS+=($(sbatch --parsable --dependency=afterok:$merge {job}))\n"
+                    f"\nDEPS2+=($(sbatch --parsable --dependency=afterok:$merge {job}))\n"
                 )
         else:
             with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
                 f.write(f"\n# Running {tool} for {sample}")
-                f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
+                f.write(f"\nDEPS2+=($(sbatch --parsable {job}))\n")
     else:
         print(f"Done: {tool}")
 
@@ -1743,8 +1744,8 @@ def cleanup(sample, toml_config, done):
         print(f"To-Do: {tool}")
         with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
             f.write("\n# Cleanup")
-            f.write('\nDEPENDENCY_LIST=$(IFS=:; echo "${DEPS[*]}")')
-            f.write("\nif [ ${#DEPS[@]} -gt 0 ]; then")
+            f.write('\nDEPENDENCY_LIST=$(IFS=:; echo "${DEPS2[*]}")')
+            f.write("\nif [ ${#DEPS2[@]} -gt 0 ]; then")
             f.write(f"\n\tsbatch --dependency=afterok:$DEPENDENCY_LIST {job}")
             f.write("\nelse")
             f.write(f"\n\tsbatch {job}")
