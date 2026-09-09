@@ -77,8 +77,10 @@ def main():
     with open(path_config, "r") as f:
         toml_config_initial = toml.load(f)
 
-    if path_config != work_dir + "/config_final.toml":
-        if not (Path(work_dir) / "config_final.toml").is_file():
+    if path_config != f"{work_dir}/config_final.toml":  # path is not config_final.toml
+        if not (
+            Path(work_dir) / "config_final.toml"
+        ).is_file():  # config_final.toml does not exists
             # Create final TOML config
             toml_config = create_config_final(path_config, args)
 
@@ -87,7 +89,10 @@ def main():
                     "\n\n\n!!! WARNING !!!\nIf you want to change the parameters: Press CTRL+C now!\nModify config_final.toml and launch_pipeline with that config file.\n\nOtherwise it will run with default parameters.\n\n"
                 )
                 time.sleep(10)
-    else:
+        else:  # config_final.toml does exists but was not loaded
+            with open(f"{work_dir}/config_final.toml", "r") as f:
+                toml_config = toml.load(f)
+    else:  # path is config_final.toml, first toml is good
         toml_config = toml_config_initial
 
     # Creating output and tmp directories for sample
