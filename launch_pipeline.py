@@ -788,7 +788,7 @@ def bwa(sample, toml_config, done):
         ]
 
     command_str1 = " ".join(command)
-    command_str2 = f"samtools view -S --threads {cpu} -b {output}/{sample}.sam -o {output}/{sample}.bam"
+    command_str2 = f"samtools view -S --threads {cpu} -b -o {output}/{sample}.bam {output}/{sample}.sam"
     command_str3 = f"rm {output}/{sample}.sam"
 
     command_str = "\n".join([command_str1, command_str2, command_str3])
@@ -971,7 +971,7 @@ def samtools(sample, toml_config, done):
     command_str1 = f"samtools sort --threads {cpu} -m 4G -o {bamCoord} {inBAM}"
 
     # Index bam sorted by coordinates
-    command_str2 = f"samtools index --threads {cpu} -b {bamCoord} -o {bamCoord}.bai"
+    command_str2 = f"samtools index --threads {cpu} {bamCoord}"
 
     # alignment stats
     command_str3 = f"samtools stats {bamCoord} | grep ^SN | cut -f 2- > {stats}"
