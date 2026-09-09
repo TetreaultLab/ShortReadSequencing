@@ -77,15 +77,16 @@ def main():
     with open(path_config, "r") as f:
         toml_config_initial = toml.load(f)
 
-    if not (Path(work_dir) / "config_final.toml").is_file():
-        # Create final TOML config
-        toml_config = create_config_final(path_config, args)
+    if toml_config_initial != work_dir + "/config_final.toml":
+        if not (Path(work_dir) / "config_final.toml").is_file():
+            # Create final TOML config
+            toml_config = create_config_final(path_config, args)
 
-        if not args.test:
-            print(
-                "\n\n\n!!! WARNING !!!\nIf you want to change the parameters: Press CTRL+C now!\nModify config_final.toml and launch_pipeline with that config file.\n\nOtherwise it will run with default parameters.\n\n"
-            )
-            time.sleep(10)
+            if not args.test:
+                print(
+                    "\n\n\n!!! WARNING !!!\nIf you want to change the parameters: Press CTRL+C now!\nModify config_final.toml and launch_pipeline with that config file.\n\nOtherwise it will run with default parameters.\n\n"
+                )
+                time.sleep(10)
     else:
         toml_config = toml_config_initial
 
