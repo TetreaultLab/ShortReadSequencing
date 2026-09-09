@@ -608,8 +608,9 @@ def star(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     subprocess.run(["mkdir", "-p", output])
 
-    temporary = toml_config["general"]["tmp"] + "/" + sample + "/star_tmp"
-    subprocess.run(["rm", "-r", temporary])
+    temporary = Path(toml_config["general"]["tmp"]) / sample / "star_tmp"
+    if temporary.is_dir():
+        subprocess.run(["rm", "-r", str(temporary)])
 
     ref = get_reference(toml_config["general"]["reference"], "star")["index"]
 
