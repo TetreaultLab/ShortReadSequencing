@@ -271,7 +271,7 @@ def create_config_final(path_config, args):
         args.trimming = False
         args.pseudo = False
 
-        if args.rna:
+        if sequencing == "rna":
             args.quantification = True
             args.variants = False
         else:
