@@ -234,7 +234,7 @@ def main():
         with open(f"{work_dir}/scripts/{sample}.sh", "w") as f:
             f.write("#!/bin/sh\n")
             f.write("\nDEPS=()\n")  # Add multiQC dependencies
-            f.write("\nDEPS2=()\n") # Add cleanup dependencies
+            f.write("\nDEPS2=()\n")  # Add cleanup dependencies
 
         # Calling each steps
         for func in function_queue:
@@ -950,8 +950,25 @@ def samtools(sample, toml_config, done):
     bamCoord = in_out + "/" + sample + "_sortedCoordinate.bam"
     stats = in_out + "/" + sample + "_stats.txt"
 
+    # If tmp still exists from previous failed job
+    target_dir = Path(in_out)
+    tmp_files = list(target_dir.glob("*.tmp.*"))
+
+    if tmp_files:
+        for tmp_file in tmp_files:
+            try:
+                tmp_file.unlink()
+            except Exception as e:
+                print(f"[Error] unable to delete {tmp_file.name} : {e}")
+
+        if bamCoord.exists():
+            try:
+                bamCoord.unlink()
+            except Exception as e:
+                print(f"[Error] unable to delete {bamCoord.name} : {e}")
+
     # Sort by coordinate
-    command_str1 = f"samtools sort --threads {cpu} -m 4G {inBAM} -o {bamCoord}"
+    command_str1 = f"samtools sort --threads {cpu} -m 4G -o {bamCoord} {inBAM}"
 
     # Index bam sorted by coordinates
     command_str2 = f"samtools index --threads {cpu} -b {bamCoord} -o {bamCoord}.bai"
