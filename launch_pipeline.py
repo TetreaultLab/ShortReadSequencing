@@ -968,9 +968,9 @@ def samtools(sample, toml_config, done):
             except Exception as e:
                 print(f"[Error] unable to delete {tmp_file.name} : {e}")
 
-        if bamCoord.exists():
+        if os.path.exists(bamCoord):
             try:
-                bamCoord.unlink()
+                os.remove(bamCoord)
             except Exception as e:
                 print(f"[Error] unable to delete {bamCoord.name} : {e}")
 
