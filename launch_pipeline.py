@@ -1319,9 +1319,11 @@ def multiqc(sample, toml_config, done):
             f.write("\n# MultiQC")
             f.write('\nDEPENDENCY_LIST=$(IFS=:; echo "${DEPS[*]}")')
             f.write("\nif [ ${#DEPS[@]} -gt 0 ]; then")
-            f.write(f"\n\tDEPS2+=(sbatch --dependency=afterok:$DEPENDENCY_LIST {job})")
+            f.write(
+                f"\n\tDEPS2+=($(sbatch --dependency=afterok:$DEPENDENCY_LIST {job}))"
+            )
             f.write("\nelse")
-            f.write(f"\n\tDEPS2+=(sbatch {job})")
+            f.write(f"\n\tDEPS2+=($(sbatch {job}))")
             f.write("\nfi\n")
     else:
         print(f"Done: {tool}")
