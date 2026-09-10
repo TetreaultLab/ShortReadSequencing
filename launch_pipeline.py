@@ -1770,9 +1770,9 @@ def cleanup(sample, toml_config, done):
         print(f"To-Do: {tool}")
         with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
             f.write("\n# Cleanup")
-            f.write('\nDEPENDENCY_LIST=$(IFS=:; echo "${DEPS2[*]}")')
+            f.write('\nDEPENDENCY_LIST2=$(IFS=:; echo "${DEPS2[*]}")')
             f.write("\nif [ ${#DEPS2[@]} -gt 0 ]; then")
-            f.write(f"\n\tsbatch --dependency=afterok:$DEPENDENCY_LIST {job}")
+            f.write(f"\n\tsbatch --dependency=afterok:$DEPENDENCY_LIST2 {job}")
             f.write("\nelse")
             f.write(f"\n\tsbatch {job}")
             f.write("\nfi\n")
