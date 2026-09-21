@@ -701,12 +701,14 @@ def star(sample, toml_config, done):
     command_str3 = f"mv {output}/{sample}_Log.final.out {output}/{sample}_summary_mapping_stats.out"
     command_str4 = f"mv {output}/{sample}_Log.out {output}/{sample}_run_information.out"
     command_str5 = f"rm {output}/{sample}_Log.progress.out"
-    command_str6 = f"rm {output}/{sample}_Unmapped.out.mate1"
-    command_str7 = f"rm {output}/{sample}_Unmapped.out.mate2"
-    command_str8 = f"rm -r {output}/{sample}__STARpass1"
-    command_str9 = f"mv {output}/{sample}__STARgenome/sjdbList.out.tab {output}/{sample}_sjdbList.out.tab"
+    command_str6 = f"rm -r {output}/{sample}__STARpass1"
+    command_str7 = f"mv {output}/{sample}__STARgenome/sjdbList.out.tab {output}/{sample}_sjdbList.out.tab"
 
-    command_str = "\n".join(
+    if toml_config["general"]["reads"] == "PE":
+        command_str8 = f"rm {output}/{sample}_Unmapped.out.mate1"
+        command_str9 = f"rm {output}/{sample}_Unmapped.out.mate2"
+
+        command_str = "\n".join(
         [
             command_str1,
             command_str2,
@@ -718,7 +720,21 @@ def star(sample, toml_config, done):
             command_str8,
             command_str9,
         ]
-    )
+    )  
+    else :
+        command_str = "\n".join(
+        [
+            command_str1,
+            command_str2,
+            command_str3,
+            command_str4,
+            command_str5,
+            command_str6,
+            command_str7,
+        ]
+    ) 
+
+    
 
     job = fill_template(
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
