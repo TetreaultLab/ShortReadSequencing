@@ -709,32 +709,30 @@ def star(sample, toml_config, done):
         command_str9 = f"rm {output}/{sample}_Unmapped.out.mate2"
 
         command_str = "\n".join(
-        [
-            command_str1,
-            command_str2,
-            command_str3,
-            command_str4,
-            command_str5,
-            command_str6,
-            command_str7,
-            command_str8,
-            command_str9,
-        ]
-    )  
-    else :
+            [
+                command_str1,
+                command_str2,
+                command_str3,
+                command_str4,
+                command_str5,
+                command_str6,
+                command_str7,
+                command_str8,
+                command_str9,
+            ]
+        )
+    else:
         command_str = "\n".join(
-        [
-            command_str1,
-            command_str2,
-            command_str3,
-            command_str4,
-            command_str5,
-            command_str6,
-            command_str7,
-        ]
-    ) 
-
-    
+            [
+                command_str1,
+                command_str2,
+                command_str3,
+                command_str4,
+                command_str5,
+                command_str6,
+                command_str7,
+            ]
+        )
 
     job = fill_template(
         tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
@@ -1731,7 +1729,7 @@ def snpeff(sample, toml_config, done):
         # 1. snpEff reads sample.vcf and streams output to stdout
         f"java -jar {snpeff_path}/snpEff.jar -noLog -c {snpeff_path}/snpEff.config "
         f"-stats {path}/{sample}_summary.html -csvStats {path}/{sample}_summary.csv "
-        f"{ref} {path}/{sample}.vcf | "
+        f"{ref} {path}/{sample}_merged.vcf | "
         # 2. SnpSift varType reads from stdin (-) and streams output to stdout
         f"java -jar {snpeff_path}/SnpSift.jar varType -noLog - | "
         # 3. SnpSift extractFields reads from stdin (-) and writes TSV output to file
