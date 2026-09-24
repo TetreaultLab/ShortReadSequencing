@@ -1104,7 +1104,7 @@ def markduplicates(sample, toml_config, done):
     cpu = "2"
     if toml_config["general"]["sequencing"] == "genome":
         time_allocated = "00-11:00"
-        mem = "16"
+        mem = "24"
     else:
         time_allocated = "00-03:00"
         mem = "6"
@@ -1406,7 +1406,7 @@ def freebayes(sample, toml_config, done):
 
     cpu = "2"
     if toml_config["general"]["sequencing"] == "genome":
-        mem = "64"
+        mem = "96"
         time_allocated = "00-23:00"
     else:
         mem = "32"
