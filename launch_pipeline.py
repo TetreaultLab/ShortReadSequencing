@@ -95,8 +95,6 @@ def main():
     else:  # path is config_final.toml, first toml is good
         toml_config = toml_config_initial
 
-    print(toml_config)
-
     # Creating output and tmp directories for sample
     output = toml_config["general"]["output"] + "/" + sample
     tmp = toml_config["general"]["tmp"] + "/" + sample
