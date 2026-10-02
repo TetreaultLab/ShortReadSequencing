@@ -1472,7 +1472,7 @@ def bcftools_filter(sample, toml_config, done):
 
     command_str = (
         f"bcftools concat --threads 8 --allow-overlaps --rm-dups exact {output}{sample}_bcftools.vcf.gz {output}{sample}_freebayes.vcf.gz | "
-        f"bcftools filter -i 'QUAL >= 10 && DP >= 5 && AC>0' -o {output}{sample}_merged.vcf && "
+        f"bcftools filter -i 'QUAL >= 10 && AC>0' -o {output}{sample}_merged.vcf && "
         f"rm {toml_config['general']['output']}/{sample}/sample.txt"
     )
 
