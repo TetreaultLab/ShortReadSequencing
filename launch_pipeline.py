@@ -1431,7 +1431,7 @@ def freebayes(sample, toml_config, done):
         f"freebayes -f {ref} {input} | "
         f"bcftools reheader --samples {toml_config['general']['output']}/{sample}/sample.txt | "
         f"bcftools norm -f {ref} -m -any -Ou | "
-        f"bcftools filter -i 'QUAL >= 10 && FORMAT/DP >= 5' -Oz -o {output}{sample}_freebayes.vcf.gz && "
+        f"bcftools filter -i 'QUAL >= 10 && DP >= 5' -Oz -o {output}{sample}_freebayes.vcf.gz && "
         f"tabix -p vcf {output}{sample}_freebayes.vcf.gz"
     )
 
@@ -1467,21 +1467,12 @@ def bcftools_filter(sample, toml_config, done):
     env = "module load StdEnv/2023 bcftools/1.22"
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
-    isec_dir = f"{output}isec_temp"
 
     subprocess.run(["mkdir", "-p", output])
-    subprocess.run(["mkdir", "-p", isec_dir])
 
     command_str = (
-        # 1. Split into temp directory (0000 = bcftools-only, 0001 = freebayes-only, 0002 = shared)
-        f"bcftools isec -p {isec_dir} -Oz "
-        f"{output}{sample}_bcftools.vcf.gz {output}{sample}_freebayes.vcf.gz && "
-        # 2. Concat all sites (-Ou) and pipe directly into final filter (-Oz)
-        f"bcftools concat -a -Ou "
-        f"{isec_dir}/0000.vcf.gz {isec_dir}/0001.vcf.gz {isec_dir}/0002.vcf.gz | "
-        f"bcftools filter -i 'QUAL >= 10 && FORMAT/DP >= 5' -O v -o {output}{sample}_merged.vcf && "
-        # 3. Cleanup temporary files
-        f"rm -r {isec_dir} && "
+        f"bcftools concat --threads 8 --allow-overlaps --rm-dups exact {output}{sample}_bcftools.vcf.gz {output}{sample}_freebayes.vcf.gz | "
+        f"bcftools filter -i 'QUAL >= 10 && DP >= 5 && AC>0' -o {output}{sample}_merged.vcf && "
         f"rm {toml_config['general']['output']}/{sample}/sample.txt"
     )
 
