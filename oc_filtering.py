@@ -282,46 +282,33 @@ df_rare.to_csv(
 )
 
 # Likely Pathogenic variants
-cond_impact = df_rare["impact"].isin(["MODERATE", "HIGH"])
-cond_cadd = df_rare["CADD_score"] >= 10
-cond_gerp = df_rare["GERP++_score"] >= 2
-cond_phastcons = df_rare["PhastCons_score"] >= 0.5
-cond_phylop = df_rare["PhyloP_score"] >= 2.27
+conditions = {
+    "Impact (MOD/HIGH)": df_rare["impact"].isin(["MODERATE", "HIGH"]),
+    "CADD >= 10": df_rare["CADD_score"] >= 10,
+    "GERP++ >= 2": df_rare["GERP++_score"] >= 2,
+    "PhastCons >= 0.5": df_rare["PhastCons_score"] >= 0.5,
+    "PhyloP >= 2.27": df_rare["PhyloP_score"] >= 2.27,
+    "MutationTaster (Damaging)": df_rare["MutationTaster_prediction"].isin(
+        ["Automatic Disease Causing", "Damaging"]
+    ),
+    "PolyPhen2 >= 0.5": (df_rare["polyPhen2_HDIV_score"] >= 0.5)
+    | (df_rare["polyPhen2_HVAR_score"] >= 0.5),
+    "SIFT (Damaging)": df_rare["SIFT_score"] == "Damaging",
+    "SpliceAI >= 0.8": (
+        (df_rare["SpliceAI_acceptor_gain_score"] >= 0.8)
+        | (df_rare["SpliceAI_acceptor_loss_score"] >= 0.8)
+        | (df_rare["SpliceAI_donor_gain_score"] >= 0.8)
+        | (df_rare["SpliceAI_donor_loss_score"] >= 0.8)
+    ),
+}
 
-cond_mutationtaster = df_rare["MutationTaster_prediction"].isin(
-    ["Automatic Disease Causing", "Damaging"]
-)
+cond_df = pd.DataFrame(conditions, index=df_rare.index)
 
-cond_polyphen = (df_rare["polyPhen2_HDIV_score"] >= 0.5) | (
-    df_rare["polyPhen2_HVAR_score"] >= 0.5
-)
+df_rare["num_conditions_met"] = cond_df.sum(axis=1)
 
-cond_sift = df_rare["SIFT_score"] == "Damaging"
+df_rare["conditions_met"] = cond_df.apply(lambda row: ", ".join(row.index[row]), axis=1)
 
-cond_spliceai = (
-    (df_rare["SpliceAI_acceptor_gain_score"] >= 0.8)
-    | (df_rare["SpliceAI_acceptor_loss_score"] >= 0.8)
-    | (df_rare["SpliceAI_donor_gain_score"] >= 0.8)
-    | (df_rare["SpliceAI_donor_loss_score"] >= 0.8)
-)
-
-scores_count = pd.concat(
-    [
-        cond_impact,
-        cond_cadd,
-        cond_gerp,
-        cond_phastcons,
-        cond_phylop,
-        cond_mutationtaster,
-        cond_polyphen,
-        cond_sift,
-        cond_spliceai,
-    ],
-    axis=1,
-).sum(axis=1)
-
-# 3. Filter for variants meeting at least 2 criteria
-df_patho = df_rare[scores_count >= 2]
+df_patho = df_rare[df_rare["num_conditions_met"] >= 2]
 
 print('\n>>> Filters "Pathogenic":')
 print('\t>>> Same as "Rare" and at least 2 scores from this:')
