@@ -1377,7 +1377,7 @@ def bcftools(sample, toml_config, done):
         f"bcftools call --threads {cpu} -m -v -Ou | "
         f"bcftools reheader --samples {toml_config['general']['output']}/{sample}/sample.txt | "
         f"bcftools norm -f {ref} -m -any -Ou | "
-        f"bcftools filter -i 'QUAL >= 10 && DP >= 5' -Oz -o {output}{sample}_bcftools.vcf.gz && "
+        f"bcftools filter -i 'QUAL >= 10 && INFO/DP >= 5' -Oz -o {output}{sample}_bcftools.vcf.gz && "
         f"tabix -p vcf {output}{sample}_bcftools.vcf.gz"
     )
 
@@ -1431,7 +1431,7 @@ def freebayes(sample, toml_config, done):
         f"freebayes -f {ref} {input} | "
         f"bcftools reheader --samples {toml_config['general']['output']}/{sample}/sample.txt | "
         f"bcftools norm -f {ref} -m -any -Ou | "
-        f"bcftools filter -i 'QUAL >= 10 && DP >= 5' -Oz -o {output}{sample}_freebayes.vcf.gz && "
+        f"bcftools filter -i 'QUAL >= 10 && INFO/DP >= 5' -Oz -o {output}{sample}_freebayes.vcf.gz && "
         f"tabix -p vcf {output}{sample}_freebayes.vcf.gz"
     )
 
