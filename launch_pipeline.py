@@ -1320,7 +1320,7 @@ def multiqc(sample, toml_config, done):
 
     slurm_tmp = f"$SLURM_TMPDIR/{tool}"
 
-    with open(slurm_tmp + "/my_file_list.txt", "w") as f:
+    with open(output + "/my_file_list.txt", "w") as f:
         f.write(input + "QC/fastQC/\n")
         if toml_config["general"]["trimming"] != "False":
             f.write(input + "Trimmed/\n")
@@ -1333,8 +1333,8 @@ def multiqc(sample, toml_config, done):
         f.write(input + "MarkDuplicates/\n")
     f.close()
 
-    command_str1 = f"apptainer run /lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif multiqc --file-list {slurm_tmp}/my_file_list.txt --force --filename {sample}_multiqc_report --outdir {slurm_tmp}/"
-    command_str2 = f"rm {slurm_tmp}/my_file_list.txt"
+    command_str1 = f"apptainer run /lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif multiqc --file-list {output}/my_file_list.txt --force --filename {sample}_multiqc_report --outdir {slurm_tmp}/"
+    command_str2 = f"rm {output}/my_file_list.txt"
     command_str3 = f"rm -r {slurm_tmp}/{sample}_multiqc_report_data"
     command_str4 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/check_fastqc.py --path {input}QC/fastQC --sample {sample}"
 
