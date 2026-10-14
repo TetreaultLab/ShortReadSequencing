@@ -344,7 +344,9 @@ def create_config_final(path_config, args):
     return toml_config
 
 
-def fill_template(tool, toml_config, sample, cpu, mem, time_allocated, env, command):
+def fill_template(
+    tool, toml_config, sample, cpu, mem, time_allocated, env, command, output
+):
     email = toml_config["general"]["email"]
     job = f"{work_dir}/scripts/{sample}_{tool}.slurm"
     infos = toml_config["general"]["output"] + "/" + sample + "/infos.txt"
@@ -355,7 +357,7 @@ def fill_template(tool, toml_config, sample, cpu, mem, time_allocated, env, comm
     ) as f:
         slurm = f.read()
         slurm_filled = slurm.format(
-            cpu, mem, time_allocated, sample, tool, email, env, command, infos
+            cpu, mem, time_allocated, sample, tool, email, env, command, output, infos
         )
 
         with open(job, "w") as o:
@@ -414,6 +416,7 @@ def get_reference(ref, tool):
 
 
 def get_file_trimmed(toml_config, output, sample):
+
     files = {}
     if toml_config["general"]["trimming"] == "True":
         files = {
@@ -435,7 +438,6 @@ def get_file_trimmed(toml_config, output, sample):
             + "/Trimmed/"
             + sample
             + "_trimmed.fastq.gz",
-            "O_aligned": output + "/" + sample + "_",
         }
 
     else:
@@ -449,7 +451,6 @@ def get_file_trimmed(toml_config, output, sample):
             + sample
             + "_R2.fastq.gz",
             "I_toAlign": toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz",
-            "O_aligned": output + "/" + sample + "_",
         }
 
     return files
@@ -470,7 +471,9 @@ def fastqc(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
     subprocess.run(["mkdir", "-p", output])
 
-    temporary = toml_config["general"]["tmp"] + "/" + sample
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}/"
+
+    temporary = f"$SLURM_TMPDIR/tmp_{sample}"
     subprocess.run(["mkdir", "-p", temporary])
 
     if toml_config["general"]["reads"] == "PE":
@@ -480,7 +483,7 @@ def fastqc(sample, toml_config, done):
         command = [
             "fastqc",
             "-o",
-            output,
+            slurm_tmp,
             "--noextract",
             "--threads",
             cpu,
@@ -498,7 +501,7 @@ def fastqc(sample, toml_config, done):
         command = [
             "fastqc",
             "-o",
-            output,
+            slurm_tmp,
             "--noextract",
             "--threads",
             cpu,
@@ -512,7 +515,7 @@ def fastqc(sample, toml_config, done):
     command_str = " ".join(command)
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
@@ -591,7 +594,7 @@ def fastp(sample, toml_config, done):
     command_str = " ".join(command)
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
@@ -614,9 +617,10 @@ def star(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     subprocess.run(["mkdir", "-p", output])
 
-    temporary = f"{toml_config['general']['tmp']}/{sample}/star_tmp"
-    if Path(temporary).is_dir():
-        subprocess.run(["rm", "-r", str(temporary)])
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+    temporary = f"$SLURM_TMPDIR/tmp_{sample}"
+    # if Path(temporary).is_dir():
+    #     subprocess.run(["rm", "-r", str(temporary)])
 
     ref = get_reference(toml_config["general"]["reference"], "star")["index"]
 
@@ -624,7 +628,7 @@ def star(sample, toml_config, done):
     I1_toAlign = files["I1_toAlign"]
     I2_toAlign = files["I2_toAlign"]
     I_toAlign = files["I_toAlign"]
-    O_aligned = files["O_aligned"]
+    O_aligned = f"{slurm_tmp}/{sample}_"
 
     if toml_config["general"]["reads"] == "PE":
         command = [
@@ -695,18 +699,18 @@ def star(sample, toml_config, done):
         ]
 
     command_str1 = " ".join(command)
-    command_str2 = (
-        f"mv {output}/{sample}_Aligned.sortedByCoord.out.bam {output}/{sample}.bam"
+    command_str2 = f"mv {slurm_tmp}/{sample}_Aligned.sortedByCoord.out.bam {slurm_tmp}/{sample}.bam"
+    command_str3 = f"mv {slurm_tmp}/{sample}_Log.final.out {slurm_tmp}/{sample}_summary_mapping_stats.out"
+    command_str4 = (
+        f"mv {slurm_tmp}/{sample}_Log.out {slurm_tmp}/{sample}_run_information.out"
     )
-    command_str3 = f"mv {output}/{sample}_Log.final.out {output}/{sample}_summary_mapping_stats.out"
-    command_str4 = f"mv {output}/{sample}_Log.out {output}/{sample}_run_information.out"
-    command_str5 = f"rm {output}/{sample}_Log.progress.out"
-    command_str6 = f"rm -r {output}/{sample}__STARpass1"
-    command_str7 = f"mv {output}/{sample}__STARgenome/sjdbList.out.tab {output}/{sample}_sjdbList.out.tab"
+    command_str5 = f"rm {slurm_tmp}/{sample}_Log.progress.out"
+    command_str6 = f"rm -r {slurm_tmp}/{sample}__STARpass1"
+    command_str7 = f"mv {slurm_tmp}/{sample}__STARgenome/sjdbList.out.tab {slurm_tmp}/{sample}_sjdbList.out.tab"
 
     if toml_config["general"]["reads"] == "PE":
-        command_str8 = f"rm {output}/{sample}_Unmapped.out.mate1"
-        command_str9 = f"rm {output}/{sample}_Unmapped.out.mate2"
+        command_str8 = f"rm {slurm_tmp}/{sample}_Unmapped.out.mate1"
+        command_str9 = f"rm {slurm_tmp}/{sample}_Unmapped.out.mate2"
 
         command_str = "\n".join(
             [
@@ -735,7 +739,7 @@ def star(sample, toml_config, done):
         )
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
@@ -774,6 +778,8 @@ def bwa(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     subprocess.run(["mkdir", "-p", output])
 
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+
     ref = get_reference(toml_config["general"]["reference"], "bwa-mem2")["index"]
 
     files = get_file_trimmed(toml_config, output, sample)
@@ -790,7 +796,7 @@ def bwa(sample, toml_config, done):
             "-v",
             "1",
             "-o",
-            output + "/" + sample + ".sam",
+            slurm_tmp + "/" + sample + ".sam",
             ref,
             I1_toAlign,
             I2_toAlign,
@@ -804,19 +810,19 @@ def bwa(sample, toml_config, done):
             "-v",
             "1",
             "-o",
-            output + "/" + sample + ".sam",
+            slurm_tmp + "/" + sample + ".sam",
             ref,
             I_toAlign,
         ]
 
     command_str1 = " ".join(command)
-    command_str2 = f"samtools view -S --threads {cpu} -b -o {output}/{sample}.bam {output}/{sample}.sam"
-    command_str3 = f"rm {output}/{sample}.sam"
+    command_str2 = f"samtools view -S --threads {cpu} -b -o {slurm_tmp}/{sample}.bam {slurm_tmp}/{sample}.sam"
+    command_str3 = f"rm {slurm_tmp}/{sample}.sam"
 
     command_str = "\n".join([command_str1, command_str2, command_str3])
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
@@ -854,6 +860,8 @@ def salmon(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Salmon"
     subprocess.run(["mkdir", "-p", output])
 
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+
     ref = get_reference(toml_config["general"]["reference"], "salmon")["index"]
 
     files = get_file_trimmed(toml_config, output, sample)
@@ -881,7 +889,7 @@ def salmon(sample, toml_config, done):
             "--mates2",
             I2_toAlign,
             "--output",
-            output,
+            slurm_tmp,
         ]
     else:
         command = [
@@ -900,18 +908,18 @@ def salmon(sample, toml_config, done):
             "--unmatedReads",
             I_toAlign,
             "--output",
-            output,
+            slurm_tmp,
         ]
 
     command_str1 = " ".join(command)
 
-    command_str2 = f"mv {output}/logs/salmon_quant.log {output}/{sample}_log.out"
+    command_str2 = f"mv {slurm_tmp}/logs/salmon_quant.log {slurm_tmp}/{sample}_log.out"
 
-    command_str3 = f"mv {output}/quant.sf {output}/{sample}_transcript_quant.sf"
-    command_str4 = f"rm {output}/cmd_info.json"
-    command_str5 = f"rm -r {output}/libParams"
-    command_str6 = f"rm -r {output}/logs"
-    command_str7 = f"rm -r {output}/salmon_tmp"
+    command_str3 = f"mv {slurm_tmp}/quant.sf {slurm_tmp}/{sample}_transcript_quant.sf"
+    command_str4 = f"rm {slurm_tmp}/cmd_info.json"
+    command_str5 = f"rm -r {slurm_tmp}/libParams"
+    command_str6 = f"rm -r {slurm_tmp}/logs"
+    command_str7 = f"rm -r {slurm_tmp}/salmon_tmp"
 
     command_str = "\n".join(
         [
@@ -926,7 +934,7 @@ def salmon(sample, toml_config, done):
     )
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
@@ -968,26 +976,28 @@ def samtools(sample, toml_config, done):
 
     in_out = toml_config["general"]["output"] + "/" + sample + "/Aligned"
 
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+
     inBAM = in_out + "/" + sample + ".bam"
-    bamCoord = in_out + "/" + sample + "_sortedCoordinate.bam"
-    stats = in_out + "/" + sample + "_stats.txt"
+    bamCoord = slurm_tmp + "/" + sample + "_sortedCoordinate.bam"
+    stats = slurm_tmp + "/" + sample + "_stats.txt"
 
     # If tmp still exists from previous failed job
-    target_dir = Path(in_out)
-    tmp_files = list(target_dir.glob("*.tmp.*"))
+    # target_dir = Path(in_out)
+    # tmp_files = list(target_dir.glob("*.tmp.*"))
 
-    if tmp_files:
-        for tmp_file in tmp_files:
-            try:
-                tmp_file.unlink()
-            except Exception as e:
-                print(f"[Error] unable to delete {tmp_file.name} : {e}")
+    # if tmp_files:
+    #     for tmp_file in tmp_files:
+    #         try:
+    #             tmp_file.unlink()
+    #         except Exception as e:
+    #             print(f"[Error] unable to delete {tmp_file.name} : {e}")
 
-        if os.path.exists(bamCoord):
-            try:
-                os.remove(bamCoord)
-            except Exception as e:
-                print(f"[Error] unable to delete {bamCoord.name} : {e}")
+    #     if os.path.exists(bamCoord):
+    #         try:
+    #             os.remove(bamCoord)
+    #         except Exception as e:
+    #             print(f"[Error] unable to delete {bamCoord.name} : {e}")
 
     # Sort by coordinate
     command_str1 = f"samtools sort --threads {cpu} -m 4G -o {bamCoord} {inBAM}"
@@ -1010,7 +1020,7 @@ def samtools(sample, toml_config, done):
     )
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, in_out
     )
 
     if tool not in done:
@@ -1051,7 +1061,8 @@ def bamqc(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
     subprocess.run(["mkdir", "-p", output])
 
-    temporary = toml_config["general"]["tmp"] + "/" + sample
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+    temporary = f"$SLURM_TMPDIR/tmp_{sample}"
     subprocess.run(["mkdir", "-p", temporary])
 
     input = (
@@ -1066,7 +1077,7 @@ def bamqc(sample, toml_config, done):
     command = [
         "fastqc",
         "-o",
-        output,
+        slurm_tmp,
         "--noextract",
         "--threads",
         cpu,
@@ -1080,7 +1091,7 @@ def bamqc(sample, toml_config, done):
     command_str = " ".join(command)
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
@@ -1115,14 +1126,15 @@ def markduplicates(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/"
     subprocess.run(["mkdir", "-p", output])
 
-    temporary = toml_config["general"]["tmp"] + "/" + sample + "/md_tmp"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+    temporary = f"$SLURM_TMPDIR/tmp_{sample}"
     subprocess.run(["mkdir", "-p", temporary])
 
     input = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     bamCoord = input + "/" + sample + "_sortedCoordinate.bam"
-    bam_RG = input + "/" + sample + "_sortedCoordinate_RG.bam"
-    metrics = output + sample + "_duplicates_metrics.txt"
-    records = output + sample + "_markDuplicates.bam"
+    bam_RG = slurm_tmp + "/" + sample + "_sortedCoordinate_RG.bam"
+    metrics = slurm_tmp + sample + "_duplicates_metrics.txt"
+    records = slurm_tmp + sample + "_markDuplicates.bam"
     rg_line = f"'@RG\\tID:{sample}\\tPL:Illumina\\tSM:{sample}\\tPU:{sample}'"
 
     # Add RG tag to bam file
@@ -1173,7 +1185,7 @@ def markduplicates(sample, toml_config, done):
     )
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
@@ -1208,7 +1220,9 @@ def featurecounts(sample, toml_config, done):
     time_allocated = "00-01:00"
     env = "module load StdEnv/2023 subread/2.0.6"
 
-    temporary = toml_config["general"]["tmp"] + "/" + sample
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+    temporary = f"$SLURM_TMPDIR/tmp_{sample}"
+
     output = toml_config["general"]["output"] + "/" + sample + "/FeatureCounts"
     subprocess.run(["mkdir", "-p", output])
     markduplicates_dir = (
@@ -1240,7 +1254,7 @@ def featurecounts(sample, toml_config, done):
             "-a",
             gtf,
             "-o",
-            output + "/" + sample + "_geneID.txt",
+            slurm_tmp + "/" + sample + "_geneID.txt",
             input,
         ]
     else:
@@ -1262,18 +1276,18 @@ def featurecounts(sample, toml_config, done):
             "-a",
             gtf,
             "-o",
-            output + "/" + sample + "_geneID.txt",
+            slurm_tmp + "/" + sample + "_geneID.txt",
             input,
         ]
 
     command_str1 = " ".join(command)
 
-    command_str2 = f"tail -n +2 {output}/{sample}_geneID.txt | cut -f1,7 | sed '1s|.*|gene_id\t{sample}|' > {output}/{sample}_counts.txt"
+    command_str2 = f"tail -n +2 {slurm_tmp}/{sample}_geneID.txt | cut -f1,7 | sed '1s|.*|gene_id\t{sample}|' > {slurm_tmp}/{sample}_counts.txt"
 
     command_str = "\n".join([command_str1, command_str2])
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
@@ -1304,7 +1318,9 @@ def multiqc(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/QC/multiQC"
     subprocess.run(["mkdir", "-p", output])
 
-    with open(output + "/my_file_list.txt", "w") as f:
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+
+    with open(slurm_tmp + "/my_file_list.txt", "w") as f:
         f.write(input + "QC/fastQC/\n")
         if toml_config["general"]["trimming"] != "False":
             f.write(input + "Trimmed/\n")
@@ -1317,15 +1333,15 @@ def multiqc(sample, toml_config, done):
         f.write(input + "MarkDuplicates/\n")
     f.close()
 
-    command_str1 = f"apptainer run /lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif multiqc --file-list {output}/my_file_list.txt --force --filename {sample}_multiqc_report --outdir {output}/"
-    command_str2 = f"rm {output}/my_file_list.txt"
-    command_str3 = f"rm -r {output}/{sample}_multiqc_report_data"
+    command_str1 = f"apptainer run /lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif multiqc --file-list {slurm_tmp}/my_file_list.txt --force --filename {sample}_multiqc_report --outdir {slurm_tmp}/"
+    command_str2 = f"rm {slurm_tmp}/my_file_list.txt"
+    command_str3 = f"rm -r {slurm_tmp}/{sample}_multiqc_report_data"
     command_str4 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/check_fastqc.py --path {input}QC/fastQC --sample {sample}"
 
     command_str = "\n".join([command_str1, command_str2, command_str3, command_str4])
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
@@ -1366,6 +1382,8 @@ def bcftools(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
 
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}/"
+
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
 
     with open(
@@ -1378,12 +1396,12 @@ def bcftools(sample, toml_config, done):
         f"bcftools call --threads {cpu} -m -v -Ou | "
         f"bcftools reheader --samples {toml_config['general']['output']}/{sample}/sample.txt | "
         f"bcftools norm -f {ref} -m -any -Ou | "
-        f"bcftools filter -i 'QUAL >= 10 && INFO/DP >= 5' -Oz -o {output}{sample}_bcftools.vcf.gz && "
-        f"tabix -p vcf {output}{sample}_bcftools.vcf.gz"
+        f"bcftools filter -i 'QUAL >= 10 && INFO/DP >= 5' -Oz -o {slurm_tmp}{sample}_bcftools.vcf.gz && "
+        f"tabix -p vcf {slurm_tmp}{sample}_bcftools.vcf.gz"
     )
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
@@ -1426,18 +1444,20 @@ def freebayes(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
 
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}/"
+
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
 
     command_str = (
         f"freebayes -f {ref} {input} | "
         f"bcftools reheader --samples {toml_config['general']['output']}/{sample}/sample.txt | "
         f"bcftools norm -f {ref} -m -any -Ou | "
-        f"bcftools filter -i 'QUAL >= 10 && INFO/DP >= 5' -Oz -o {output}{sample}_freebayes.vcf.gz && "
-        f"tabix -p vcf {output}{sample}_freebayes.vcf.gz"
+        f"bcftools filter -i 'QUAL >= 10 && INFO/DP >= 5' -Oz -o {slurm_tmp}{sample}_freebayes.vcf.gz && "
+        f"tabix -p vcf {slurm_tmp}{sample}_freebayes.vcf.gz"
     )
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
@@ -1468,17 +1488,18 @@ def bcftools_filter(sample, toml_config, done):
     env = "module load StdEnv/2023 bcftools/1.22"
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
-
     subprocess.run(["mkdir", "-p", output])
+
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}/"
 
     command_str = (
         f"bcftools concat --threads 8 --allow-overlaps --rm-dups exact {output}{sample}_bcftools.vcf.gz {output}{sample}_freebayes.vcf.gz | "
-        f"bcftools filter -i 'QUAL >= 10 && AC>0' -o {output}{sample}_merged.vcf && "
+        f"bcftools filter -i 'QUAL >= 10 && AC>0' -o {slurm_tmp}{sample}_merged.vcf && "
         f"rm {toml_config['general']['output']}/{sample}/sample.txt"
     )
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
@@ -1515,8 +1536,11 @@ def vep(sample, toml_config, done):
     env = "module load StdEnv/2023 apptainer/1.3.5"
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
+
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}/"
+
     vcf = f"{output}{sample}_merged.vcf"
-    out_vcf = output + sample + "_vep.vcf"
+    out_vcf = f"{slurm_tmp}{sample}_vep.vcf"
 
     vep_cmd = [
         "apptainer",
@@ -1534,7 +1558,7 @@ def vep(sample, toml_config, done):
         "--vcf",
         "--force_overwrite",
         "--stats_file",
-        output + sample + "_vep_summary.html",
+        slurm_tmp + sample + "_vep_summary.html",
         "--variant_class",
         "--domains",
         "--regulatory",
@@ -1562,7 +1586,7 @@ def vep(sample, toml_config, done):
     command_str = " ".join(vep_cmd)
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
@@ -1601,6 +1625,8 @@ def openCravat(sample, toml_config, done):
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     vcf = output + sample + "_vep.vcf"
+
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}/"
 
     genome = toml_config["general"]["reference"]
 
@@ -1656,7 +1682,7 @@ def openCravat(sample, toml_config, done):
         "-l",
         ref,
         "-d",
-        output,
+        slurm_tmp,
         "-t",
         "text",
         "--cleanrun",
@@ -1664,7 +1690,7 @@ def openCravat(sample, toml_config, done):
 
     command_str1 = " ".join(oc)
 
-    command_str2 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/oc_filtering.py --output {output} --sample {sample} --vcf {vcf}"
+    command_str2 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/oc_filtering.py --output {slurm_tmp} --sample {sample} --vcf {vcf}"
 
     # command_str3 = (
     #     f"rm {output}{sample}_vep.vcf.err && "
@@ -1675,7 +1701,7 @@ def openCravat(sample, toml_config, done):
     command_str = "\n".join([command_str1, command_str2])  # , command_str3])
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
@@ -1717,11 +1743,13 @@ def snpeff(sample, toml_config, done):
 
     path = toml_config["general"]["output"] + "/" + sample + "/Variants"
 
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+
     command_str1 = (
         # 1. snpEff reads sample.vcf and streams output to stdout
         f"java -jar {snpeff_path}/snpEff.jar -noLog -c {snpeff_path}/snpEff.config "
-        f"-stats {path}/{sample}_summary.html -csvStats {path}/{sample}_summary.csv "
-        f"{ref} {path}/{sample}_merged.vcf | "
+        f"-stats {slurm_tmp}/{sample}_summary.html -csvStats {slurm_tmp}/{sample}_summary.csv "
+        f"{ref} {slurm_tmp}/{sample}_merged.vcf | "
         # 2. SnpSift varType reads from stdin (-) and streams output to stdout
         f"java -jar {snpeff_path}/SnpSift.jar varType -noLog - | "
         # 3. SnpSift extractFields reads from stdin (-) and writes TSV output to file
@@ -1730,15 +1758,15 @@ def snpeff(sample, toml_config, done):
         f"'ANN[*].GENE' 'ANN[*].GENEID' 'ANN[*].FEATUREID' "
         f"'ANN[*].EFFECT' 'ANN[*].IMPACT' 'ANN[*].BIOTYPE' "
         f"'ANN[*].HGVS_C' 'ANN[*].HGVS_P' "
-        f"> {path}/{sample}_annotated.txt"
+        f"> {slurm_tmp}/{sample}_annotated.txt"
     )
 
-    command_str2 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/snpeff_filtering.py --path {path} --sample {sample}"
+    command_str2 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/snpeff_filtering.py --path {slurm_tmp} --sample {sample}"
 
     command_str = "\n".join([command_str1, command_str2])
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, path
     )
 
     if tool not in done:
