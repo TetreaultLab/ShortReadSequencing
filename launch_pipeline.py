@@ -617,7 +617,7 @@ def star(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     subprocess.run(["mkdir", "-p", output])
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
     temporary = f"$SLURM_TMPDIR/tmp_{sample}"
     # if Path(temporary).is_dir():
     #     subprocess.run(["rm", "-r", str(temporary)])
@@ -778,7 +778,7 @@ def bwa(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     subprocess.run(["mkdir", "-p", output])
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
 
     ref = get_reference(toml_config["general"]["reference"], "bwa-mem2")["index"]
 
@@ -860,7 +860,7 @@ def salmon(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Salmon"
     subprocess.run(["mkdir", "-p", output])
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
 
     ref = get_reference(toml_config["general"]["reference"], "salmon")["index"]
 
@@ -976,7 +976,7 @@ def samtools(sample, toml_config, done):
 
     in_out = toml_config["general"]["output"] + "/" + sample + "/Aligned"
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
 
     inBAM = in_out + "/" + sample + ".bam"
     bamCoord = slurm_tmp + "/" + sample + "_sortedCoordinate.bam"
@@ -1061,7 +1061,7 @@ def bamqc(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
     subprocess.run(["mkdir", "-p", output])
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
     temporary = f"$SLURM_TMPDIR/tmp_{sample}"
     subprocess.run(["mkdir", "-p", temporary])
 
@@ -1126,7 +1126,7 @@ def markduplicates(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/"
     subprocess.run(["mkdir", "-p", output])
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
     temporary = f"$SLURM_TMPDIR/tmp_{sample}"
     subprocess.run(["mkdir", "-p", temporary])
 
@@ -1220,7 +1220,7 @@ def featurecounts(sample, toml_config, done):
     time_allocated = "00-01:00"
     env = "module load StdEnv/2023 subread/2.0.6"
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
     temporary = f"$SLURM_TMPDIR/tmp_{sample}"
 
     output = toml_config["general"]["output"] + "/" + sample + "/FeatureCounts"
@@ -1318,7 +1318,7 @@ def multiqc(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/QC/multiQC"
     subprocess.run(["mkdir", "-p", output])
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
 
     with open(output + "/my_file_list.txt", "w") as f:
         f.write(input + "QC/fastQC/\n")
@@ -1743,7 +1743,7 @@ def snpeff(sample, toml_config, done):
 
     path = toml_config["general"]["output"] + "/" + sample + "/Variants"
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
 
     command_str1 = (
         # 1. snpEff reads sample.vcf and streams output to stdout
