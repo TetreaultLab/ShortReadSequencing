@@ -471,7 +471,7 @@ def fastqc(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
     subprocess.run(["mkdir", "-p", output])
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}/"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}/"
 
     temporary = f"$SLURM_TMPDIR/tmp_{sample}"
     subprocess.run(["mkdir", "-p", temporary])
@@ -1382,7 +1382,7 @@ def bcftools(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}/"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}/"
 
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
 
@@ -1444,7 +1444,7 @@ def freebayes(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}/"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}/"
 
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
 
@@ -1490,7 +1490,7 @@ def bcftools_filter(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     subprocess.run(["mkdir", "-p", output])
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}/"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}/"
 
     command_str = (
         f"bcftools concat --threads 8 --allow-overlaps --rm-dups exact {output}{sample}_bcftools.vcf.gz {output}{sample}_freebayes.vcf.gz | "
@@ -1537,7 +1537,7 @@ def vep(sample, toml_config, done):
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}/"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}/"
 
     vcf = f"{output}{sample}_merged.vcf"
     out_vcf = f"{slurm_tmp}{sample}_vep.vcf"
@@ -1626,7 +1626,7 @@ def openCravat(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
     vcf = output + sample + "_vep.vcf"
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}/"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}/"
 
     genome = toml_config["general"]["reference"]
 
