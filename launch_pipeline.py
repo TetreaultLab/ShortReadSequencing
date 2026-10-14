@@ -345,7 +345,7 @@ def create_config_final(path_config, args):
 
 
 def fill_template(
-    tool, toml_config, sample, cpu, mem, time_allocated, env, command, output
+    tool, toml_config, sample, cpu, mem, time_allocated, env, command, cleanup_cmd
 ):
     email = toml_config["general"]["email"]
     job = f"{work_dir}/scripts/{sample}_{tool}.slurm"
@@ -357,7 +357,16 @@ def fill_template(
     ) as f:
         slurm = f.read()
         slurm_filled = slurm.format(
-            cpu, mem, time_allocated, sample, tool, email, env, command, output, infos
+            cpu,
+            mem,
+            time_allocated,
+            sample,
+            tool,
+            email,
+            env,
+            command,
+            cleanup_cmd,
+            infos,
         )
 
         with open(job, "w") as o:
@@ -513,8 +522,18 @@ def fastqc(sample, toml_config, done):
 
     command_str = " ".join(command)
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -541,6 +560,8 @@ def fastp(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
     subprocess.run(["mkdir", "-p", output])
 
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
+
     if toml_config["general"]["reads"] == "PE":
         I1 = toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz"
         I2 = toml_config["general"]["fastq"] + "/" + sample + "_R2.fastq.gz"
@@ -565,9 +586,9 @@ def fastp(sample, toml_config, done):
             "--length_required",
             str(toml_config["fastp"]["length"]),
             "--html",
-            output + "/" + sample + "_fastp_report.html",
+            slurm_tmp + "/" + sample + "_fastp_report.html",
             "--json",
-            output + "/" + sample + "_fastp_report.json",
+            slurm_tmp + "/" + sample + "_fastp_report.json",
         ]
     else:
         I_SE = toml_config["general"]["fastq"] + "/" + sample + ".fastq.gz"
@@ -585,15 +606,25 @@ def fastp(sample, toml_config, done):
             "--length_required",
             str(toml_config["fastp"]["length"]),
             "--html",
-            output + "/" + sample + "_fastp_report.html",
+            slurm_tmp + "/" + sample + "_fastp_report.html",
             "--json",
-            output + "/" + sample + "_fastp_report.json",
+            slurm_tmp + "/" + sample + "_fastp_report.json",
         ]
 
     command_str = " ".join(command)
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -737,8 +768,18 @@ def star(sample, toml_config, done):
             ]
         )
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -820,8 +861,18 @@ def bwa(sample, toml_config, done):
 
     command_str = "\n".join([command_str1, command_str2, command_str3])
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -932,8 +983,18 @@ def salmon(sample, toml_config, done):
         ]
     )
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -1018,8 +1079,18 @@ def samtools(sample, toml_config, done):
         ]
     )
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}/* {in_out}/"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, in_out
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -1088,8 +1159,18 @@ def bamqc(sample, toml_config, done):
 
     command_str = " ".join(command)
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -1181,8 +1262,18 @@ def markduplicates(sample, toml_config, done):
         ]
     )
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -1283,8 +1374,18 @@ def featurecounts(sample, toml_config, done):
 
     command_str = "\n".join([command_str1, command_str2])
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -1337,8 +1438,18 @@ def multiqc(sample, toml_config, done):
 
     command_str = "\n".join([command_str1, command_str2, command_str3, command_str4])
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -1397,8 +1508,18 @@ def bcftools(sample, toml_config, done):
         f"tabix -p vcf {slurm_tmp}{sample}_bcftools.vcf.gz"
     )
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}* {output}"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -1453,8 +1574,18 @@ def freebayes(sample, toml_config, done):
         f"tabix -p vcf {slurm_tmp}{sample}_freebayes.vcf.gz"
     )
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}* {output}"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -1495,8 +1626,18 @@ def bcftools_filter(sample, toml_config, done):
         f"rm {toml_config['general']['output']}/{sample}/sample.txt"
     )
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}* {output}"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -1582,8 +1723,18 @@ def vep(sample, toml_config, done):
 
     command_str = " ".join(vep_cmd)
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}* {output}"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -1697,8 +1848,18 @@ def openCravat(sample, toml_config, done):
     # )
     command_str = "\n".join([command_str1, command_str2])  # , command_str3])
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}* {output}"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -1762,8 +1923,18 @@ def snpeff(sample, toml_config, done):
 
     command_str = "\n".join([command_str1, command_str2])
 
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}/* {path}/"
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, path
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
@@ -1791,10 +1962,21 @@ def cleanup(sample, toml_config, done):
     env = ""
 
     output = toml_config["general"]["output"]
+
     command_str = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/cleanup.py --output {output} --sample {sample}"
 
+    cleanup_cmd = ""
+
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
+        tool,
+        toml_config,
+        sample,
+        cpu,
+        mem,
+        time_allocated,
+        env,
+        command_str,
+        cleanup_cmd,
     )
 
     if tool not in done:
