@@ -474,7 +474,6 @@ def fastqc(sample, toml_config, done):
     slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}/"
 
     temporary = f"$SLURM_TMPDIR/tmp_{sample}"
-    subprocess.run(["mkdir", "-p", temporary])
 
     if toml_config["general"]["reads"] == "PE":
         Read1 = toml_config["general"]["fastq"] + "/" + sample + "_R1.fastq.gz"
@@ -1063,7 +1062,6 @@ def bamqc(sample, toml_config, done):
 
     slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
     temporary = f"$SLURM_TMPDIR/tmp_{sample}"
-    subprocess.run(["mkdir", "-p", temporary])
 
     input = (
         toml_config["general"]["output"]
@@ -1128,7 +1126,6 @@ def markduplicates(sample, toml_config, done):
 
     slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
     temporary = f"$SLURM_TMPDIR/tmp_{sample}"
-    subprocess.run(["mkdir", "-p", temporary])
 
     input = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     bamCoord = input + "/" + sample + "_sortedCoordinate.bam"
