@@ -1797,7 +1797,7 @@ def cleanup(sample, toml_config, done):
     command_str = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/cleanup.py --output {output} --sample {sample}"
 
     job = fill_template(
-        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str
+        tool, toml_config, sample, cpu, mem, time_allocated, env, command_str, output
     )
 
     if tool not in done:
