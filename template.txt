@@ -14,7 +14,7 @@
 set -euo pipefail
 {6}
 
-mkdir $SLURM_TMPDIR/{4}
+mkdir $SLURM_TMPDIR/{4}_{3}
 $SLURM_TMPDIR/tmp_{3}
 #
 ### Running {4} for {3}
