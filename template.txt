@@ -22,7 +22,7 @@ mkdir $SLURM_TMPDIR/{4}
 #
 ### Transfering {4}
 #
-rsync -azh --no-g --no-p $SLURM_TMPDIR/{4}/* {8}/
+rsync -azh --no-g --no-p $SLURM_TMPDIR/{4}_{3}/* {8}/
 #
 if [ $? -eq 0 ]; then
     echo "{4}" >> "{9}"
