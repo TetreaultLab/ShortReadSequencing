@@ -1205,12 +1205,12 @@ def markduplicates(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/MarkDuplicates/"
     subprocess.run(["mkdir", "-p", output])
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}/"
     temporary = f"$SLURM_TMPDIR/tmp_{sample}"
 
     input = toml_config["general"]["output"] + "/" + sample + "/Aligned"
     bamCoord = input + "/" + sample + "_sortedCoordinate.bam"
-    bam_RG = slurm_tmp + "/" + sample + "_sortedCoordinate_RG.bam"
+    bam_RG = slurm_tmp + sample + "_sortedCoordinate_RG.bam"
     metrics = slurm_tmp + sample + "_duplicates_metrics.txt"
     records = slurm_tmp + sample + "_markDuplicates.bam"
     rg_line = f"'@RG\\tID:{sample}\\tPL:Illumina\\tSM:{sample}\\tPU:{sample}'"
@@ -1250,19 +1250,17 @@ def markduplicates(sample, toml_config, done):
 
     command_str2 = " ".join(command2)
 
-    command_str3 = f"rm -r {temporary}"
-    command_str4 = f"rm {bam_RG}"
+    command_str3 = f"rm {bam_RG}"
 
     command_str = "\n".join(
         [
             command_str1,
             command_str2,
             command_str3,
-            command_str4,
         ]
     )
 
-    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}* {output}"
 
     job = fill_template(
         tool,
