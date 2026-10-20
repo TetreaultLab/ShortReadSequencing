@@ -1673,10 +1673,8 @@ def vep(sample, toml_config, done):
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}/"
-
     vcf = f"{output}{sample}_merged.vcf"
-    out_vcf = f"{slurm_tmp}{sample}_vep.vcf"
+    out_vcf = f"{output}{sample}_vep.vcf"
 
     vep_cmd = [
         "apptainer",
@@ -1694,7 +1692,7 @@ def vep(sample, toml_config, done):
         "--vcf",
         "--force_overwrite",
         "--stats_file",
-        slurm_tmp + sample + "_vep_summary.html",
+        output + sample + "_vep_summary.html",
         "--variant_class",
         "--domains",
         "--regulatory",
@@ -1721,7 +1719,7 @@ def vep(sample, toml_config, done):
 
     command_str = " ".join(vep_cmd)
 
-    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}* {output}"
+    cleanup_cmd = ""
 
     job = fill_template(
         tool,
