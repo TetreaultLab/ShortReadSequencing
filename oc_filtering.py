@@ -302,6 +302,8 @@ conditions = {
     ),
 }
 
+df_rare = df_rare.copy()
+
 cond_df = pd.DataFrame(conditions, index=df_rare.index)
 
 df_rare["num_conditions_met"] = cond_df.sum(axis=1)
@@ -311,7 +313,7 @@ df_rare["conditions_met"] = cond_df.apply(lambda row: ", ".join(row.index[row]),
 df_patho = df_rare[df_rare["num_conditions_met"] >= 1]
 
 print('\n>>> Filters "Pathogenic":')
-print('\t>>> Same as "Rare" and at least 2 scores from this:')
+print('\t>>> Same as "Rare" and at least 1 score from this:')
 print('\t>>> Variant impact is "Moderate" or "High"')
 print("\t>>> CADD (pathogenecity) >= 10")
 print("\t>>> GERP++ (conservation) >= 2")
