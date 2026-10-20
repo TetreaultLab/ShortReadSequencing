@@ -1770,9 +1770,9 @@ def openCravat(sample, toml_config, done):
     env = ""
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
+    vcf = output + sample + "_vep.vcf"
 
     slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}/"
-    vcf = slurm_tmp + sample + "_vep.vcf"
 
     genome = toml_config["general"]["reference"]
 
