@@ -188,8 +188,6 @@ def main():
 
         # MultiQC
         f.write("\n>>> Quality control report: MultiQC (v1.31)")
-        if "MultiQC" not in done:
-            function_queue.append(multiqc)
 
         # Variant Calling
         if toml_config["general"]["variants"] == "True":
@@ -202,8 +200,6 @@ def main():
 
             # Variant filtering
             f.write("\n>>> Variant Filtering: BCFtools (v1.18)")
-            if "BCFtools_filters" not in done:
-                function_queue.append(bcftools_filter)
 
             # Variant Annotation
             if (
@@ -239,8 +235,7 @@ def main():
         subprocess.run(["mkdir", "-p", f"{work_dir}/scripts/"])
         with open(f"{work_dir}/scripts/{sample}.sh", "w") as f:
             f.write("#!/bin/sh\n")
-            f.write("\nDEPS=()\n")  # Add multiQC dependencies
-            f.write("\nDEPS2=()\n")  # Add cleanup dependencies
+            f.write("\nDEPS=()\n")  # Add cleanup dependencies
 
         # Calling each steps
         for func in function_queue:
@@ -469,11 +464,11 @@ def fastqc(sample, toml_config, done):
     tool = "FastQC"
 
     cpu = "1"
-    mem = "2"
+    mem = "1"
     if toml_config["general"]["sequencing"] == "genome":
-        time_allocated = "00-06:00"
-    else:
         time_allocated = "00-03:00"
+    else:
+        time_allocated = "00-01:00"
 
     env = "module load StdEnv/2023 python/3.11.5 fastqc/0.12.1\nsource /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate"
 
@@ -549,7 +544,7 @@ def fastp(sample, toml_config, done):
     tool = "fastp"
 
     if toml_config["general"]["sequencing"] == "genome":
-        cpu = "16"
+        cpu = "10"
     else:
         cpu = "8"
 
@@ -649,8 +644,6 @@ def star(sample, toml_config, done):
 
     slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
     temporary = f"$SLURM_TMPDIR/tmp_{sample}"
-    # if Path(temporary).is_dir():
-    #     subprocess.run(["rm", "-r", str(temporary)])
 
     ref = get_reference(toml_config["general"]["reference"], "star")["index"]
 
@@ -806,7 +799,7 @@ def star(sample, toml_config, done):
 def bwa(sample, toml_config, done):
     tool = "BWA-MEM2"
 
-    cpu = "4"
+    cpu = "2"
     if toml_config["general"]["sequencing"] == "exome":
         time_allocated = "00-06:00"
         mem = "64"
@@ -1021,17 +1014,18 @@ def salmon(sample, toml_config, done):
 def samtools(sample, toml_config, done):
     tool = "Samtools"
 
-    cpu = 3
+    cores = 3
+    cpu = 4
 
     if toml_config["general"]["sequencing"] == "rna":
         time_allocated = "00-11:00"
-        mem = "40"
+        mem = "32"
     elif toml_config["general"]["sequencing"] == "exome":
         time_allocated = "00-11:00"
-        mem = "40"
+        mem = "32"
     else:
         time_allocated = "00-23:00"
-        mem = "64"
+        mem = "32"
     env = "module load StdEnv/2023 samtools/1.22.1"
 
     in_out = toml_config["general"]["output"] + "/" + sample + "/Aligned"
@@ -1042,28 +1036,11 @@ def samtools(sample, toml_config, done):
     bamCoord = slurm_tmp + "/" + sample + "_sortedCoordinate.bam"
     stats = slurm_tmp + "/" + sample + "_stats.txt"
 
-    # If tmp still exists from previous failed job
-    # target_dir = Path(in_out)
-    # tmp_files = list(target_dir.glob("*.tmp.*"))
-
-    # if tmp_files:
-    #     for tmp_file in tmp_files:
-    #         try:
-    #             tmp_file.unlink()
-    #         except Exception as e:
-    #             print(f"[Error] unable to delete {tmp_file.name} : {e}")
-
-    #     if os.path.exists(bamCoord):
-    #         try:
-    #             os.remove(bamCoord)
-    #         except Exception as e:
-    #             print(f"[Error] unable to delete {bamCoord.name} : {e}")
-
     # Sort by coordinate
-    command_str1 = f"samtools sort --threads {cpu} -m 4G -o {bamCoord} {inBAM}"
+    command_str1 = f"samtools sort --threads {cores} -m 4G -o {bamCoord} {inBAM}"
 
     # Index bam sorted by coordinates
-    command_str2 = f"samtools index --threads {cpu} {bamCoord}"
+    command_str2 = f"samtools index --threads {cores} {bamCoord}"
 
     # alignment stats
     command_str3 = f"samtools stats {bamCoord} | grep ^SN | cut -f 2- > {stats}"
@@ -1121,11 +1098,11 @@ def bamqc(sample, toml_config, done):
     tool = "FastQC_bam"
 
     cpu = "1"
-    mem = "2"
+    mem = "1"
     if toml_config["general"]["sequencing"] == "genome":
-        time_allocated = "00-06:00"
-    else:
         time_allocated = "00-03:00"
+    else:
+        time_allocated = "00-01:00"
     env = "module load StdEnv/2023 python/3.11.5 fastqc/0.12.1\nsource /lustre09/project/6019267/shared/tools/main_pipelines/long-read/launch_pipeline_env/bin/activate"
 
     output = toml_config["general"]["output"] + "/" + sample + "/QC/fastQC"
@@ -1192,9 +1169,9 @@ def bamqc(sample, toml_config, done):
 def markduplicates(sample, toml_config, done):
     tool = "MarkDuplicates"
 
-    cpu = "2"
+    cpu = "1"
     if toml_config["general"]["sequencing"] == "genome":
-        time_allocated = "00-11:00"
+        time_allocated = "00-06:00"
         mem = "24"
     else:
         time_allocated = "00-03:00"
@@ -1402,77 +1379,13 @@ def featurecounts(sample, toml_config, done):
         print(f"Done: {tool}")
 
 
-def multiqc(sample, toml_config, done):
-    tool = "MultiQC"
-
-    cpu = "1"
-    mem = "1"
-    time_allocated = "00-01:00"
-    env = "module load StdEnv/2023 python/3.11.5 apptainer/1.3.5"
-
-    input = toml_config["general"]["output"] + "/" + sample + "/"
-    output = toml_config["general"]["output"] + "/" + sample + "/QC/multiQC"
-    subprocess.run(["mkdir", "-p", output])
-
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
-
-    with open(output + "/my_file_list.txt", "w") as f:
-        f.write(input + "QC/fastQC/\n")
-        if toml_config["general"]["trimming"] != "False":
-            f.write(input + "Trimmed/\n")
-        if toml_config["general"]["pseudo"] != "False":
-            f.write(input + "Salmon/\n")
-        if toml_config["general"]["quantification"] != "False":
-            f.write(input + "FeatureCounts/\n")
-        f.write(input + "Aligned/\n")
-        f.write(input + "Samtools/\n")
-        f.write(input + "MarkDuplicates/\n")
-    f.close()
-
-    command_str1 = f"apptainer run /lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif multiqc --file-list {output}/my_file_list.txt --force --filename {sample}_multiqc_report --outdir {slurm_tmp}/"
-    command_str2 = f"rm {output}/my_file_list.txt"
-    command_str3 = f"rm -r {slurm_tmp}/{sample}_multiqc_report_data"
-    command_str4 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/check_fastqc.py --path {input}QC/fastQC --sample {sample}"
-
-    command_str = "\n".join([command_str1, command_str2, command_str3, command_str4])
-
-    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
-
-    job = fill_template(
-        tool,
-        toml_config,
-        sample,
-        cpu,
-        mem,
-        time_allocated,
-        env,
-        command_str,
-        cleanup_cmd,
-    )
-
-    if tool not in done:
-        print(f"To-Do: {tool}")
-        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
-            f.write("\n# MultiQC")
-            f.write('\nDEPENDENCY_LIST=$(IFS=:; echo "${DEPS[*]}")')
-            f.write("\nif [ ${#DEPS[@]} -gt 0 ]; then")
-            f.write(
-                f"\n\tDEPS2+=($(sbatch --parsable --dependency=afterok:$DEPENDENCY_LIST {job}))"
-            )
-            f.write("\nelse")
-            f.write(f"\n\tDEPS2+=($(sbatch --parsable {job}))")
-            f.write("\nfi\n")
-    else:
-        print(f"Done: {tool}")
-
-
 def bcftools(sample, toml_config, done):
     tool = "BCFtools"
 
-    cpu = "2"
-    mem = "2"
+    cpu = "1"
+    mem = "1"
     if toml_config["general"]["sequencing"] == "genome":
-        time_allocated = "00-11:00"
+        time_allocated = "00-06:00"
     else:
         time_allocated = "00-06:00"
     env = "module load StdEnv/2023 bcftools/1.22"
@@ -1539,10 +1452,10 @@ def bcftools(sample, toml_config, done):
 def freebayes(sample, toml_config, done):
     tool = "FreeBayes"
 
-    cpu = "2"
+    cpu = "1"
     if toml_config["general"]["sequencing"] == "genome":
-        mem = "96"
-        time_allocated = "00-23:00"
+        mem = "32"
+        time_allocated = "00-11:00"
     else:
         mem = "32"
         time_allocated = "00-11:00"
@@ -1602,79 +1515,31 @@ def freebayes(sample, toml_config, done):
         print(f"Done: {tool}")
 
 
-def bcftools_filter(sample, toml_config, done):
-    tool = "BCFtools_filters"
-
-    cpu = "1"
-    mem = "1"
-    if toml_config["general"]["sequencing"] == "genome":
-        time_allocated = "00-06:00"
-    else:
-        time_allocated = "00-01:00"
-    env = "module load StdEnv/2023 bcftools/1.22"
-
-    output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
-    subprocess.run(["mkdir", "-p", output])
-
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}/"
-
-    command_str = (
-        f"bcftools concat --threads 8 --allow-overlaps --rm-dups exact {output}{sample}_bcftools.vcf.gz {output}{sample}_freebayes.vcf.gz | "
-        f"bcftools filter -i 'QUAL >= 10 && AC>0' -o {slurm_tmp}{sample}_merged.vcf && "
-        f"rm {toml_config['general']['output']}/{sample}/sample.txt"
-    )
-
-    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}* {output}"
-
-    job = fill_template(
-        tool,
-        toml_config,
-        sample,
-        cpu,
-        mem,
-        time_allocated,
-        env,
-        command_str,
-        cleanup_cmd,
-    )
-
-    if tool not in done:
-        print(f"To-Do: {tool}")
-        active_deps = []
-        if "BCFtools" not in done:
-            active_deps.append("$bcftools")
-        if "FreeBayes" not in done:
-            active_deps.append("$freebayes")
-
-        if len(active_deps) > 0:
-            dep_str = f"--dependency=afterok:{':'.join(active_deps)} "
-        else:
-            dep_str = ""
-
-        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
-            f.write(f"\n# Running {tool} for {sample}")
-            f.write(f"\nmerge=$(sbatch --parsable {dep_str}{job})\n")
-    else:
-        print(f"Done: {tool}")
-
-
 def vep(sample, toml_config, done):
     tool = "VEP"
 
     if toml_config["general"]["sequencing"] == "genome":
-        time_allocated = "00-02:30"
+        time_allocated = "00-03:00"
         cpu = "3"
         mem = "20"
     else:
         time_allocated = "00-01:00"
         cpu = "1"
         mem = "10"
-    env = "module load StdEnv/2023 apptainer/1.3.5"
+    env = "module load StdEnv/2023 apptainer/1.3.5 bcftools/1.22"
+
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}/"
 
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
 
-    vcf = f"{output}{sample}_merged.vcf"
+    vcf = f"{slurm_tmp}{sample}_merged.vcf"
     out_vcf = f"{output}{sample}_vep.vcf"
+
+    filter_str = (
+        f"bcftools concat --threads 8 --allow-overlaps --rm-dups exact {output}{sample}_bcftools.vcf.gz {output}{sample}_freebayes.vcf.gz | "
+        f"bcftools filter -i 'QUAL >= 10 && AC>0' -o {vcf} && "
+        f"rm {toml_config['general']['output']}/{sample}/sample.txt"
+    )
 
     vep_cmd = [
         "apptainer",
@@ -1717,9 +1582,11 @@ def vep(sample, toml_config, done):
         cpu,
     ]
 
-    command_str = " ".join(vep_cmd)
+    vep_str = " ".join(vep_cmd)
 
-    cleanup_cmd = ""
+    command_str = "\n".join([filter_str, vep_str])
+
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}* {output}"
 
     job = fill_template(
         tool,
@@ -1735,16 +1602,20 @@ def vep(sample, toml_config, done):
 
     if tool not in done:
         print(f"To-Do: {tool}")
-        if "BCFtools_filters" not in done:
-            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
-                f.write(f"\n# Running {tool} for {sample}")
-                f.write(
-                    f"\nvep=$(sbatch --parsable --dependency=afterok:$merge {job})\n"
-                )
+        active_deps = []
+        if "BCFtools" not in done:
+            active_deps.append("$bcftools")
+        if "FreeBayes" not in done:
+            active_deps.append("$freebayes")
+
+        if len(active_deps) > 0:
+            dep_str = f"--dependency=afterok:{':'.join(active_deps)} "
         else:
-            with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
-                f.write(f"\n# Running {tool} for {sample}")
-                f.write(f"\nvep=$(sbatch --parsable {job})\n")
+            dep_str = ""
+
+        with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
+            f.write(f"\n# Running {tool} for {sample}")
+            f.write(f"\nmerge=$(sbatch --parsable {dep_str}{job})\n")
     else:
         print(f"Done: {tool}")
 
@@ -1753,7 +1624,7 @@ def openCravat(sample, toml_config, done):
     tool = "openCravat"
 
     if toml_config["general"]["sequencing"] == "genome":
-        mem = "100"
+        mem = "96"
         cpu = "1"
         time_allocated = "01-23:00"
     elif toml_config["general"]["sequencing"] == "exome":
@@ -1864,12 +1735,12 @@ def openCravat(sample, toml_config, done):
             with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
                 f.write(f"\n# Running {tool} for {sample}")
                 f.write(
-                    f"\nDEPS2+=($(sbatch --parsable --dependency=afterok:$vep {job}))\n"
+                    f"\nDEPS+=($(sbatch --parsable --dependency=afterok:$vep {job}))\n"
                 )
         else:
             with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
                 f.write(f"\n# Running {tool} for {sample}")
-                f.write(f"\nDEPS2+=($(sbatch --parsable {job}))\n")
+                f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
     else:
         print(f"Done: {tool}")
 
@@ -1939,12 +1810,12 @@ def snpeff(sample, toml_config, done):
             with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
                 f.write(f"\n# Running {tool} for {sample}")
                 f.write(
-                    f"\nDEPS2+=($(sbatch --parsable --dependency=afterok:$merge {job}))\n"
+                    f"\nDEPS+=($(sbatch --parsable --dependency=afterok:$merge {job}))\n"
                 )
         else:
             with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
                 f.write(f"\n# Running {tool} for {sample}")
-                f.write(f"\nDEPS2+=($(sbatch --parsable {job}))\n")
+                f.write(f"\nDEPS+=($(sbatch --parsable {job}))\n")
     else:
         print(f"Done: {tool}")
 
@@ -1954,12 +1825,45 @@ def cleanup(sample, toml_config, done):
 
     cpu = "1"
     mem = "4"
-    time_allocated = "00-03:00"
-    env = ""
+    time_allocated = "00-01:00"
 
-    output = toml_config["general"]["output"]
+    # MultiQC
+    env = "module load StdEnv/2023 python/3.11.5 apptainer/1.3.5"
 
-    command_str = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/cleanup.py --output {output} --sample {sample}"
+    input = toml_config["general"]["output"] + "/" + sample + "/"
+    output = toml_config["general"]["output"] + "/" + sample + "/QC/multiQC"
+    subprocess.run(["mkdir", "-p", output])
+
+    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
+
+    with open(output + "/my_file_list.txt", "w") as f:
+        f.write(input + "QC/fastQC/\n")
+        if toml_config["general"]["trimming"] != "False":
+            f.write(input + "Trimmed/\n")
+        if toml_config["general"]["pseudo"] != "False":
+            f.write(input + "Salmon/\n")
+        if toml_config["general"]["quantification"] != "False":
+            f.write(input + "FeatureCounts/\n")
+        f.write(input + "Aligned/\n")
+        f.write(input + "Samtools/\n")
+        f.write(input + "MarkDuplicates/\n")
+    f.close()
+
+    command_str1 = f"apptainer run /lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif multiqc --file-list {output}/my_file_list.txt --force --filename {sample}_multiqc_report --outdir {slurm_tmp}/"
+    command_str2 = f"rm {output}/my_file_list.txt"
+    command_str3 = f"rm -r {slurm_tmp}/{sample}_multiqc_report_data"
+    command_str4 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/check_fastqc.py --path {input}QC/fastQC --sample {sample}"
+    command_str5 = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
+
+    multiqc_str = "\n".join([command_str1, command_str2, command_str3, command_str4, command_str5])
+
+
+    # Cleanup
+    final = toml_config["general"]["output"]
+
+    cleanup_str = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/cleanup.py --output {final} --sample {sample}"
+
+    command_str = "\n".join([multiqc_str, cleanup_str])
 
     cleanup_cmd = ""
 
@@ -1979,9 +1883,9 @@ def cleanup(sample, toml_config, done):
         print(f"To-Do: {tool}")
         with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
             f.write("\n# Cleanup")
-            f.write('\nDEPENDENCY_LIST2=$(IFS=:; echo "${DEPS2[*]}")')
-            f.write("\nif [ ${#DEPS2[@]} -gt 0 ]; then")
-            f.write(f"\n\tsbatch --dependency=afterok:$DEPENDENCY_LIST2 {job}")
+            f.write('\nDEPENDENCY_LIST=$(IFS=:; echo "${DEPS[*]}")')
+            f.write("\nif [ ${#DEPS[@]} -gt 0 ]; then")
+            f.write(f"\n\tsbatch --dependency=afterok:$DEPENDENCY_LIST {job}")
             f.write("\nelse")
             f.write(f"\n\tsbatch {job}")
             f.write("\nfi\n")
