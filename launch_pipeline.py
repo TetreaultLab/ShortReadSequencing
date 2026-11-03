@@ -346,8 +346,16 @@ def fill_template(
     job = f"{work_dir}/scripts/{sample}_{tool}.slurm"
     infos = toml_config["general"]["output"] + "/" + sample + "/infos.txt"
 
+    if tool == "BWA-MEM2":
+        template = (
+            f"{TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/template_bwa.txt"
+        )
+    else:
+        template = (
+            f"{TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/template.txt"
+        )
     with open(
-        f"{TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/template.txt",
+        template,
         "r",
     ) as f:
         slurm = f.read()
@@ -1855,8 +1863,9 @@ def cleanup(sample, toml_config, done):
     command_str4 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/check_fastqc.py --path {input}QC/fastQC --sample {sample}"
     command_str5 = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
 
-    multiqc_str = "\n".join([command_str1, command_str2, command_str3, command_str4, command_str5])
-
+    multiqc_str = "\n".join(
+        [command_str1, command_str2, command_str3, command_str4, command_str5]
+    )
 
     # Cleanup
     final = toml_config["general"]["output"]
