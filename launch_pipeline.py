@@ -1391,7 +1391,7 @@ def bcftools(sample, toml_config, done):
     tool = "BCFtools"
 
     cpu = "1"
-    mem = "1"
+    mem = "4"
     if toml_config["general"]["sequencing"] == "genome":
         time_allocated = "00-06:00"
     else:
@@ -1712,15 +1712,13 @@ def openCravat(sample, toml_config, done):
 
     command_str2 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/oc_filtering.py --output {slurm_tmp} --sample {sample} --vcf {vcf}"
 
-    command_str3 = (
-        f"rm {toml_config['general']['output']}/{sample}/sample.txt"
-    )
+    command_str3 = f"rm {toml_config['general']['output']}/{sample}/sample.txt"
     #     f"rm {output}{sample}_vep.vcf.err && "
     #     f"rm {output}{sample}_vep.vcf.log && "
     #     f"rm {output}{sample}_vep.vcf.sqlite && "
     #     f"rm {output}{sample}_vep.vcf.tsv && "
     # )
-    command_str = "\n".join([command_str1, command_str2], command_str3])
+    command_str = "\n".join([command_str1, command_str2, command_str3])
 
     cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}* {output}"
 
