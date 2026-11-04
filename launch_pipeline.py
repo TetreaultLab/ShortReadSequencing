@@ -1463,7 +1463,7 @@ def freebayes(sample, toml_config, done):
     cpu = "1"
     if toml_config["general"]["sequencing"] == "genome":
         mem = "32"
-        time_allocated = "00-11:00"
+        time_allocated = "01-11:00"
     else:
         mem = "32"
         time_allocated = "00-11:00"
@@ -1536,11 +1536,9 @@ def vep(sample, toml_config, done):
         mem = "10"
     env = "module load StdEnv/2023 apptainer/1.3.5 bcftools/1.22"
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}/"
-
     output = toml_config["general"]["output"] + "/" + sample + "/Variants/"
 
-    vcf = f"{slurm_tmp}{sample}_merged.vcf"
+    vcf = f"{output}{sample}_merged.vcf"
     out_vcf = f"{output}{sample}_vep.vcf"
 
     filter_str = (
@@ -1594,7 +1592,7 @@ def vep(sample, toml_config, done):
 
     command_str = "\n".join([filter_str, vep_str])
 
-    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}* {output}"
+    cleanup_cmd = ""
 
     job = fill_template(
         tool,
@@ -1842,8 +1840,6 @@ def cleanup(sample, toml_config, done):
     output = toml_config["general"]["output"] + "/" + sample + "/QC/multiQC"
     subprocess.run(["mkdir", "-p", output])
 
-    slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}"
-
     with open(output + "/my_file_list.txt", "w") as f:
         f.write(input + "QC/fastQC/\n")
         if toml_config["general"]["trimming"] != "False":
@@ -1857,15 +1853,12 @@ def cleanup(sample, toml_config, done):
         f.write(input + "MarkDuplicates/\n")
     f.close()
 
-    command_str1 = f"apptainer run /lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif multiqc --file-list {output}/my_file_list.txt --force --filename {sample}_multiqc_report --outdir {slurm_tmp}/"
+    command_str1 = f"apptainer run /lustre09/project/6019267/shared/tools/others/multiqc/multiqc.sif multiqc --file-list {output}/my_file_list.txt --force --filename {sample}_multiqc_report --outdir {output}/"
     command_str2 = f"rm {output}/my_file_list.txt"
-    command_str3 = f"rm -r {slurm_tmp}/{sample}_multiqc_report_data"
+    command_str3 = f"rm -r {output}/{sample}_multiqc_report_data"
     command_str4 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/check_fastqc.py --path {input}QC/fastQC --sample {sample}"
-    command_str5 = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
 
-    multiqc_str = "\n".join(
-        [command_str1, command_str2, command_str3, command_str4, command_str5]
-    )
+    multiqc_str = "\n".join([command_str1, command_str2, command_str3, command_str4])
 
     # Cleanup
     final = toml_config["general"]["output"]
