@@ -1543,8 +1543,7 @@ def vep(sample, toml_config, done):
 
     filter_str = (
         f"bcftools concat --threads 8 --allow-overlaps --rm-dups exact {output}{sample}_bcftools.vcf.gz {output}{sample}_freebayes.vcf.gz | "
-        f"bcftools filter -i 'QUAL >= 10 && AC>0' -o {vcf} && "
-        f"rm {toml_config['general']['output']}/{sample}/sample.txt"
+        f"bcftools filter -i 'QUAL >= 10 && AC>0' -o {vcf}"
     )
 
     vep_cmd = [
@@ -1621,7 +1620,7 @@ def vep(sample, toml_config, done):
 
         with open(f"{work_dir}/scripts/{sample}.sh", "a") as f:
             f.write(f"\n# Running {tool} for {sample}")
-            f.write(f"\nmerge=$(sbatch --parsable {dep_str}{job})\n")
+            f.write(f"\nvep=$(sbatch --parsable {dep_str}{job})\n")
     else:
         print(f"Done: {tool}")
 
@@ -1713,13 +1712,15 @@ def openCravat(sample, toml_config, done):
 
     command_str2 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/oc_filtering.py --output {slurm_tmp} --sample {sample} --vcf {vcf}"
 
-    # command_str3 = (
+    command_str3 = (
+        f"rm {toml_config['general']['output']}/{sample}/sample.txt"
+    )
     #     f"rm {output}{sample}_vep.vcf.err && "
     #     f"rm {output}{sample}_vep.vcf.log && "
     #     f"rm {output}{sample}_vep.vcf.sqlite && "
     #     f"rm {output}{sample}_vep.vcf.tsv && "
     # )
-    command_str = "\n".join([command_str1, command_str2])  # , command_str3])
+    command_str = "\n".join([command_str1, command_str2], command_str3])
 
     cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}* {output}"
 
