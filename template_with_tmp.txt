@@ -8,7 +8,7 @@
 #SBATCH --mail-type=FAIL
 #SBATCH --account=def-tetreaum
 #SBATCH --mail-user={5}
-#SBATCH --tmp 300G
+#SBATCH --tmp 350G
 #
 ### Load environnment
 #
