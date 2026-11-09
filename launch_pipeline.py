@@ -348,7 +348,7 @@ def fill_template(
 
     if tool == "BWA-MEM2":
         template = (
-            f"{TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/template_bwa.txt"
+            f"{TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/template_with_tmp.txt"
         )
     else:
         template = (
