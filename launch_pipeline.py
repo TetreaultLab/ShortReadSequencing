@@ -1527,11 +1527,11 @@ def vep(sample, toml_config, done):
     tool = "VEP"
 
     if toml_config["general"]["sequencing"] == "genome":
-        time_allocated = "00-03:00"
+        time_allocated = "00-06:00"
         cpu = "3"
         mem = "20"
     else:
-        time_allocated = "00-01:00"
+        time_allocated = "00-03:00"
         cpu = "1"
         mem = "10"
     env = "module load StdEnv/2023 apptainer/1.3.5 bcftools/1.22"
