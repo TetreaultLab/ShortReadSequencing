@@ -1704,7 +1704,7 @@ def openCravat(sample, toml_config, done):
         "text",
         "--cleanrun",
     ]
-    command_str0 = f"cp {vcf} {slurm_tmp}{sample}_vep.vcf"
+    command_str0 = f"cp {vcf} {slurm_tmp}{sample}_vep.vcf \n\n rsync -a /lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/lib/python3.10/site-packages/cravat/modules {slurm_tmp} \n\n oc config md {slurm_tmp}"
 
     command_str1 = " ".join(oc)
 
@@ -1718,7 +1718,7 @@ def openCravat(sample, toml_config, done):
     # )
     command_str = "\n".join([command_str0, command_str1, command_str2, command_str3])
 
-    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}* {output}"
+    cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}{sample}* {output}"
 
     job = fill_template(
         tool,
