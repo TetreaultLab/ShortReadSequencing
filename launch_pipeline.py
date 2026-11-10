@@ -1655,7 +1655,7 @@ def openCravat(sample, toml_config, done):
     oc = [
         "/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin/oc",
         "run",
-        vcf,
+        f"{slurm_tmp}{sample}_vep.vcf",
         "-a",
         "alfa",
         "alphamissense",
