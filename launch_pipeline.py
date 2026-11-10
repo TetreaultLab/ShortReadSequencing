@@ -1704,7 +1704,7 @@ def openCravat(sample, toml_config, done):
         "text",
         "--cleanrun",
     ]
-    command_str0 = f"cp {vcf} {slurm_tmp}{sample}_vep.vcf \n\n rsync -a /lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/lib/python3.10/site-packages/cravat/modules {slurm_tmp} \n\n oc config md {slurm_tmp}"
+    command_str0 = f"cp {vcf} {slurm_tmp}{sample}_vep.vcf\n\nrsync -a /lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/lib/python3.10/site-packages/cravat/modules {slurm_tmp}\n\n/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin/oc config md {slurm_tmp}"
 
     command_str1 = " ".join(oc)
 
