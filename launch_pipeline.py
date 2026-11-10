@@ -347,9 +347,7 @@ def fill_template(
     infos = toml_config["general"]["output"] + "/" + sample + "/infos.txt"
 
     if tool == "BWA-MEM2":
-        template = (
-            f"{TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/template_with_tmp.txt"
-        )
+        template = f"{TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/template_with_tmp.txt"
     else:
         template = (
             f"{TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/template.txt"
@@ -1460,13 +1458,12 @@ def bcftools(sample, toml_config, done):
 def freebayes(sample, toml_config, done):
     tool = "FreeBayes"
 
-    cpu = "1"
+    cpu = "8"
+    mem = "32"
     if toml_config["general"]["sequencing"] == "genome":
-        mem = "32"
-        time_allocated = "01-11:00"
+        time_allocated = "0-11:00"
     else:
-        mem = "32"
-        time_allocated = "00-11:00"
+        time_allocated = "00-06:00"
 
     env = "module load StdEnv/2023 freebayes/1.3.7 bcftools/1.22"
 
@@ -1486,7 +1483,7 @@ def freebayes(sample, toml_config, done):
     ref = get_reference(toml_config["general"]["reference"], "")["fasta"]
 
     command_str = (
-        f"freebayes -f {ref} {input} | "
+        f"freebayes-parallel <(fasta_generate_regions.py {ref}.fai 100000) 8 -f {ref} {input} | "
         f"bcftools reheader --samples {toml_config['general']['output']}/{sample}/sample.txt | "
         f"bcftools norm -f {ref} -m -any -Ou | "
         f"bcftools filter -i 'QUAL >= 10 && INFO/DP >= 5' -Oz -o {slurm_tmp}{sample}_freebayes.vcf.gz && "
