@@ -346,7 +346,7 @@ def fill_template(
     job = f"{work_dir}/scripts/{sample}_{tool}.slurm"
     infos = toml_config["general"]["output"] + "/" + sample + "/infos.txt"
 
-    if tool == "BWA-MEM2":
+    if tool in {"BWA-MEM2", "openCravat"}:
         template = f"{TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/template_with_tmp.txt"
     else:
         template = (
