@@ -1626,9 +1626,9 @@ def openCravat(sample, toml_config, done):
     tool = "openCravat"
 
     if toml_config["general"]["sequencing"] == "genome":
-        mem = "64"
+        mem = "80"
         cpu = "4"
-        time_allocated = "01-23:00"
+        time_allocated = "00-23:00"
     elif toml_config["general"]["sequencing"] == "exome":
         mem = "64"
         cpu = "4"
@@ -1644,6 +1644,7 @@ def openCravat(sample, toml_config, done):
     vcf = output + sample + "_vep.vcf"
 
     slurm_tmp = f"$SLURM_TMPDIR/{tool}_{sample}/"
+    tmp_dir = f"$SLURM_TMPDIR/tmp_{sample}/"
 
     genome = toml_config["general"]["reference"]
 
@@ -1698,24 +1699,29 @@ def openCravat(sample, toml_config, done):
         "--debug",
         "-l",
         ref,
+        "--md",
+        tmp_dir,
         "-d",
         slurm_tmp,
         "-t",
         "text",
         "--cleanrun",
     ]
-    command_str0 = f"cp {vcf} {slurm_tmp}{sample}_vep.vcf\n\nrsync -a /lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/lib/python3.10/site-packages/cravat/modules {slurm_tmp}\n\n/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin/oc config md {slurm_tmp}"
+    command_str0 = (
+        f"cp {vcf} {slurm_tmp}{sample}_vep.vcf && "
+        f"cp -r /lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/lib/python3.10/site-packages/cravat/modules/* {tmp_dir} && "
+        f"/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin/oc config md {slurm_tmp}"
+    )
 
     command_str1 = " ".join(oc)
 
     command_str2 = f"python -u {TOOL_PATH}main_pipelines/short-read/ShortReadSequencing/oc_filtering.py --output {slurm_tmp} --sample {sample} --vcf {slurm_tmp}{sample}_vep.vcf"
 
-    command_str3 = f"rm {toml_config['general']['output']}/{sample}/sample.txt"
-    #     f"rm {output}{sample}_vep.vcf.err && "
-    #     f"rm {output}{sample}_vep.vcf.log && "
-    #     f"rm {output}{sample}_vep.vcf.sqlite && "
-    #     f"rm {output}{sample}_vep.vcf.tsv && "
-    # )
+    command_str3 = (
+        f"rm {toml_config['general']['output']}/{sample}/sample.txt && "
+        f"rm {output}{sample}_vep.vcf.sqlite && "
+        f"rm {output}{sample}_vep.vcf.tsv"
+    )
     command_str = "\n".join([command_str0, command_str1, command_str2, command_str3])
 
     cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}{sample}* {output}"
