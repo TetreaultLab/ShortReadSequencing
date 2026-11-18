@@ -727,6 +727,7 @@ def star(sample, toml_config, done):
             toml_config["star"]["quantMode"],
         ]
 
+    command_str0 = f"rm -r {slurm_tmp}"
     command_str1 = " ".join(command)
     command_str2 = f"mv {slurm_tmp}/{sample}_Aligned.sortedByCoord.out.bam {slurm_tmp}/{sample}.bam"
     command_str3 = f"mv {slurm_tmp}/{sample}_Log.final.out {slurm_tmp}/{sample}_summary_mapping_stats.out"
@@ -743,6 +744,7 @@ def star(sample, toml_config, done):
 
         command_str = "\n".join(
             [
+                command_str0,
                 command_str1,
                 command_str2,
                 command_str3,
@@ -757,6 +759,7 @@ def star(sample, toml_config, done):
     else:
         command_str = "\n".join(
             [
+                command_str0,
                 command_str1,
                 command_str2,
                 command_str3,
