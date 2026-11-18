@@ -1430,7 +1430,7 @@ def freebayes(sample, toml_config, done):
     tool = "FreeBayes"
 
     cpu = "8"
-    mem = "32"
+    mem = "64"
     if toml_config["general"]["sequencing"] == "genome":
         time_allocated = "0-11:00"
     else:
@@ -1680,8 +1680,7 @@ def openCravat(sample, toml_config, done):
     ]
     command_str0 = (
         f"cp {vcf} {slurm_tmp}{sample}_vep.vcf && "
-        f"cp -r /lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/lib/python3.10/site-packages/cravat/modules/* {tmp_dir} && "
-        f"/lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/bin/oc config md {slurm_tmp}"
+        f"cp -r /lustre09/project/6019267/shared/tools/variants/annotation/openCravat_env/lib/python3.10/site-packages/cravat/modules/* {tmp_dir}"
     )
 
     command_str1 = " ".join(oc)
