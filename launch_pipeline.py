@@ -805,13 +805,13 @@ def star(sample, toml_config, done):
 def bwa(sample, toml_config, done):
     tool = "BWA-MEM2"
 
-    cpu = "2"
+    cpu = "4"
     if toml_config["general"]["sequencing"] == "exome":
         time_allocated = "00-06:00"
-        mem = "64"
+        mem = "32"
     else:
         time_allocated = "01-11:00"
-        mem = "96"
+        mem = "64"
     env = "module load StdEnv/2023 bwa-mem2/2.2.1 samtools/1.22.1"
 
     output = toml_config["general"]["output"] + "/" + sample + "/Aligned"
@@ -827,38 +827,9 @@ def bwa(sample, toml_config, done):
     I_toAlign = files["I_toAlign"]
 
     if toml_config["general"]["reads"] == "PE":
-        command = [
-            "bwa-mem2",
-            "mem",
-            "-t",
-            cpu,
-            "-v",
-            "1",
-            "-o",
-            slurm_tmp + "/" + sample + ".sam",
-            ref,
-            I1_toAlign,
-            I2_toAlign,
-        ]
+        command_str = f"bwa-mem2 mem -t {cpu} -v 1 {ref} {I1_toAlign} {I2_toAlign} \ \n | samtools view -S --threads {cpu} -b -o {slurm_tmp}/{sample}.bam -"
     else:
-        command = [
-            "bwa-mem2",
-            "mem",
-            "-t",
-            cpu,
-            "-v",
-            "1",
-            "-o",
-            slurm_tmp + "/" + sample + ".sam",
-            ref,
-            I_toAlign,
-        ]
-
-    command_str1 = " ".join(command)
-    command_str2 = f"samtools view -S --threads {cpu} -b -o {slurm_tmp}/{sample}.bam {slurm_tmp}/{sample}.sam"
-    command_str3 = f"rm {slurm_tmp}/{sample}.sam"
-
-    command_str = "\n".join([command_str1, command_str2, command_str3])
+        command_str = f"bwa-mem2 mem -t {cpu} -v 1 {ref} {I_toAlign} \ \n | samtools view -S --threads {cpu} -b -o {slurm_tmp}/{sample}.bam -"
 
     cleanup_cmd = f"rsync -azh --no-g --no-p {slurm_tmp}/* {output}/"
 
