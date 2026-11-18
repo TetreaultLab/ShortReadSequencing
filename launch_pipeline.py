@@ -550,12 +550,12 @@ def fastp(sample, toml_config, done):
     tool = "fastp"
 
     if toml_config["general"]["sequencing"] == "genome":
-        cpu = "10"
+        cpu = "4"
     else:
-        cpu = "8"
+        cpu = "4"
 
     mem = "8"
-    time_allocated = "00-01:00"
+    time_allocated = "00-03:00"
     env = "module load StdEnv/2023 fastp/1.0.1"
 
     output = toml_config["general"]["output"] + "/" + sample + "/Trimmed"
