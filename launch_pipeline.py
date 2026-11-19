@@ -830,7 +830,7 @@ def bwa(sample, toml_config, done):
     I_toAlign = files["I_toAlign"]
 
     if toml_config["general"]["reads"] == "PE":
-        command_str = f"bwa-mem2 mem -t {cpu} -v 1 {ref} {I1_toAlign} {I2_toAlign} \ \n | samtools view -S --threads {cpu} -b -o {slurm_tmp}/{sample}.bam -"
+        command_str = f"bwa-mem2 mem -t {cpu} -v 1 {ref} {I1_toAlign} {I2_toAlign} \\n | samtools view -S --threads {cpu} -b -o {slurm_tmp}/{sample}.bam -"
     else:
         command_str = f"bwa-mem2 mem -t {cpu} -v 1 {ref} {I_toAlign} \ \n | samtools view -S --threads {cpu} -b -o {slurm_tmp}/{sample}.bam -"
 
