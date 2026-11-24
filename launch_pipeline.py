@@ -1149,13 +1149,13 @@ def bamqc(sample, toml_config, done):
 def markduplicates(sample, toml_config, done):
     tool = "MarkDuplicates"
 
-    cpu = "1"
+    cpu = "4"
     if toml_config["general"]["sequencing"] == "genome":
         time_allocated = "00-06:00"
-        mem = "24"
+        mem = "48"
     else:
         time_allocated = "00-03:00"
-        mem = "6"
+        mem = "16"
 
     env = "module load StdEnv/2023 samtools/1.22.1 gatk/4.6.1.0"
 
